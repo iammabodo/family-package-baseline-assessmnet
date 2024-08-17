@@ -49,49 +49,84 @@ DietQuality <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>%
     MDDDrinksSoftDrinks = S7_31,
     MDDEatOut = S7_32) %>% 
   # Change variables to factor variables
-  mutate_at(vars(MDDStapCereal:MDDEatOut), as_factor) %>%
+  #mutate_at(vars(MDDStapCereal:MDDEatOut), as_factor) %>%
   mutate_at(vars(Province:Village, IDPOOR, Sex ), as_factor) %>%
   #Mutate the food groups variables
   mutate(MDDStaples = case_when(
-    MDDStapCereal == "Yes" | MDDStapOther == "Yes" | MDDStapRoots == "Yes"  ~ 1,
+    MDDStapCereal == 1 | MDDStapOther == 1 | MDDStapRoots == 1  ~ 1,
     TRUE ~ 0),
     MDDPulses = case_when(
-      MDDStapPulse == "Yes" ~ 1,
+      MDDStapPulse == 1 ~ 1,
       TRUE ~ 0),
     MDDNutsSeeds = case_when(
-      MDDOtherPeanuts == "Yes" ~ 1,
+      MDDOtherPeanuts == 1 ~ 1,
       TRUE ~ 0),
     MDDDiary = case_when(
-      MDDProteinYogurt == "Yes" | MDDDrinkMilk == "Yes" ~ 1,
+      MDDProteinYogurt == 1 | MDDDrinkMilk == 1 ~ 1,
       TRUE ~ 0),
     MDDProtein = case_when(
-      MDDProteinProcessed  == "Yes" | MDDProteinBeef == "Yes" | MDDProteinPork == "Yes" | MDDProteinChicken == "Yes" | MDDProteinFish == "Yes" ~ 1,
+      MDDProteinProcessed  == 1 | MDDProteinBeef == 1 | MDDProteinPork == 1 | MDDProteinChicken == 1 | MDDProteinFish == 1 ~ 1,
       TRUE ~ 0),
     MDDEggs = case_when(
-      MDDProteinEgg == "Yes" ~ 1,
+      MDDProteinEgg == 1 ~ 1,
       TRUE ~ 0),
     MDDDarkGreenVeg = case_when(
-      MDDVegGreens == "Yes" | MDDVegPumpkin == "Yes"  ~ 1,
+      MDDVegGreens == 1 | MDDVegPumpkin == 1  ~ 1,
       TRUE ~ 0),
     MDDOtherVitA = case_when(
-      MDDVegVitamin == "Yes" | MDDFruitRipe == "Yes"  ~ 1,
+      MDDVegVitamin == 1 | MDDFruitRipe == 1  ~ 1,
       TRUE ~ 0),
     MDDOtherVeg = case_when(
-      MDDVegEggplant == "Yes" | MDDVegWaxGourd == "Yes" | MDDVegLettuce == "Yes"  ~ 1,
+      MDDVegEggplant == 1 | MDDVegWaxGourd == 1 | MDDVegLettuce == 1  ~ 1,
       TRUE ~ 0),
     MDDOtherFruits = case_when(
-      MDDFruitOrange == "Yes" | MDDFruitBanana == "Yes" | MDDFruitMangosteen == "Yes"  ~ 1,
-      TRUE ~ 0)) %>% 
+      MDDFruitOrange == 1 | MDDFruitBanana == 1 | MDDFruitMangosteen == 1  ~ 1,
+      TRUE ~ 0),
+    NCDFruits = case_when(
+      MDDFruitBanana == 1 | MDDFruitMangosteen == 1  ~ 1,
+      TRUE ~ 0),
+    NCDRiskUnprocemeat = case_when(
+      MDDProteinBeef == 1 | MDDProteinPork == 1 ~ 1,
+      TRUE ~ 0),
+    NCDRiskOtherFastFds = case_when(
+      MDDEatOut == 1 | MDDOtherNoodles == 1  ~ 1,
+      TRUE ~ 0),
+    MDDAllFruits = case_when(
+      MDDVegVitamin == 1 | MDDFruitOrange == 1 | MDDFruitBanana == 1 | MDDFruitMangosteen == 1  ~ 1,
+      TRUE ~ 0),
+    MDDAllVegetables = case_when(
+      MDDVegVitamin == 1 | MDDVegGreens == 1 | MDDVegPumpkin == 1 | MDDVegEggplant == 1 | MDDVegWaxGourd == 1 | MDDVegLettuce == 1  ~ 1,
+      TRUE ~ 0),
+    MDDAllPulses = case_when(
+      MDDStapPulse == 1 | MDDOtherPeanuts == 1  ~ 1,
+      TRUE ~ 0),
+    MDDAllProteins = case_when(
+      MDDProteinEgg == 1 | MDDProteinYogurt == 1 | MDDProteinProcessed == 1 | MDDProteinBeef == 1 | MDDProteinPork == 1 | MDDProteinChicken == 1 | MDDProteinFish == 1 | MDDDrinkMilk == 1 ~ 1,
+      TRUE ~ 0)) %>%
   # Convert food groups to numeric
-  mutate(across(MDDStaples:MDDOtherFruits, as.double)) %>%
+  #mutate(across(MDDStapCereal:MDDAllProteins, as.double)) %>%
   # Create MDDScore variable
   rowwise() %>%
-  mutate(MDDScore = sum((across(MDDStaples:MDDOtherFruits)))) %>% 
+  mutate(MDDScore = sum((across(MDDStaples:MDDOtherFruits))), # Minimum Dietary Diversity Score
+         # Consumption of all five food groups score
+         MDDAllGroupsScore = sum(across(c(MDDStaples,MDDAllFruits:MDDAllProteins))),
+         # Non communicable diseases (NCD) protective score
+         NCDProtScore = sum(across(c(MDDStapOther, MDDStapPulse, MDDOtherPeanuts,
+                                     MDDVegVitamin, MDDDarkGreenVeg, MDDOtherVeg, 
+                                     MDDFruitRipe, MDDFruitOrange, NCDFruits))),
+         # Non communicable diseases (NCD) risk score
+         NCDRiskScore = (MDDDrinksSoftDrinks + MDDSweetsCake + MDDSweetsCandy + 
+                                     (MDDProteinProcessed * 2) + MDDOtherFriedFoods + NCDRiskOtherFastFds),
+         # Global Dietary Recommendations (GDR) Score
+         GDRScore = NCDProtScore - NCDRiskScore + 9) %>% 
   ungroup() %>%
-  # Mutate MDDCategory variable
+  # Mutate MDDCategory and MDDAllGroupscat variables
   mutate(MDDCategory = case_when(
     MDDScore >= 5 ~ "Minimum Dietary Diversity Met",
-    TRUE ~ "Minimum Dietary Diversity Not Met")) %>%
+    TRUE ~ "Minimum Dietary Diversity Not Met"),
+    MDDAllGroupsCat = case_when(
+      MDDAllGroupsScore == 5 ~ "All Food groups consumed",
+      TRUE ~ "All Food groups not consumed")) %>%
   # Mutate the family package treatment group variable
   mutate(Treatment = case_when(
     IDPOOR == "POOR_1" | IDPOOR == "POOR_2" ~ "Treatment Group",
@@ -135,7 +170,7 @@ DietQuality <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>%
     MDDDrinksFruitJuice = "Yesterday, did you have fruit juice, fruit drinks, sugarcane juice, or fruit shake?",
     MDDDrinksSoftDrinks = "Yesterday, did you have soft drinks such as Coca-Cola, Fanta, Sprite, Bacchus, or M-150?",
     MDDEatOut = "Yesterday, did you get food from any place like Burger King, KFC, Pizza Company, Five Star, Lucky Burger, or other places that serve burgers, fried chicken or pizza?",
-    # Food Group Variables
+    # 10 Food Group Variables for MDD Calculation
     MDDStaples = "Grains, white roots and tubers, and plantains",
     MDDPulses = "Pulses (beans, peas and lentils)",
     MDDNutsSeeds = "Nuts and seeds",
@@ -148,7 +183,20 @@ DietQuality <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>%
     MDDOtherFruits = "Other fruits",
     MDDScore = "Minimum Dietary Diversity Score",
     Treatment = "Family Package Treatment Group",
-    MDDCategory = "Minimum Dietary Diversity Category")
+    MDDCategory = "Minimum Dietary Diversity Category",
+    # All Food Groups Consumed
+    MDDAllGroupsScore = "All Five Food Groups Consumed (Score)",
+    MDDAllGroupsCat = "All Five Food Groups Consumed (Category)",
+    MDDAllFruits = "All Fruits Consumed",
+    MDDAllVegetables = "All Vegetables Consumed",
+    MDDAllPulses = "All Pulses Consumed",
+    MDDAllProteins = "All Proteins Consumed",
+    # Non Communicable Diseases (NCD) Protective Score
+    NCDProtScore = "NCD Protective Score",
+    # Non Communicable Diseases (NCD) Risk Score
+    NCDRiskScore = "NCD Risk Score",
+    # Global Dietary Recommendations (GDR) Score
+    GDRScore = "Global Dietary Recommendations (GDR) Score")
 
 ## Data Export in sav, stata, and csv formats
 write_sav(DietQuality, "data/DietQuality.sav")
@@ -165,14 +213,37 @@ DietQuality %>%
             Total = n(),
             MDDMetPerc = (MDDMet/Total)*100,
             MDNotMEPerc = (MDDNotMet/ Total) * 100) %>%
-  ungroup()
+  ungroup() # to add the code to create the map after this line
+
 
 # 2. All five food groups consumed by the respondent
+DietQuality %>%
+  group_by(Treatment, Province) %>%
+  summarise(AllGroups = sum(MDDAllGroupsCat == "All Food groups consumed"),
+            NotAllGroups = sum(MDDAllGroupsCat == "All Food groups not consumed"),
+            Total = n(),
+            AllGroupsPerc = (AllGroups/Total)*100,
+            NotAllGroupsPerc = (NotAllGroups/Total)*100) %>%
+  ungroup() # to add the code to create the map after this line
   
+
+# 3. Mean GDRScore by treatment group and province
+DietQuality %>%
+  group_by(Treatment, Province) %>%
+  summarise(MeanGDRScore = mean(GDRScore, na.rm = TRUE)) %>%
+  ungroup() # to add the code to create the map after this line
   
-  
-  
-  
+# 4. Mean NCDProtScore by treatment group and province
+DietQuality %>%
+  group_by(Treatment, Province) %>%
+  summarise(MeanNCDProtScore = mean(NCDProtScore, na.rm = TRUE)) %>%
+  ungroup() # to add the code to create the map after this line
+
+# 5. Mean NCDRiskScore by treatment group and province
+DietQuality %>%
+  group_by(Treatment, Province) %>%
+  summarise(MeanNCDRiskScore = mean(NCDRiskScore, na.rm = TRUE)) %>%
+  ungroup() # to add the code to create the map after this line
   
 
 
