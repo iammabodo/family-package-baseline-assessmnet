@@ -51,6 +51,54 @@ DietQuality <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>%
   # Change variables to factor variables
   mutate_at(vars(MDDStapCereal:MDDEatOut), as_factor) %>%
   mutate_at(vars(Province:Village, IDPOOR, Sex ), as_factor) %>%
+  #Mutate the food groups variables
+  mutate(MDDStaples = case_when(
+    MDDStapCereal == "Yes" | MDDStapOther == "Yes" | MDDStapRoots == "Yes"  ~ 1,
+    TRUE ~ 0),
+    MDDPulses = case_when(
+      MDDStapPulse == "Yes" ~ 1,
+      TRUE ~ 0),
+    MDDNutsSeeds = case_when(
+      MDDOtherPeanuts == "Yes" ~ 1,
+      TRUE ~ 0),
+    MDDDiary = case_when(
+      MDDProteinYogurt == "Yes" | MDDDrinkMilk == "Yes" ~ 1,
+      TRUE ~ 0),
+    MDDProtein = case_when(
+      MDDProteinProcessed  == "Yes" | MDDProteinBeef == "Yes" | MDDProteinPork == "Yes" | MDDProteinChicken == "Yes" | MDDProteinFish == "Yes" ~ 1,
+      TRUE ~ 0),
+    MDDEggs = case_when(
+      MDDProteinEgg == "Yes" ~ 1,
+      TRUE ~ 0),
+    MDDDarkGreenVeg = case_when(
+      MDDVegGreens == "Yes" | MDDVegPumpkin == "Yes"  ~ 1,
+      TRUE ~ 0),
+    MDDOtherVitA = case_when(
+      MDDVegVitamin == "Yes" | MDDFruitRipe == "Yes"  ~ 1,
+      TRUE ~ 0),
+    MDDOtherVeg = case_when(
+      MDDVegEggplant == "Yes" | MDDVegWaxGourd == "Yes" | MDDVegLettuce == "Yes"  ~ 1,
+      TRUE ~ 0),
+    MDDOtherFruits = case_when(
+      MDDFruitOrange == "Yes" | MDDFruitBanana == "Yes" | MDDFruitMangosteen == "Yes"  ~ 1,
+      TRUE ~ 0)) %>% 
+  # Convert food groups to numeric
+  mutate(across(MDDStaples:MDDOtherFruits, as.double)) %>%
+  # Create MDDScore variable
+  rowwise() %>%
+  mutate(MDDScore = sum((across(MDDStaples:MDDOtherFruits)))) %>% 
+  ungroup() %>%
+  # Mutate MDDCategory variable
+  mutate(MDDCategory = case_when(
+    MDDScore >= 5 ~ "Minimum Dietary Diversity Met",
+    TRUE ~ "Minimum Dietary Diversity Not Met")) %>%
+  # Mutate the family package treatment group variable
+  mutate(Treatment = case_when(
+    IDPOOR == "POOR_1" | IDPOOR == "POOR_2" ~ "Treatment Group",
+    TRUE ~ "Control Group")) %>%
+  # Change Treatment to factor variable
+  mutate(Treatment = as_factor(Treatment),
+         MDDCategory = as_factor(MDDCategory)) %>%
   # Set Variable Labels
   set_variable_labels(
     HHDisabNm = "Number of Household Members with Disability",
@@ -61,7 +109,7 @@ DietQuality <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>%
     MDDStapPulse = "Yesterday, did you eat soybeans, soymilk, peas, pigeon peas, red mung beans, or mung beans?Staple Pulse",
     MDDVegVitamin = "Yesterday, did you eat carrots, pumpkin, or sweet potatoes that are orange inside?",
     MDDVegGreens = "Yesterday, did you eat ivy gourd leaves, moringa leaves, green amaranth, water spinach, bok choy, or mustard greens?",
-    MDDVegPumpkin = "Uesterday, did you eat umpkin leaves, sweet leaf bush, choy sum, spinach, kale, or broccoli?",
+    MDDVegPumpkin = "Uesterday, did you eat pumpkin leaves, sweet leaf bush, choy sum, spinach, kale, or broccoli?",
     MDDVegEggplant = "Yesterday, did you eat eggplant, cauliflower, long beans, cabbage, bean sprouts, tomatoes, or okra?",
     MDDVegWaxGourd = "Yesterday, did you eat wax gourd, sponge gourd, bitter gourd, ridge gourd, bottle gourd, ivy gourd, or cucumber?",
     MDDVegLettuce = "Yesterday, did you eat lettuce, banana flower, mushrooms, bamboo shoots, white radish, green mango, or green papaya?",
@@ -86,11 +134,40 @@ DietQuality <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>%
     MDDDrinkTea = "Yesterday, did you have sweetened tea, sweetened coffee, coffee frappe, chocolate frappe, or green tea frappe?",
     MDDDrinksFruitJuice = "Yesterday, did you have fruit juice, fruit drinks, sugarcane juice, or fruit shake?",
     MDDDrinksSoftDrinks = "Yesterday, did you have soft drinks such as Coca-Cola, Fanta, Sprite, Bacchus, or M-150?",
-    MDDEatOut = "Yesterday, did you get food from any place like Burger King, KFC, Pizza Company, Five Star, Lucky Burger, or other places that serve burgers, fried chicken or pizza?") 
+    MDDEatOut = "Yesterday, did you get food from any place like Burger King, KFC, Pizza Company, Five Star, Lucky Burger, or other places that serve burgers, fried chicken or pizza?",
+    # Food Group Variables
+    MDDStaples = "Grains, white roots and tubers, and plantains",
+    MDDPulses = "Pulses (beans, peas and lentils)",
+    MDDNutsSeeds = "Nuts and seeds",
+    MDDDiary = "Dairy",
+    MDDProtein = "Meat, poultry, and fish",
+    MDDEggs = "Eggs (Duck or Chicken)",
+    MDDDarkGreenVeg = "Dark green leafy vegetables",
+    MDDOtherVitA = "Other vitamin A-rich fruits and vegetables",
+    MDDOtherVeg = "Other vegetables",
+    MDDOtherFruits = "Other fruits",
+    MDDScore = "Minimum Dietary Diversity Score",
+    Treatment = "Family Package Treatment Group",
+    MDDCategory = "Minimum Dietary Diversity Category")
 
-  
-  
-  
+## Data Export in sav, stata, and csv formats
+write_sav(DietQuality, "data/DietQuality.sav")
+write_dta(DietQuality, "data/DietQuality.dta")  
+write_csv(DietQuality, "data/DietQuality.csv")  
+
+## Indicators Calculation
+
+# 1. Calculate the percentage of respondents who met the minimum dietary diversity, by treatment group
+DietQuality %>%
+  group_by(Treatment, Province) %>%
+  summarise(MDDMet = sum(MDDCategory == "Minimum Dietary Diversity Met"),
+            MDDNotMet = sum(MDDCategory == "Minimum Dietary Diversity Not Met"),
+            Total = n(),
+            MDDMetPerc = (MDDMet/Total)*100,
+            MDNotMEPerc = (MDDNotMet/ Total) * 100) %>%
+  ungroup()
+
+# 2. All five food groups consumed by the respondent
   
   
   
