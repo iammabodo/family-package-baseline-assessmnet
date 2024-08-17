@@ -4,8 +4,8 @@ library(labelled)
 
 
 ## Read in the data
-children_nutrition <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dta") %>% 
-  # Select relevent variables
+MADChildren <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dta") %>% 
+  # Select relevant variables
   select(interview__key, interview__id, HHRoster__id, S1A_3, S1A_4, S1A_5a,
          DOB, DOB_Day, DOB_Month, DOB_Year, DOB_Age, Age_Month, S1A_5b, S1A_5c,
          S1A_6, AGE_Mother,AGE_Father, starts_with("S6_")) %>% 
