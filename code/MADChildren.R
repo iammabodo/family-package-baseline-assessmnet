@@ -1,5 +1,6 @@
 library(tidyverse)
 library(haven)
+library(labelled)
 
 
 ## Read in the data
@@ -218,7 +219,7 @@ children_nutrition <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_F
     PCMADOtherEatOut = "Did the child eat food from any place like Burger King, Pizza Company, Five Star,  restaurant, food stall, or street vendor, yesterday during the day or night?",
     PCMADCheck = "Are you sure the child did not eat any of the foods we discussed so far, yesterday during the day or night?",
     PCMADNumber = "How many times did the child eat solid, semi-solid or soft foods, yesterday during the day or night?")
-  # Change labbeled variables to factor variables
+  # Change labeled variables to factor variables
   
     
     
