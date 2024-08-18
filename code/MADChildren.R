@@ -7,8 +7,8 @@ library(labelled)
 MADChildren <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dta") %>% 
   # Select relevant variables
   select(interview__key, interview__id, HHRoster__id, S1A_3, S1A_4, S1A_5a,
-         DOB, DOB_Day, DOB_Month, DOB_Year, DOB_Age, Age_Month, S1A_5b, S1A_5c,
-         S1A_6, AGE_Mother,AGE_Father, starts_with("S6_")) %>% 
+         DOB, DOB_Day, DOB_Month, DOB_Year, DOB_Age, Age_Month, S1A_5b,
+         AGE_Mother,AGE_Father, starts_with("S6_")) %>% 
   # Convert Age_Month to numeric
   mutate(Age_Month = as.numeric(Age_Month)) %>%
   filter(Age_Month >= 0 & Age_Month <= 23) %>%
@@ -84,70 +84,106 @@ MADChildren <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dt
     PCMADOtherEatOut = S6_25,
     PCMADCheck = S6_26,
     PCMADNumber = S6_27) %>% 
-  # Change some variables to numeric and convert to missing if the value == -5555
+  # Change some variables values to missing if the value == -5555
   mutate(
-    MotherAge = ifelse(MotherAge == -5555, NA, MotherAge),
-    FatherAge = ifelse(FatherAge == -5555, NA, FatherAge),
-    PCMADInfFormulaNum = ifelse(PCMADInfFormulaNum == -5555, NA, PCMADInfFormulaNum),
-    PCMADMilkNum = ifelse(PCMADMilkNum == -5555, NA, PCMADMilkNum),
-    PCMADYogurtDrinkNum = ifelse(PCMADYogurtDrinkNum == -5555, NA, PCMADYogurtDrinkNum),
-    PCMADYogurtNum = ifelse(PCMADYogurtNum == -5555, NA, PCMADYogurtNum),
-    PCMADNumber = ifelse(PCMADNumber == -5555, NA, PCMADNumber)) %>%
-  # Change labbeled variables to factor variables
+    across(
+      c(MotherAge, FatherAge, PCMADInfFormulaNum, PCMADMilkNum, PCMADYogurtDrinkNum, 
+        PCMADYogurtNum, PCMADNumber, PCMADMilkSwt, PCMADYogurtDrinkSwt, 
+        PCMADOtherMilkSwtFlavoured, PCMADTeaSwt, PCMADAnyOtherLiquidsSwt, PCMADCheck),
+      ~ ifelse(.x == -5555, NA, .x)))%>%
+  # Create variables for the calculation of relevant variables
   mutate(
-    ChildGender = as_factor(ChildGender),
-    ChildHHRelationship = as_factor(ChildHHRelationship),
-    PCMADBreastfeeding = as_factor(PCMADBreastfeeding),
-    PCMADBottleLiquid = as_factor(PCMADBottleLiquid),
-    PCMADPlainWAter = as_factor(PCMADPlainWAter),
-    PCMADInfFormula = as_factor(PCMADInfFormula),
-    PCMADMilk = as_factor(PCMADMilk),
-    PCMADMilkSwt = as_factor(PCMADMilkSwt),
-    PCMADYogurtDrink = as_factor(PCMADYogurtDrink),
-    PCMADYogurtDrinkSwt = as_factor(PCMADYogurtDrinkSwt),
-    PCMADOtherMilk = as_factor(PCMADOtherMilk),
-    PCMADOtherMilkSwtFlavoured = as_factor(PCMADOtherMilkSwtFlavoured),
-    PCMADChocolateFrappe = as_factor(PCMADChocolateFrappe),
-    PCMADCondensedMilk = as_factor(PCMADCondensedMilk),
-    PCMADFruiteJuice = as_factor(PCMADFruiteJuice),
-    PCMADSoftDrink = as_factor(PCMADSoftDrink),
-    PCMADTea = as_factor(PCMADTea),
-    PCMADTeaSwt = as_factor(PCMADTeaSwt),
-    PCMADBroth = as_factor(PCMADBroth),
-    PCMADAnyOtherLiquids = as_factor(PCMADAnyOtherLiquids),
-    PCMADAnyOtherLiquidsSwt = as_factor(PCMADAnyOtherLiquidsSwt),
-    PCMADYogurt = as_factor(PCMADYogurt),
-    PCMADStapCereal = as_factor(PCMADStapCereal),
-    PCMADOtherCereal = as_factor(PCMADOtherCereal),
-    PCMADStapTubers = as_factor(PCMADStapTubers),
-    PCMADStapLegumes = as_factor(PCMADStapLegumes),
-    PCMADVegCarrots = as_factor(PCMADVegCarrots),
-    PCMADVegIvyGourd = as_factor(PCMADVegIvyGourd),
-    PCMADVegPumpkin = as_factor(PCMADVegPumpkin),
-    PCMADVegEggplant = as_factor(PCMADVegEggplant),
-    PCMADVegWaxGourd = as_factor(PCMADVegWaxGourd),
-    PCMADVegLettuce = as_factor(PCMADVegLettuce),
-    PCMADFruitRipe = as_factor(PCMADFruitRipe),
-    PCMADFruitOrange = as_factor(PCMADFruitOrange),
-    PCMADFruitBanana = as_factor(PCMADFruitBanana),
-    PCMADFruitMangosteen = as_factor(PCMADFruitMangosteen),
-    PCMADSweetsCakes = as_factor(PCMADSweetsCakes),
-    PCMADSweetsCandy = as_factor(PCMADSweetsCandy),
-    PCMADProteinEggs = as_factor(PCMADProteinEggs),
-    PCMADProteinKidney = as_factor(PCMADProteinKidney),
-    PCMADProteinSausages = as_factor(PCMADProteinSausages),
-    PCMADProteinBeef = as_factor(PCMADProteinBeef),
-    PCMADProteinPork = as_factor(PCMADProteinPork),
-    PCMADProteinChicken = as_factor(PCMADProteinChicken),
-    PCMADProteinFish = as_factor(PCMADProteinFish),
-    PCMADProteinCrikets = as_factor(PCMADProteinCrikets),
-    PCMADOtherPeanuts = as_factor(PCMADOtherPeanuts),
-    PCMADOtherChips = as_factor(PCMADOtherChips),
-    PCMADOtherNoodles = as_factor(PCMADOtherNoodles),
-    PCMADOtherFriedChicken = as_factor(PCMADOtherFriedChicken),
-    PCMADOtherSemiSolid = as_factor(PCMADOtherSemiSolid),
-    PCMADOtherEatOut = as_factor(PCMADOtherEatOut),
-    PCMADCheck = as_factor(PCMADCheck)) %>%
+    # Staples  - Grains, white/pale starchy roots, tubers, and plantains
+    PCMADStaples = case_when(
+      PCMADStapCereal == 1 | PCMADOtherCereal == 1 | PCMADStapTubers == 1 ~ 1,
+      TRUE ~ 0),
+    # Legumes - Beans, peas, lentils, nuts and seeds
+    PCMADLegumes = case_when(
+      PCMADStapLegumes == 1 | PCMADOtherPeanuts == 1 ~ 1,
+      TRUE ~ 0),
+    # Dairy products - milk, infant formula, yourgut and cheese
+    PCMADDairy = case_when(
+      PCMADInfFormula == 1 | PCMADMilk == 1 | PCMADYogurtDrink == 1 ~ 1,
+      TRUE ~ 0),
+    # Flesh foods - meat, fish, poultry, organ meats
+    PCMADFleshFoods = case_when(
+      # Ask Jyoti about the inclusion of organ meats
+      PCMADProteinSausages == 1 | PCMADProteinBeef == 1 | PCMADProteinPork == 1 | PCMADProteinChicken == 1 | 
+        PCMADProteinFish == 1 | PCMADProteinKidney == 1 ~ 1,
+      TRUE ~ 0),
+    # Vitamin A rich fruits and vegetables
+    PCMADVitA = case_when(
+      PCMADVegCarrots == 1 | PCMADVegIvyGourd == 1 | PCMADVegPumpkin == 1 | PCMADFruitRipe == 1 ~ 1,
+      TRUE ~ 0),
+    # Other fruits and vegetables
+    PCMADOtherFruitsVeg = case_when(
+      PCMADFruitOrange == 1 | PCMADFruitBanana == 1 | PCMADFruitMangosteen == 1 | PCMADVegEggplant == 1 | 
+        PCMADVegWaxGourd == 1 | PCMADVegLettuce == 1 ~ 1,
+      TRUE ~ 0)) %>% 
+  # Create the MDD Score variable
+  mutate(
+    MDDScore = PCMADBreastfeeding + PCMADStaples + 
+      PCMADProteinEggs + PCMADLegumes + 
+      PCMADDairy + PCMADFleshFoods + 
+      PCMADVitA + PCMADOtherFruitsVeg,
+    MDDCat = case_when(
+      MDDScore >= 5 ~ "MDD Met",
+      TRUE ~ "MDD Not Met")) %>%
+  # # Change labbeled variables to factor variables
+  # mutate(
+  #   ChildGender = as_factor(ChildGender),
+  #   ChildHHRelationship = as_factor(ChildHHRelationship),
+  #   PCMADBreastfeeding = as_factor(PCMADBreastfeeding),
+  #   PCMADBottleLiquid = as_factor(PCMADBottleLiquid),
+  #   PCMADPlainWAter = as_factor(PCMADPlainWAter),
+  #   PCMADInfFormula = as_factor(PCMADInfFormula),
+  #   PCMADMilk = as_factor(PCMADMilk),
+  #   PCMADMilkSwt = as_factor(PCMADMilkSwt),
+  #   PCMADYogurtDrink = as_factor(PCMADYogurtDrink),
+  #   PCMADYogurtDrinkSwt = as_factor(PCMADYogurtDrinkSwt),
+  #   PCMADOtherMilk = as_factor(PCMADOtherMilk),
+  #   PCMADOtherMilkSwtFlavoured = as_factor(PCMADOtherMilkSwtFlavoured),
+  #   PCMADChocolateFrappe = as_factor(PCMADChocolateFrappe),
+  #   PCMADCondensedMilk = as_factor(PCMADCondensedMilk),
+  #   PCMADFruiteJuice = as_factor(PCMADFruiteJuice),
+  #   PCMADSoftDrink = as_factor(PCMADSoftDrink),
+  #   PCMADTea = as_factor(PCMADTea),
+  #   PCMADTeaSwt = as_factor(PCMADTeaSwt),
+  #   PCMADBroth = as_factor(PCMADBroth),
+  #   PCMADAnyOtherLiquids = as_factor(PCMADAnyOtherLiquids),
+  #   PCMADAnyOtherLiquidsSwt = as_factor(PCMADAnyOtherLiquidsSwt),
+  #   PCMADYogurt = as_factor(PCMADYogurt),
+  #   PCMADStapCereal = as_factor(PCMADStapCereal),
+  #   PCMADOtherCereal = as_factor(PCMADOtherCereal),
+  #   PCMADStapTubers = as_factor(PCMADStapTubers),
+  #   PCMADStapLegumes = as_factor(PCMADStapLegumes),
+  #   PCMADVegCarrots = as_factor(PCMADVegCarrots),
+  #   PCMADVegIvyGourd = as_factor(PCMADVegIvyGourd),
+  #   PCMADVegPumpkin = as_factor(PCMADVegPumpkin),
+  #   PCMADVegEggplant = as_factor(PCMADVegEggplant),
+  #   PCMADVegWaxGourd = as_factor(PCMADVegWaxGourd),
+  #   PCMADVegLettuce = as_factor(PCMADVegLettuce),
+  #   PCMADFruitRipe = as_factor(PCMADFruitRipe),
+  #   PCMADFruitOrange = as_factor(PCMADFruitOrange),
+  #   PCMADFruitBanana = as_factor(PCMADFruitBanana),
+  #   PCMADFruitMangosteen = as_factor(PCMADFruitMangosteen),
+  #   PCMADSweetsCakes = as_factor(PCMADSweetsCakes),
+  #   PCMADSweetsCandy = as_factor(PCMADSweetsCandy),
+  #   PCMADProteinEggs = as_factor(PCMADProteinEggs),
+  #   PCMADProteinKidney = as_factor(PCMADProteinKidney),
+  #   PCMADProteinSausages = as_factor(PCMADProteinSausages),
+  #   PCMADProteinBeef = as_factor(PCMADProteinBeef),
+  #   PCMADProteinPork = as_factor(PCMADProteinPork),
+  #   PCMADProteinChicken = as_factor(PCMADProteinChicken),
+  #   PCMADProteinFish = as_factor(PCMADProteinFish),
+  #   PCMADProteinCrikets = as_factor(PCMADProteinCrikets),
+  #   PCMADOtherPeanuts = as_factor(PCMADOtherPeanuts),
+  #   PCMADOtherChips = as_factor(PCMADOtherChips),
+  #   PCMADOtherNoodles = as_factor(PCMADOtherNoodles),
+  #   PCMADOtherFriedChicken = as_factor(PCMADOtherFriedChicken),
+  #   PCMADOtherSemiSolid = as_factor(PCMADOtherSemiSolid),
+  #   PCMADOtherEatOut = as_factor(PCMADOtherEatOut),
+  #   PCMADCheck = as_factor(PCMADCheck)) %>%
   # Set Variable Labels
   set_variable_labels(
     ChildId = "Child ID",
@@ -218,7 +254,15 @@ MADChildren <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dt
     PCMADOtherSemiSolidNm = "What was the other solid, semi-solid or soft food that the child ate?",
     PCMADOtherEatOut = "Did the child eat food from any place like Burger King, Pizza Company, Five Star,  restaurant, food stall, or street vendor, yesterday during the day or night?",
     PCMADCheck = "Are you sure the child did not eat any of the foods we discussed so far, yesterday during the day or night?",
-    PCMADNumber = "How many times did the child eat solid, semi-solid or soft foods, yesterday during the day or night?")
+    PCMADNumber = "How many times did the child eat solid, semi-solid or soft foods, yesterday during the day or night?",
+    PCMADStaples = "Staples",
+    PCMADLegumes = "Legumes",
+    PCMADDairy = "Dairy",
+    PCMADFleshFoods = "Flesh Foods",
+    PCMADVitA = "Vitamin A rich fruits and vegetables",
+    PCMADOtherFruitsVeg = "Other fruits and vegetables",
+    MDDScore = "Minimum Dietary Diversity Score",
+    MDDCat = "Minimum Dietary Diversity Category")
   # Change labeled variables to factor variables
   
     
