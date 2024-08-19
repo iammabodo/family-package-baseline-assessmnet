@@ -129,61 +129,32 @@ MADChildren <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dt
     MDDCat = case_when(
       MDDScore >= 5 ~ "MDD Met",
       TRUE ~ "MDD Not Met")) %>%
-  # # Change labbeled variables to factor variables
-  # mutate(
-  #   ChildGender = as_factor(ChildGender),
-  #   ChildHHRelationship = as_factor(ChildHHRelationship),
-  #   PCMADBreastfeeding = as_factor(PCMADBreastfeeding),
-  #   PCMADBottleLiquid = as_factor(PCMADBottleLiquid),
-  #   PCMADPlainWAter = as_factor(PCMADPlainWAter),
-  #   PCMADInfFormula = as_factor(PCMADInfFormula),
-  #   PCMADMilk = as_factor(PCMADMilk),
-  #   PCMADMilkSwt = as_factor(PCMADMilkSwt),
-  #   PCMADYogurtDrink = as_factor(PCMADYogurtDrink),
-  #   PCMADYogurtDrinkSwt = as_factor(PCMADYogurtDrinkSwt),
-  #   PCMADOtherMilk = as_factor(PCMADOtherMilk),
-  #   PCMADOtherMilkSwtFlavoured = as_factor(PCMADOtherMilkSwtFlavoured),
-  #   PCMADChocolateFrappe = as_factor(PCMADChocolateFrappe),
-  #   PCMADCondensedMilk = as_factor(PCMADCondensedMilk),
-  #   PCMADFruiteJuice = as_factor(PCMADFruiteJuice),
-  #   PCMADSoftDrink = as_factor(PCMADSoftDrink),
-  #   PCMADTea = as_factor(PCMADTea),
-  #   PCMADTeaSwt = as_factor(PCMADTeaSwt),
-  #   PCMADBroth = as_factor(PCMADBroth),
-  #   PCMADAnyOtherLiquids = as_factor(PCMADAnyOtherLiquids),
-  #   PCMADAnyOtherLiquidsSwt = as_factor(PCMADAnyOtherLiquidsSwt),
-  #   PCMADYogurt = as_factor(PCMADYogurt),
-  #   PCMADStapCereal = as_factor(PCMADStapCereal),
-  #   PCMADOtherCereal = as_factor(PCMADOtherCereal),
-  #   PCMADStapTubers = as_factor(PCMADStapTubers),
-  #   PCMADStapLegumes = as_factor(PCMADStapLegumes),
-  #   PCMADVegCarrots = as_factor(PCMADVegCarrots),
-  #   PCMADVegIvyGourd = as_factor(PCMADVegIvyGourd),
-  #   PCMADVegPumpkin = as_factor(PCMADVegPumpkin),
-  #   PCMADVegEggplant = as_factor(PCMADVegEggplant),
-  #   PCMADVegWaxGourd = as_factor(PCMADVegWaxGourd),
-  #   PCMADVegLettuce = as_factor(PCMADVegLettuce),
-  #   PCMADFruitRipe = as_factor(PCMADFruitRipe),
-  #   PCMADFruitOrange = as_factor(PCMADFruitOrange),
-  #   PCMADFruitBanana = as_factor(PCMADFruitBanana),
-  #   PCMADFruitMangosteen = as_factor(PCMADFruitMangosteen),
-  #   PCMADSweetsCakes = as_factor(PCMADSweetsCakes),
-  #   PCMADSweetsCandy = as_factor(PCMADSweetsCandy),
-  #   PCMADProteinEggs = as_factor(PCMADProteinEggs),
-  #   PCMADProteinKidney = as_factor(PCMADProteinKidney),
-  #   PCMADProteinSausages = as_factor(PCMADProteinSausages),
-  #   PCMADProteinBeef = as_factor(PCMADProteinBeef),
-  #   PCMADProteinPork = as_factor(PCMADProteinPork),
-  #   PCMADProteinChicken = as_factor(PCMADProteinChicken),
-  #   PCMADProteinFish = as_factor(PCMADProteinFish),
-  #   PCMADProteinCrikets = as_factor(PCMADProteinCrikets),
-  #   PCMADOtherPeanuts = as_factor(PCMADOtherPeanuts),
-  #   PCMADOtherChips = as_factor(PCMADOtherChips),
-  #   PCMADOtherNoodles = as_factor(PCMADOtherNoodles),
-  #   PCMADOtherFriedChicken = as_factor(PCMADOtherFriedChicken),
-  #   PCMADOtherSemiSolid = as_factor(PCMADOtherSemiSolid),
-  #   PCMADOtherEatOut = as_factor(PCMADOtherEatOut),
-  #   PCMADCheck = as_factor(PCMADCheck)) %>%
+  # Mutate MMF variables
+  mutate(
+    PCMADInfFormulaNum = replace_na(PCMADInfFormulaNum, 0),
+    PCMADMilkNum = replace_na(PCMADMilkNum, 0),
+    PCMADNumber = replace_na(PCMADNumber, 0),
+    # Generate 'feeds' variable
+    feeds = if_else(PCMADBreastfeeding == 0, 0, NA_real_) %>%
+      if_else(PCMADBreastfeeding == 0 & between(PCMADInfFormulaNum, 1, 7), ., . + PCMADInfFormulaNum) %>%
+      if_else(PCMADBreastfeeding == 0 & between(PCMADMilkNum, 1, 7), ., . + PCMADMilkNum) %>%
+      if_else(PCMADBreastfeeding == 0 & between(PCMADNumber, 1, 7), ., . + PCMADNumber),
+    # Generate 'MMF' variable
+    MMF = case_when(
+      PCMADBreastfeeding == 1 & ChildAgeMonths >= 6 & ChildAgeMonths < 9 & between(PCMADNumber, 2, 7) ~ 100,
+      PCMADBreastfeeding == 1 & ChildAgeMonths >= 9 & ChildAgeMonths < 24 & between(PCMADNumber, 3, 7) ~ 100,
+      PCMADBreastfeeding == 0 & ChildAgeMonths >= 6 & ChildAgeMonths < 24 & feeds >= 4 & between(PCMADNumber, 1, 7) ~ 100,
+      TRUE ~ 0)) %>% 
+  # Create 
+  mutate(
+    # Initialize milkfeeds and update based on conditions
+    milkfeeds = if_else(PCMADBreastfeeding == 0, 
+                        PCMADInfFormulaNum * between(PCMADInfFormulaNum, 1, 7) +
+                        PCMADMilkNum * between(PCMADMilkNum, 1, 7) +
+                        PCMADYogurtDrinkNum * between(PCMADYogurtDrinkNum, 1, 7), 
+                        NA_real_),
+    # Generate MMFF and multiply by 100
+    MMFF = if_else(PCMADBreastfeeding == 0 & ChildAgeMonths >= 6 & ChildAgeMonths < 24 & milkfeeds >= 2, 100, 0)) %>% 
   # Set Variable Labels
   set_variable_labels(
     ChildId = "Child ID",
@@ -265,9 +236,36 @@ MADChildren <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dt
     MDDCat = "Minimum Dietary Diversity Category")
   # Change labeled variables to factor variables
   
+# Merge the data with household data
+
+MADChildren <- MADChildren %>% 
+  left_join(HHCharacteristics, by = "interview__key")
+
+# Calculate Relevant Indicators
+
+# 1. Proportion of children between 6 and 23 months who have been breastfed yesterday
+
+BreastFeeding <- MADChildren %>% 
+  filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 23) %>%
+  group_by(Treatment, Province) %>%
+  summarise(
+    N = n(),
+    N_Breastfed = sum(PCMADBreastfeeding == 1),
+    Pct_Breastfed = N_Breastfed / N * 100,
+    N_NotBreastfed = sum(PCMADBreastfeeding == 0),
+    Pct_NotBreastfed = N_NotBreastfed / N * 100)
+  
     
-    
-    
+# 2. Proportion of children between 6 and 23 months who have met the MDD
+MDDChildren <- MADChildren %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+  group_by(Treatment) %>%
+  summarise(
+    N = n(),
+    N_MDDMet = sum(MDDCat == "MDD Met"),
+    Pct_MDDMet = N_MDDMet / N * 100,
+    N_MDDNotMet = sum(MDDCat == "MDD Not Met"),
+    Pct_MDDNotMet = N_MDDNotMet / N * 100)
     
     
     
