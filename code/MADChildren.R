@@ -127,34 +127,41 @@ MADChildren <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dt
       PCMADDairy + PCMADFleshFoods + 
       PCMADVitA + PCMADOtherFruitsVeg,
     MDDCat = case_when(
-      MDDScore >= 5 ~ "MDD Met",
-      TRUE ~ "MDD Not Met")) %>%
+      MDDScore >= 5 ~ 1,
+      TRUE ~ 0)) %>%
   # Mutate MMF variables
   mutate(
     PCMADInfFormulaNum = replace_na(PCMADInfFormulaNum, 0),
     PCMADMilkNum = replace_na(PCMADMilkNum, 0),
+    PCMADYogurtDrinkNum = replace_na(PCMADYogurtDrinkNum, 0),
+    PCMADYogurtNum = replace_na(PCMADYogurtNum, 0),
     PCMADNumber = replace_na(PCMADNumber, 0),
-    # Generate 'feeds' variable
-    feeds = if_else(PCMADBreastfeeding == 0, 0, NA_real_) %>%
-      if_else(PCMADBreastfeeding == 0 & between(PCMADInfFormulaNum, 1, 7), ., . + PCMADInfFormulaNum) %>%
-      if_else(PCMADBreastfeeding == 0 & between(PCMADMilkNum, 1, 7), ., . + PCMADMilkNum) %>%
-      if_else(PCMADBreastfeeding == 0 & between(PCMADNumber, 1, 7), ., . + PCMADNumber),
-    # Generate 'MMF' variable
-    MMF = case_when(
-      PCMADBreastfeeding == 1 & ChildAgeMonths >= 6 & ChildAgeMonths < 9 & between(PCMADNumber, 2, 7) ~ 100,
-      PCMADBreastfeeding == 1 & ChildAgeMonths >= 9 & ChildAgeMonths < 24 & between(PCMADNumber, 3, 7) ~ 100,
-      PCMADBreastfeeding == 0 & ChildAgeMonths >= 6 & ChildAgeMonths < 24 & feeds >= 4 & between(PCMADNumber, 1, 7) ~ 100,
-      TRUE ~ 0)) %>% 
-  # Create 
+    PCMADNumber = if_else(PCMADNumber < 0, 0, PCMADNumber),
+    # How many times does the child drink infant formula, milk, or eat solid, semi-solid or soft foods - For Non Breastfed children
+    feeds = if_else(PCMADBreastfeeding == 0, 0, NA_real_),  # Initialize 'feeds' variable to 0 where IYCF_4 == 0
+    feeds = if_else(PCMADBreastfeeding == 0 & between(PCMADInfFormulaNum, 1, 7), feeds + PCMADInfFormulaNum, feeds),  # Add the number of times the child drank infant formula
+    feeds = if_else(PCMADBreastfeeding == 0 & between(PCMADMilkNum, 1, 7), feeds + PCMADMilkNum, feeds),  # Add the number of times the child drink milk
+    feeds = if_else(PCMADBreastfeeding == 0 & between(PCMADNumber, 1, 7), feeds + PCMADNumber, feeds),  # Add the number of times the child ate solid, semi-solid or soft foods
+    MMF = case_when(  # Creating 'MMF' based on conditions
+      PCMADBreastfeeding == 1 & between(ChildAgeMonths, 6, 8) & between(PCMADNumber, 2, 7) ~ 1,  # Currently breastfeeding and 6-8 months
+      PCMADBreastfeeding == 1 & between(ChildAgeMonths, 9, 23) & between(PCMADNumber, 3, 7) ~ 1,  # Currently breastfeeding and 9-23 months
+      PCMADBreastfeeding == 0 & between(ChildAgeMonths, 6, 23) & feeds >= 4 & between(PCMADNumber, 1, 7) ~ 1,  # Not breastfeeding and 6-23 months
+          TRUE ~ 0  # Default to 0 if none of the conditions are met
+        ),
+    milkfeeds = if_else(PCMADBreastfeeding == 0, 0, NA_real_),  # Initialize 'milkfeeds' to 0 where IYCF_4 == 0
+    milkfeeds = if_else(PCMADBreastfeeding == 0 & between(PCMADInfFormulaNum, 1, 7), milkfeeds + PCMADInfFormulaNum, milkfeeds),  # Add IYCF_6Bnum
+    milkfeeds = if_else(PCMADBreastfeeding == 0 & between(PCMADMilkNum , 1, 7), milkfeeds + PCMADMilkNum , milkfeeds),  # Add IYCF_6Cnum
+    milkfeeds = if_else(PCMADBreastfeeding == 0 & between(PCMADYogurtDrinkNum, 1, 7), milkfeeds + PCMADYogurtDrinkNum, milkfeeds),  # Add IYCF_7_15num
+    milkfeeds = if_else(PCMADBreastfeeding == 0 & between(PCMADYogurtNum, 1, 7), milkfeeds + PCMADYogurtNum, milkfeeds),
+    MMFF = case_when(
+      milkfeeds >= 2 ~ 1,
+      milkfeeds < 2 ~ 0,
+    TRUE ~ NA)) %>%
+  # generate the MAD variable
   mutate(
-    # Initialize milkfeeds and update based on conditions
-    milkfeeds = if_else(PCMADBreastfeeding == 0, 
-                        PCMADInfFormulaNum * between(PCMADInfFormulaNum, 1, 7) +
-                        PCMADMilkNum * between(PCMADMilkNum, 1, 7) +
-                        PCMADYogurtDrinkNum * between(PCMADYogurtDrinkNum, 1, 7), 
-                        NA_real_),
-    # Generate MMFF and multiply by 100
-    MMFF = if_else(PCMADBreastfeeding == 0 & ChildAgeMonths >= 6 & ChildAgeMonths < 24 & milkfeeds >= 2, 100, 0)) %>% 
+    MAD = case_when(
+      MDDCat == 1 & MMF == 1 & (PCMADBreastfeeding == 1 | MMFF == 1) ~ 1,
+      TRUE ~ 0)) %>%
   # Set Variable Labels
   set_variable_labels(
     ChildId = "Child ID",
@@ -235,11 +242,30 @@ MADChildren <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dt
     MDDScore = "Minimum Dietary Diversity Score",
     MDDCat = "Minimum Dietary Diversity Category")
   # Change labeled variables to factor variables
-  
+
+# Read in the Household Characteristics data
+
+HHCharacteristics <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>% 
+  # Select relevant variables
+  select(interview__key, interview__id, Province, District, Commune, Village, HHID, IDPOOR, equitycardno, householduuid) %>% 
+  # Create treatment variable
+  mutate(Treatment = case_when(
+    IDPOOR == 1 | IDPOOR == 2 ~ "Treatment Group",
+    TRUE ~ "Control Group")) %>%
+  # Change variables to factor variables
+  mutate(
+    Province = as_factor(Province),
+    District = as_factor(District),
+    Commune = as_factor(Commune),
+    Village = as_factor(Village),
+    IDPOOR = as_factor(IDPOOR),
+    Treatment = as_factor(Treatment))
+
+ 
 # Merge the data with household data
 
 MADChildren <- MADChildren %>% 
-  left_join(HHCharacteristics, by = "interview__key")
+  left_join(HHCharacteristics, by = c("interview__key", "interview__id"))
 
 # Calculate Relevant Indicators
 
@@ -262,16 +288,61 @@ MDDChildren <- MADChildren %>%
   group_by(Treatment) %>%
   summarise(
     N = n(),
-    N_MDDMet = sum(MDDCat == "MDD Met"),
+    N_MDDMet = sum(MDDCat == 1),
     Pct_MDDMet = N_MDDMet / N * 100,
-    N_MDDNotMet = sum(MDDCat == "MDD Not Met"),
+    N_MDDNotMet = sum(MDDCat == 0),
     Pct_MDDNotMet = N_MDDNotMet / N * 100)
     
     
+# Calculate the proportion of children who met the MMF
+MMFChildren <- MADChildren %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+  group_by(Treatment) %>%
+  summarise(
+    N = n(),
+    N_MMFMet = sum(MMF == 1),
+    Pct_MMFMet = N_MMFMet / N * 100,
+    N_MMFNotMet = sum(MMF == 0),
+    Pct_MMFNotMet = N_MMFNotMet / N * 100)
+
+
+# Calculate the proportion of children who met the MMFF
+MMFFChildren <- MADChildren %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+  filter(!is.na(MMFF)) %>% # This code can be changed tp filter the children who are not being breastfed (Still gives the same results)
+  group_by(Treatment) %>%
+  summarise(
+    N = n(),
+    N_MMFFMet = sum(MMFF == 1),
+    Pct_MMFFMet = N_MMFFMet / N * 100,
+    N_MMFFNotMet = sum(MMFF == 0),
+    Pct_MMFFNotMet = N_MMFFNotMet / N * 100)
+
+# Calculate the percentage of children who meet MAD
+MADChildrenCat <- MADChildren %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+  group_by(Treatment) %>%
+  summarise(
+    N = n(),
+    N_MADMet = sum(MAD == 1),
+    Pct_MADMet = N_MADMet / N * 100,
+    N_MADNotMet = sum(MAD == 0),
+    Pct_MADNotMet = N_MADNotMet / N * 100)
+
     
-    
-    
-    
+# calculate MIXED MILK FEEDING UNDER SIX MONTHS (MixMF)
+MADMixMF <- MADChildren %>% 
+  filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 5) %>% 
+  mutate(MixMF = case_when(
+    PCMADBreastfeeding == 1 & (PCMADInfFormula == 1 | PCMADMilk == 1) ~ 1,
+    TRUE ~ 0)) %>%
+  group_by(Province, Treatment) %>%
+  summarise(
+    N = n(),
+    N_MixMF = sum(MixMF == 1),
+    Pct_MixMF = N_MixMF / N * 100,
+    N_NotMixMF = sum(MixMF == 0),
+    Pct_NotMixMF = N_NotMixMF / N * 100)
     
     
     
