@@ -20,12 +20,8 @@
 library(tidyverse)
 
 
-# Source MDD.R, FoodSecurity.R and MADChildren.R, and SurveyDesign.R files Relevant files for the Baseline indicators calculation 
-source("code/MDD.R")
-source("code/FoodSecurity.R")
-source("code/MADChildren.R")
-source("code/SurveyDesign.R")
-source("code/Functions.R")
+source("code/SurveyDesign.R") # This file converts the data into survey designed data
+source("code/Functions.R") # Functions for significance tests and creating Word documents
 
 ###################################################################################################################################################################
 
