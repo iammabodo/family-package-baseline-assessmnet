@@ -178,7 +178,10 @@ MADBreasfed <- SvyMADData %>%
   summarize(PropotionBreastfed = survey_mean() * 100,
             Total = survey_total()) %>% 
   select(-c("PropotionBreastfed_se", "Total_se")) %>% 
-  mutate(PCMADBreastfeeding = as_factor(PCMADBreastfeeding))
+  mutate(PCMADBreastfeeding = as_factor(PCMADBreastfeeding)) %>% 
+  filter(PCMADBreastfeeding == "Yes")
+
+MADBrestfedProptest <- svyttest(PCMADBreastfeeding == "Yes" ~ Treatment, design = SvyMADData)
 
 # Calculate the proportion of children meeting minimum diteray diversity
 MDDChildren <- SvyMADData %>% 
@@ -188,6 +191,8 @@ MDDChildren <- SvyMADData %>%
             Total = survey_total()) %>% 
   select(-c("MDDChilden_se", "Total_se")) %>% 
   filter(MDDCat == 1)
+
+MDDChldrenProptest <- svyttest(MDDCat == 1 ~ Treatment, design = SvyMADData)
 
 # Calculate the proportion of children who met the MMF
 MMFChildren <- SvyMADData %>% 
@@ -208,6 +213,8 @@ MMFFChildren <- SvyMADData %>%
   select(-c("MMFFChildren_se", "Total_se")) %>% 
   filter(MMFF == 1)
 
+MMFProptest <- svyttest(MMF == 1 ~ Treatment, design = SvyMADData)
+
 # Calculate the proportion of children who met MAD
 MADChildren <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
@@ -216,6 +223,8 @@ MADChildren <- SvyMADData %>%
             Total = survey_total()) %>% 
   select(-c("MADChildren_se", "Total_se")) %>% 
   filter(MAD == 1)
+
+MADProptest <- svyttest(MAD == 1 ~ Treatment, design = SvyMADData)
 
 # calculate MIXED MILK FEEDING UNDER SIX MONTHS (MixMF)
 MADMixMF <- SvyMADData %>% 
@@ -240,6 +249,7 @@ MADUnhealthyFoods <- SvyMADData %>%
   select(-c("UnhealthyFoods_se", "Total_se")) %>% 
   filter(PCMADUnhealthyFds == 1)
 
+prop_test <- svyttest(PCMADUnhealthyFds == 1 ~ Treatment, design = SvyMADData)
 ######################################################################################################################################
 
 ## Add code to create the impact evaluation balance tables after this line. combine all the indicators into one table
