@@ -3,12 +3,12 @@ library(haven)
 library(labelled)
 library(survey)
 library(RM.weights)
+library(eRm)
 
 
 FoodSecurity <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>% 
   select(interview__key, interview__id, Province, District, Commune, Village, HHID,
-         IDPOOR, equitycardno, householduuid, Sex, starts_with("S8_"))
-
+         IDPOOR, equitycardno, householduuid, Sex, starts_with("S8_")) 
 
 # Livelihoods Copying Strategies Data
 
@@ -151,73 +151,10 @@ LCSEN <- FoodSecurity %>%
     Treatment = "Family Package Treatment Group or Control Group")
   
 
-###########################################################################################################################################################################
-
-# Livelihoods Copying Strategies Indicator Calculation
-
-# Calculate the percentage of people using each coping strategy (by using MaxcopingBehaviourEN variable), disaggregated by treatment and control groups
-LCSENMainIndicators <- LCSEN %>% 
-  count(Treatment, MaxcopingBehaviourEN) %>% 
-  group_by(Treatment) %>%
-  mutate(percentage = n / sum(n) * 100)
-
-LCSENFoodCons <- LCSEN %>% 
-  filter(LCSENEngagedFood == "Yes") %>%
-  count(Treatment, MaxcopingBehaviourEN) %>% 
-  group_by(Treatment) %>%
-  mutate(percentage = n / sum(n) * 100)
-
-# Percentage of households enaged in stress coping strategies
-
-LCSENStressCopingEn <- LCSEN %>%
-  count(Treatment, StressCopingEn, Province) %>%
-  group_by(Province, Treatment) %>%
-  mutate(percentage = n / sum(n) * 100) %>% 
-  filter(StressCopingEn == "Yes")
-
-# Percentage of households enaged in crisis coping strategies
-
-LCSENCrisisCopingEn <- LCSEN %>%
-  count(Treatment, CrisisCopingEn, Province) %>%
-  group_by(Province, Treatment) %>%
-  mutate(percentage = n / sum(n) * 100) %>% 
-  filter(CrisisCopingEn == "Yes")
-
-# Percentage of households enaged in emergency coping strategies  
-LCSENEmergencyCopingEn <- LCSEN %>%
-  count(Treatment, EmergencyCopingEn, Province) %>%
-  group_by(Province, Treatment) %>%
-  mutate(percentage = n / sum(n) * 100) %>% 
-  filter(EmergencyCopingEn == "Yes")
-
-# Percentage of households engaged in stress coping to access food strategies by province
-LCSENFoodConsStress <- LCSEN %>%
-  filter(LCSENEngagedFood == "Yes") %>%
-  count(Treatment, StressCopingEn, Province) %>%
-  group_by(Province, Treatment) %>%
-  mutate(percentage = n / sum(n) * 100) %>% 
-  filter(StressCopingEn == "Yes")
-
-# Percentage of households engaged in crisis coping to access food strategies by province
-LCSENFoodConsCrisis <- LCSEN %>%
-  filter(LCSENEngagedFood == "Yes") %>%
-  count(Treatment, CrisisCopingEn, Province) %>%
-  group_by(Province, Treatment) %>%
-  mutate(percentage = n / sum(n) * 100) %>% 
-  filter(CrisisCopingEn == "Yes")
-
-# Percentage of households engaged in emergency coping to access food strategies by province
-LCSENFoodConsEmergency <- LCSEN %>%
-  filter(LCSENEngagedFood == "Yes") %>%
-  count(Treatment, EmergencyCopingEn, Province) %>%
-  group_by(Province, Treatment) %>%
-  mutate(percentage = n / sum(n) * 100) %>% 
-  filter(EmergencyCopingEn == "Yes")
-
 ##################################################################################################################################################################
 
 
-# REDUCED COPING STRATEGIES INDICATORS CALCULATION 
+# REDUCED COPING STRATEGIES INDICATORS DATA
 
 
 rCSIData <- FoodSecurity %>% 
@@ -302,55 +239,13 @@ rCSIData <- FoodSecurity %>%
     rCSIMealNbCat = "Did household reduced the number of meals eaten per day",
     rCSIMealAdultCat = "Did household restricted consumption by adults in order for small children to eat")
 
-# 1. Calculate mean RCSI by treatment and control groups - This is the main reduced coping strategies index
-rCSIDataIndicators <- rCSIData %>% 
-  group_by(Treatment, Province) %>% 
-  summarise(
-    MeanRCSI = mean(rCSI, na.rm = TRUE),
-    Total  = n()) %>% 
-  ungroup()
-
-
-# 2. Calculate the percentage of people using each coping strategy (by using rCSI variable), disaggregated by treatment and control groups
-rCSILessQlty <- rCSIData %>% 
-  count(Treatment, rCSILessQltyCat, Province) %>% 
-  group_by(Treatment, Province) %>%
-  mutate(percentage = n / sum(n) * 100) %>% 
-  filter(rCSILessQltyCat == "Yes")
-
-rCSIBorrow <- rCSIData %>%
-  count(Treatment, rCSIBorrowCat, Province) %>% 
-  group_by(Treatment, Province) %>%
-  mutate(percentage = n / sum(n) * 100) %>% 
-  filter(rCSIBorrowCat == "Yes")
-
-rCSIMealSize <- rCSIData %>%
-  count(Treatment, rCSIMealSizeCat, Province) %>% 
-  group_by(Treatment, Province) %>%
-  mutate(percentage = n / sum(n) * 100) %>% 
-  filter(rCSIMealSizeCat == "Yes")
-
-rCSIMealNb <- rCSIData %>%
-  count(Treatment, rCSIMealNbCat, Province) %>% 
-  group_by(Treatment, Province) %>%
-  mutate(percentage = n / sum(n) * 100) %>% 
-  filter(rCSIMealNbCat == "Yes")
-
-rCSIMealAdult <- rCSIData %>%
-  count(Treatment, rCSIMealAdultCat, Province) %>% 
-  group_by(Treatment, Province) %>%
-  mutate(percentage = n / sum(n) * 100) %>% 
-  filter(rCSIMealAdultCat == "Yes")
-
-
-
 ##################################################################################################################################################################
 
 # FOOD INSECURITY EXPERIENCE SCALE (FIES) INDICATORS
 
 FIESData <- FoodSecurity %>% 
-  select(interview__key, interview__id, Province, District, Commune, Village, HHID,
-         IDPOOR, equitycardno, householduuid, S8_3a:S8_3h) %>%
+  select(interview__key, Province, District, Commune, Village, IDPOOR, S8_3a:S8_3h) %>%
+  # Change the variables to factor variables
   mutate(
     Province = as_factor(Province),
     District = as_factor(District),
@@ -371,84 +266,19 @@ FIESData <- FoodSecurity %>%
   mutate(across(c(FIESWorried:FIESWholeDay), ~ na_if(., -99))) %>%
   mutate(across(c(FIESWorried:FIESWholeDay), ~ na_if(., -96))) %>%
   # Drop rows with NA values
-  #drop_na() %>%
+  drop_na() %>%
   # Change labelled variables to factor variables
   # Create the Treatment Variable
   mutate(Treatment = case_when(
     IDPOOR == "POOR_1" | IDPOOR == "POOR_2" ~ "Treatment Group",
     IDPOOR == "NEAR_POOR" ~ "Control Group",
     TRUE ~ "Missing"),
-    Treatment = factor(Treatment))
-
-# Calculate the percentage of people worried about lack of food, disaggregated by treatment and control groups
-FIESWorried <- FIESData %>% 
-  # Change the values of FIESWorried to factor variables
-  mutate(FIESWorried = as_factor(FIESWorried)) %>%
-  count(Treatment, FIESWorried) %>% 
-  group_by(Treatment) %>%
-  mutate(percentage = n / sum(n) * 100)
-
-# Calculate the percentage of people worried about not eating healthy and nutritious food, disaggregated by treatment and control groups
-FIESEatHealthy <- FIESData %>% 
-  # Change the values of FIESEatHealthy to factor variables
-  mutate(FIESEatHealthy = as_factor(FIESEatHealthy)) %>%
-  count(Treatment, FIESEatHealthy) %>% 
-  group_by(Treatment) %>%
-  mutate(percentage = n / sum(n) * 100)
-
-# Calculate the percentage of people worried about having few kinds of food to eat, disaggregated by treatment and control groups
-FIESFewFoods <- FIESData %>% 
-  count(Treatment, FIESFewFoods) %>% 
-  group_by(Treatment) %>%
-  mutate(percentage = n / sum(n) * 100)
-
-# Calculate the percentage of people worried about skipping meals, disaggregated by treatment and control groups
-FIESSkipMeal <- FIESData %>% 
-  # Change the values of FIESSkipMeal to factor variables
-  mutate(FIESSkipMeal = as_factor(FIESSkipMeal)) %>%
-  count(Treatment, FIESSkipMeal) %>% 
-  group_by(Treatment) %>%
-  mutate(percentage = n / sum(n) * 100)
-
-# Calculate the percentage of people worried about eating less than they should, disaggregated by treatment and control groups
-FIESAteLess <- FIESData %>% 
-  # Change the values of FIESAteLess to factor variables
-  mutate(FIESAteLess = as_factor(FIESAteLess)) %>%
-  count(Treatment, FIESAteLess) %>% 
-  group_by(Treatment) %>%
-  mutate(percentage = n / sum(n) * 100)
-
-# Calculate the percentage of people worried about running out of food, disaggregated by treatment and control groups
-FIESRanOut <- FIESData %>% 
-  # Change the values of FIESRanOut to factor variables
-  mutate(FIESRanOut = as_factor(FIESRanOut)) %>%
-  count(Treatment, FIESRanOut) %>% 
-  group_by(Treatment) %>%
-  mutate(percentage = n / sum(n) * 100)
-
-# Calculate the percentage of people worried about being hungry but not eating, disaggregated by treatment and control groups
-FIESHungry <- FIESData %>% 
-  # Change the values of FIESHungry to factor variables
-  mutate(FIESHungry = as_factor(FIESHungry)) %>%
-  count(Treatment, FIESHungry) %>% 
-  group_by(Treatment) %>%
-  mutate(percentage = n / sum(n) * 100)
-
-# Calculate the percentage of people worried about going a whole day and night without eating, disaggregated by treatment and control groups
-FIESWholeDay <- FIESData %>% 
-  # Change the values of FIESWholeDay to factor variables
-  mutate(FIESWholeDay = as_factor(FIESWholeDay)) %>%
-  count(Treatment, FIESWholeDay) %>% 
-  group_by(Treatment) %>%
-  mutate(percentage = n / sum(n) * 100)
+    Treatment = factor(Treatment),
+    # Calculate row scores for the FIES variables
+    FIESRowScore = rowSums(select(., FIESWorried:FIESWholeDay), na.rm = TRUE)) %>% 
+  select(Province, District, Commune, Village, IDPOOR, Treatment, FIESRowScore, everything())
 
 ##################################################################################################################################################################
-
-# RASCH MODEL FOR ESTIMATING FOOD INSECURITY EXPERIENCE SCALE (FIES) INDICATORS
-
-
-
-
 
 
 
