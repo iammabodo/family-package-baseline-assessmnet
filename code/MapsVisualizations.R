@@ -37,7 +37,9 @@ RCSIndexMap %>%
   ggplot() +
   geom_sf(aes(fill = MeanRCSI), color = "black") +
   facet_wrap(~Treatment) +
-  scale_fill_viridis_c() +
+  scale_fill_gradient(
+    low = "#F7ECD1",
+    high = "#D5B868") +
   theme_minimal() +
   labs(
     title = "Mean Resilience Capacity Score Index by Province",
@@ -54,9 +56,15 @@ LSCENMap <- COData %>%
 
 LSCENMap %>%
   ggplot() +
-  geom_sf(aes(fill = `Crisis coping strategies`), color = "black") +
+  geom_sf(aes(fill = `Stress coping strategies`), color = "black") +
+  geom_text(aes(label = Province, geometry = geometry), 
+            size = 3,
+            stat = "sf_coordinates",
+            color = "white") +
   facet_wrap(~Treatment) +
-  scale_fill_viridis_c() +
+  scale_fill_gradient(
+    low = "#F7ECD1",
+    high = "#D5B868") +
   theme_minimal() +
   labs(
     title = "Max Livelihoods Coping Strategies Essential Needs Index by Province",
@@ -65,7 +73,43 @@ LSCENMap %>%
   theme(legend.position = "bottom")
 
 
+LSCENMap %>%
+  ggplot() +
+  geom_sf(aes(fill = `Crisis coping strategies`), color = "black") +
+ # # geom_text(aes(label = Province, geometry = geometry), 
+ #            size = 3,
+ #            stat = "sf_coordinates",
+ #            color = "white") +
+  facet_wrap(~Treatment) +
+  scale_fill_gradient(
+    low = "#FBC7B3",
+    high = "#F37847") +
+  theme_minimal() +
+  labs(
+    title = "Max Livelihoods Coping Strategies Essential Needs (Crisis Coping Strategies) Index by Province",
+    fill = "Max LCSEN"
+  ) +
+  theme(legend.position = "bottom")
 
+
+LSCENMap %>%
+  #filter(!is.na(`Emergency coping strategies`)) %>%
+  ggplot() +
+  geom_sf(aes(fill = `Emergency coping strategies`), color = "black") +
+  # # geom_text(aes(label = Province, geometry = geometry), 
+  #            size = 3,
+  #            stat = "sf_coordinates",
+  #            color = "white") +
+  facet_wrap(~Treatment) +
+  scale_fill_gradient(
+    low = "#F4BFBF",
+    high = "#C00000") +
+  theme_minimal() +
+  labs(
+    title = "Max Livelihoods Coping Strategies Essential Needs (Crisis Coping Strategies) Index by Province",
+    fill = "Max LCSEN"
+  ) +
+  theme(legend.position = "bottom")
 
 
 
