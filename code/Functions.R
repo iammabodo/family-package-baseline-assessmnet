@@ -114,6 +114,88 @@ covariates <- c("poorscore", "strata_2", "strata_3", "strata_4", "strata_5", "st
   
 
 
+# Load necessary libraries
+library(dplyr)
+library(broom)    # for tidying statistical test outputs
+library(officer)  # for creating Word documents
+library(flextable) # for creating nice tables in Word documents
+
+# Function to perform t-test or proportion test based on indicator type and output results to a Word document
+perform_tests <- function(data, indicators, group_var = "Treatment", output_file = "test_results.docx") {
+  
+  # Initialize an empty list to store results
+  results <- list()
+  
+  for (indicator in indicators) {
+    
+    # Check if the indicator is binary (0 or 1)
+    is_binary <- all(data[[indicator]] %in% c(0, 1, NA))
+    
+    # Perform the appropriate test
+    if (is_binary) {
+      # Summarize data for proportion test
+      summary_data <- data %>%
+        group_by(!!sym(group_var)) %>%
+        summarise(
+          Successes = sum(!!sym(indicator), na.rm = TRUE),
+          Total = sum(!is.na(!!sym(indicator)))
+        )
+      
+      # Proportion test
+      test_result <- prop.test(summary_data$Successes, summary_data$Total)
+      
+      # Tidy the result and add it to the list
+      tidy_result <- tidy(test_result) %>%
+        mutate(Indicator = indicator,
+               Test = "Proportion Test")
+      
+    } else {
+      # T-test
+      test_result <- t.test(data[[indicator]] ~ data[[group_var]], na.rm = TRUE)
+      
+      # Tidy the result and add it to the list
+      tidy_result <- tidy(test_result) %>%
+        mutate(Indicator = indicator,
+               Test = "T-Test")
+    }
+    
+    # Append the result to the list
+    results[[indicator]] <- tidy_result
+  }
+  
+  # Combine all results into a single dataframe
+  results_table <- bind_rows(results)
+  
+  # Create a Word document
+  doc <- read_docx()
+  
+  # Add a title
+  doc <- doc %>% 
+    body_add_par("Test Results Summary", style = "heading 1")
+  
+  # Convert the results table to a flextable for better formatting in Word
+  results_flextable <- flextable(results_table)
+  
+  # Add the table to the Word document
+  doc <- doc %>% 
+    body_add_flextable(results_flextable)
+  
+  # Save the Word document
+  print(doc, target = output_file)
+  
+  return(results_table)
+}
+
+# Example usage:
+
+# Define the indicators (continuous and binary variables)
+indicators <- c("MDDCategory", "GDRScore")
+
+# Call the function and save the results to a Word file
+test_results <- perform_tests(MADChildren, indicators, output_file = "MADChildren_test_results.docx")
+
+# Print the results (also stored in the Word file)
+print(test_results)
 
 
 
