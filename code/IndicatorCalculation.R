@@ -25,6 +25,7 @@ source("code/MDD.R")
 source("code/FoodSecurity.R")
 source("code/MADChildren.R")
 source("code/SurveyDesign.R")
+source("code/Functions.R")
 
 ###################################################################################################################################################################
 
@@ -33,127 +34,218 @@ source("code/SurveyDesign.R")
 # a. Livelihoods Coping Strategies Essential Needs Indicator (LCS - EN)
 
 # Calculate the percentage of households using coping strategies to meet essential needs
-
-proportions <- svyby(~Treatment, by = ~StressCopingEn, design = SvyLCSENData, FUN = svymean, na.rm = TRUE)
-
-# b. RCSI Indicator
-
-meanRCSI <- svyby(~rCSI, by = ~Treatment, design = SvyrCSIData, FUN = svymean, na.rm = TRUE) %>% 
-  pivot_wider(names_from = Treatment, values_from = rCSI) %>% 
-  select(-se) %>% 
-  mutate(Indicator = "RCSI (mean)") %>% 
-  select(Indicator, everything())
-
-meanRCSI <- svyby(~rCSI, by = ~Treatment, design = SvyrCSIData, FUN = svymean, na.rm = TRUE) %>% 
-  pivot_wider(names_from = Treatment, values_from = rCSI) %>% 
-  select(-se) %>% 
-  mutate(
-    `Control Group` = coalesce(`Control Group`, `Treatment Group`),
-    `Treatment Group` = coalesce(`Treatment Group`, `Control Group`)
-  ) %>% 
-  mutate(Indicator = "RCSI (mean)") %>% 
-  select(Indicator, everything())
-
-print(meanRCSI)
+SvyLCSENMax <- SvyLCSENData %>% 
+  group_by(Treatment, MaxcopingBehaviourEN) %>% 
+  summarize(Pct_LCSENMax = survey_mean() * 100) %>% 
+  select( MaxcopingBehaviourEN, Treatment, Pct_LCSENMax) %>% 
+  pivot_wider(names_from = Treatment, values_from = Pct_LCSENMax) %>% 
+  mutate(Diff = `Control Group` - `Treatment Group`) %>% 
+  mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>% 
+  mutate(Indicator = "LCS - EN") %>%
+  select(Indicator, MaxcopingBehaviourEN, Overall, `Control Group`, `Treatment Group`, Diff)
 
 
+# Calculate the proportion of the population using coping strategies to afford food
+SvyLCSENFood <- SvyLCSENData %>% 
+  filter(LCSENEngagedFood == "Yes") %>% 
+  group_by(Treatment, MaxcopingBehaviourEN) %>% 
+  summarize(Pct_LCSENFood = survey_mean() * 100) %>% 
+  select(MaxcopingBehaviourEN, Treatment, Pct_LCSENFood) %>% 
+  pivot_wider(names_from = Treatment, values_from = Pct_LCSENFood) %>% 
+  mutate(Diff = `Control Group` - `Treatment Group`) %>% 
+  mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>% 
+  mutate(Indicator = "LCS - FS") %>%
+  select(Indicator, MaxcopingBehaviourEN, Overall, `Control Group`, `Treatment Group`, Diff)
 
-MDD <- svyby(~MDDCategory, ~Treatment, SvyDietQualityData, svymean, na.rm = TRUE)
+# Calculate the mean RCSI score
+
+meanRCSI <- SvyrCSIData %>% 
+  group_by(Treatment) %>% 
+  summarize(MeanRCSI = survey_mean(rCSI)) %>% 
+  select(Treatment, MeanRCSI) %>% 
+  pivot_wider(names_from = Treatment, values_from = MeanRCSI) %>%
+  mutate(Diff = `Control Group` - `Treatment Group`) %>%
+  mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
+  mutate(Indicator = "rCSI") %>%
+  select(Indicator, Overall, `Control Group`, `Treatment Group`, Diff)
 
 
+# Calculate the same indicators disaggreagted by province - this is key for vicualisations
+## Livelihoods Coping Strategies Essential Needs Indicator (LCS - EN)
+SvyLCSENMaxProvince <- SvyLCSENData %>% 
+  group_by(Treatment, MaxcopingBehaviourEN, Province) %>% 
+  summarize(Pct_LCSENMax = survey_mean() * 100) %>% 
+  select( MaxcopingBehaviourEN, Treatment, Province, Pct_LCSENMax) %>% 
+  pivot_wider(names_from = MaxcopingBehaviourEN, values_from = Pct_LCSENMax)
 
+## Livelihoods Coping Strategies Essential Needs Indicator (LCS - FS)
+SvyLCSENFoodProvince <- SvyLCSENData %>% 
+  filter(LCSENEngagedFood == "Yes") %>% 
+  group_by(Treatment, MaxcopingBehaviourEN, Province) %>% 
+  summarize(Pct_LCSENFood = survey_mean() * 100) %>% 
+  select(MaxcopingBehaviourEN, Treatment, Province, Pct_LCSENFood) %>% 
+  pivot_wider(names_from = MaxcopingBehaviourEN, values_from = Pct_LCSENFood)
 
+## Reduced Coping Strategies Index (rCSI)
+meanRCSIProvince <- SvyrCSIData %>% 
+  group_by(Treatment, Province) %>% 
+  summarize(MeanRCSI = survey_mean(rCSI)) %>% 
+  select(Treatment, Province, MeanRCSI) %>% 
+  pivot_wider(names_from = Treatment, values_from = MeanRCSI)
 
-# Calculate Relevant Indicators
+###################################################################################################################################################################
+# 2. Maternal Nutrition Indicators
 
-# 1. Proportion of children between 6 and 23 months who have been breastfed yesterday
+# Calculate minimum dietary diversity for women of reproductive age (MDD-W)
+MDDWomen <- SvyDietQualityData %>% 
+  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15 & MDDAge <= 49) %>%
+  group_by(Treatment, MDDCategory) %>% 
+  summarize(MDDWomen = survey_mean() * 100)
 
-BreastFeeding <- MADChildren %>% 
-  filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 23) %>%
-  group_by(Treatment, Province) %>%
-  summarise(
-    N = n(),
-    N_Breastfed = sum(PCMADBreastfeeding == 1),
-    Pct_Breastfed = N_Breastfed / N * 100,
-    N_NotBreastfed = sum(PCMADBreastfeeding == 0),
-    Pct_NotBreastfed = N_NotBreastfed / N * 100)
+# Calculate the proportion of women consuming all five food groups
+MDDWomen5Groups <- SvyDietQualityData %>% 
+  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15 & MDDAge <= 49) %>%
+  group_by(Treatment, MDDAllGroupsCat) %>%
+  summarize(MDDWomen5Groups = survey_mean() * 100)
 
-
-# 2. Proportion of children between 6 and 23 months who have met the MDD
-MDDChildren <- MADChildren %>% 
-  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+# Calculate the Non Communicable Disease Risk Score
+NCDRiskScore <- SvyDietQualityData %>% 
+  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15 & MDDAge <= 49) %>%
   group_by(Treatment) %>%
-  summarise(
-    N = n(),
-    N_MDDMet = sum(MDDCat == 1),
-    Pct_MDDMet = N_MDDMet / N * 100,
-    N_MDDNotMet = sum(MDDCat == 0),
-    Pct_MDDNotMet = N_MDDNotMet / N * 100)
+  summarize(NCDRiskScore = survey_mean(NCDRiskScore),
+            Total = survey_total())
 
+# Calculate the Non Communicable Diseases Protective Foods Score
+NCDProtectiveFoods <- SvyDietQualityData %>% 
+  filter(MDDGender == "Female") %>% 
+  filter(MDDAge >= 15 & MDDAge <= 49) %>%
+  group_by(Treatment) %>%
+  summarize(NCDProtectiveFoods = survey_mean(NCDProtScore),
+            Total = survey_total())
+
+# Calculate the GDRS Score
+GDRSScore <- SvyDietQualityData %>% 
+  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15 & MDDAge <= 49) %>%
+  group_by(Treatment) %>%
+  summarize(GDRSScore = survey_mean(GDRScore),
+            Total = survey_total())
+
+
+# Calculate the same indicators based on province - important for future visualisations
+## Minimum Dietary Diversity for womwn of reproductive age
+MDDWomenProvince <- SvyDietQualityData %>% 
+  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15 & MDDAge <= 49) %>%
+  group_by(Treatment, Province, MDDCategory) %>%
+  summarize(MDDWomen = survey_mean() * 100,
+            MDDTot = survey_total()) %>% 
+  filter(MDDCategory == "MDD Met")
+
+## Consumption of all five food groups by womwn of reproductive age - 5 food groups
+MDDWomen5GroupsProvince <- SvyDietQualityData %>% 
+  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15 & MDDAge <= 49) %>%
+  group_by(Treatment, Province, MDDAllGroupsCat) %>%
+  summarize(MDDWomen5Groups = survey_mean() * 100,
+            MDDTot = survey_total()) %>% 
+  filter(MDDAllGroupsCat == "All Food groups consumed")
+
+# Calculate the Non Communicable Disease Risk Score
+NCDRiskScoreProvince <- SvyDietQualityData %>% 
+  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15 & MDDAge <= 49) %>%
+  group_by(Treatment, Province) %>%
+  summarize(NCDRiskScore = survey_mean(NCDRiskScore),
+            Total = survey_total())
+
+# Calcualte the Non Communicable Diseases Protective Foods Score
+NCDProtectiveFoodsProvince <- SvyDietQualityData %>% 
+  filter(MDDGender == "Female") %>% 
+  filter(MDDAge >= 15 & MDDAge <= 49) %>%
+  group_by(Treatment, Province) %>%
+  summarize(NCDProtectiveFoods = survey_mean(NCDProtScore),
+            Total = survey_total())
+
+###########################################################################################################################
+
+# Nutrition for children under the age of 2 years (23 months)
+
+# Calculate the proportion of children who were breastfed over the last 24 hours
+MADBreasfed <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 23) %>%
+  group_by(Treatment, PCMADBreastfeeding) %>%
+  summarize(PropotionBreastfed = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("PropotionBreastfed_se", "Total_se")) %>% 
+  mutate(PCMADBreastfeeding = as_factor(PCMADBreastfeeding))
+
+# Calculate the proportion of children meeting minimum diteray diversity
+MDDChildren <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+  group_by(Treatment, MDDCat) %>%
+  summarize(MDDChilden = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("MDDChilden_se", "Total_se")) %>% 
+  filter(MDDCat == 1)
 
 # Calculate the proportion of children who met the MMF
-MMFChildren <- MADChildren %>% 
+MMFChildren <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
-  group_by(Treatment) %>%
-  summarise(
-    N = n(),
-    N_MMFMet = sum(MMF == 1),
-    Pct_MMFMet = N_MMFMet / N * 100,
-    N_MMFNotMet = sum(MMF == 0),
-    Pct_MMFNotMet = N_MMFNotMet / N * 100)
-
+  group_by(Treatment, MMF) %>%
+  summarize(MMFChildren = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("MMFChildren_se", "Total_se")) %>% 
+  filter(MMF == 1)
 
 # Calculate the proportion of children who met the MMFF
-MMFFChildren <- MADChildren %>% 
+MMFFChildren <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
   filter(!is.na(MMFF)) %>% # This code can be changed tp filter the children who are not being breastfed (Still gives the same results)
-  group_by(Treatment) %>%
-  summarise(
-    N = n(),
-    N_MMFFMet = sum(MMFF == 1),
-    Pct_MMFFMet = N_MMFFMet / N * 100,
-    N_MMFFNotMet = sum(MMFF == 0),
-    Pct_MMFFNotMet = N_MMFFNotMet / N * 100)
+  group_by(Treatment, MMFF) %>%
+  summarize(MMFFChildren = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("MMFFChildren_se", "Total_se")) %>% 
+  filter(MMFF == 1)
 
-# Calculate the percentage of children who meet MAD
-MADChildrenCat <- MADChildren %>% 
+# Calculate the proportion of children who met MAD
+MADChildren <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
-  group_by(Treatment) %>%
-  summarise(
-    N = n(),
-    N_MADMet = sum(MAD == 1),
-    Pct_MADMet = N_MADMet / N * 100,
-    N_MADNotMet = sum(MAD == 0),
-    Pct_MADNotMet = N_MADNotMet / N * 100)
-
+  group_by(Treatment, MAD) %>%
+  summarize(MADChildren = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("MADChildren_se", "Total_se")) %>% 
+  filter(MAD == 1)
 
 # calculate MIXED MILK FEEDING UNDER SIX MONTHS (MixMF)
-MADMixMF <- MADChildren %>% 
+MADMixMF <- SvyMADData %>% 
   filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 5) %>% 
   mutate(MixMF = case_when(
     PCMADBreastfeeding == 1 & (PCMADInfFormula == 1 | PCMADMilk == 1) ~ 1,
     TRUE ~ 0)) %>%
-  group_by(Province, Treatment) %>%
-  summarise(
-    N = n(),
-    N_MixMF = sum(MixMF == 1),
-    Pct_MixMF = N_MixMF / N * 100,
-    N_NotMixMF = sum(MixMF == 0),
-    Pct_NotMixMF = N_NotMixMF / N * 100)
+  group_by(Treatment, MixMF) %>%
+  summarize(MixMFChildren = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("MixMFChildren_se", "Total_se")) %>% 
+  filter(MixMF == 1)
 
 
-# Sentinel Unhealthy Foods Consumption
-MADUnhealthyFoods <- MADChildren %>% 
+# Calculate Sentinel Unhealthy Foods Consumption
+
+MADUnhealthyFoods <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
-  group_by(Treatment) %>%
-  summarise(
-    N = n(),
-    N_UnhealthyFoods = sum(PCMADUnhealthyFds == 1),
-    Pct_UnhealthyFoods = N_UnhealthyFoods / N * 100,
-    N_NoUHealthyFoods = sum(PCMADUnhealthyFds == 0),
-    Pct_NoUHealthyFoods = N_NoUHealthyFoods / N * 100)
+  group_by(Treatment, PCMADUnhealthyFds) %>%
+  summarize(UnhealthyFoods = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("UnhealthyFoods_se", "Total_se")) %>% 
+  filter(PCMADUnhealthyFds == 1)
 
+######################################################################################################################################
 
+## Add code to create the impact evaluation balance tables after this line. combine all the indicators into one table
 
 
 
