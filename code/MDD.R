@@ -122,8 +122,8 @@ DietQuality <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>%
   ungroup() %>%
   # Mutate MDDCategory and MDDAllGroupscat variables
   mutate(MDDCategory = case_when(
-    MDDScore >= 5 ~ "Minimum Dietary Diversity Met",
-    TRUE ~ "Minimum Dietary Diversity Not Met"),
+    MDDScore >= 5 ~ "MDD Met",
+    TRUE ~ "MDD not met"),
     MDDAllGroupsCat = case_when(
       MDDAllGroupsScore == 5 ~ "All Food groups consumed",
       TRUE ~ "All Food groups not consumed")) %>%
@@ -220,92 +220,6 @@ DietQuality <- left_join(DietQuality, MDDHHRoster, by = c("MDDId", "interview__i
 write_sav(DietQuality, "data/DietQuality.sav")
 write_dta(DietQuality, "data/DietQuality.dta")  
 write_csv(DietQuality, "data/DietQuality.csv")  
-
-## Indicators Calculation
-
-# 1. Calculate the percentage of respondents who met the minimum dietary diversity, by treatment group
-MDDWIndicator <- DietQuality %>%
-  filter(MDDAge >= 18 & MDDAge <= 49) %>%
-  filter(MDDGender == 2) %>% 
-  group_by(Treatment, Province) %>%
-  summarise(MDDMet = sum(MDDCategory == "Minimum Dietary Diversity Met"),
-            MDDNotMet = sum(MDDCategory == "Minimum Dietary Diversity Not Met"),
-            Total = n(),
-            MDDMetPerc = (MDDMet/Total)*100,
-            MDNotMEPerc = (MDDNotMet/ Total) * 100) %>%
-  ungroup() # to add the code to create the map after this line
-
-
-# 2. All five food groups consumed by the respondent
-MDDWAll5 <- DietQuality %>%
-  filter(MDDAge >= 18 & MDDAge <= 49) %>%
-  filter(MDDGender == 2) %>% 
-  group_by(Treatment, Province) %>%
-  summarise(AllGroups = sum(MDDAllGroupsCat == "All Food groups consumed"),
-            NotAllGroups = sum(MDDAllGroupsCat == "All Food groups not consumed"),
-            Total = n(),
-            AllGroupsPerc = (AllGroups/Total)*100,
-            NotAllGroupsPerc = (NotAllGroups/Total)*100) %>%
-  ungroup() # to add the code to create the map after this line
-  
-
-# 3. Mean GDRScore by treatment group and province
-MDDWGDRScore <- DietQuality %>%
-  filter(MDDAge >= 18 & MDDAge <= 49) %>%
-  filter(MDDGender == 2) %>% 
-  group_by(Treatment, Province) %>%
-  summarise(MeanGDRScore = mean(GDRScore, na.rm = TRUE),
-            n = n()) %>%
-  ungroup() # to add the code to create the map after this line
-  
-# 4. Mean NCDProtScore by treatment group and province
-MDDWNCDProtScore <- DietQuality %>%
-  filter(MDDAge >= 18 & MDDAge <= 49) %>%
-  filter(MDDGender == 2) %>% 
-  group_by(Treatment, Province) %>%
-  summarise(MeanNCDProtScore = mean(NCDProtScore, na.rm = TRUE),
-            n= n()) %>%
-  ungroup() # to add the code to create the map after this line
-
-# 5. Mean NCDRiskScore by treatment group and province
-MDDWNCDRiskScore <- DietQuality %>%
-  filter(MDDAge >= 18 & MDDAge <= 49) %>%
-  filter(MDDGender == 2) %>% 
-  group_by(Treatment, Province) %>%
-  summarise(MeanNCDRiskScore = mean(NCDRiskScore, na.rm = TRUE)) %>%
-  ungroup() # to add the code to create the map after this line
-  
-
-# Diet quality for all members, regardless for respondent age
-
-# 1. Calculate the percentage of respondents who met the minimum dietary diversity, by treatment group
-MDDIndicator <- DietQuality %>%
-  group_by(MDDGender, Treatment, Province) %>%
-  summarise(MDDMet = sum(MDDCategory == "Minimum Dietary Diversity Met"),
-            MDDNotMet = sum(MDDCategory == "Minimum Dietary Diversity Not Met"),
-            Total = n(),
-            MDDMetPerc = (MDDMet/Total)*100,
-            MDNotMEPerc = (MDDNotMet/ Total) * 100) %>%
-  ungroup() # to add the code to create the map after this line
-
-# 2. All five food groups consumed by the respondent
-
-MDDAll5 <- DietQuality %>%
-  group_by(MDDGender, Treatment, Province) %>%
-  summarise(AllGroups = sum(MDDAllGroupsCat == "All Food groups consumed"),
-            NotAllGroups = sum(MDDAllGroupsCat == "All Food groups not consumed"),
-            Total = n(),
-            AllGroupsPerc = (AllGroups/Total)*100,
-            NotAllGroupsPerc = (NotAllGroups/Total)*100) %>%
-  ungroup() # to add the code to create the map after this line
-
-# 3. Mean GDRScore by treatment group and province
-MDDGDRScore <- DietQuality %>%
-  group_by(MDDGender, Treatment, Province) %>%
-  summarise(MeanGDRScore = mean(GDRScore, na.rm = TRUE),
-            n = n()) %>%
-  ungroup() # to add the code to create the map after this line
-
 
 
 
