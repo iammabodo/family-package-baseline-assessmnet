@@ -119,7 +119,10 @@ MADChildren <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dt
     PCMADOtherFruitsVeg = case_when(
       PCMADFruitOrange == 1 | PCMADFruitBanana == 1 | PCMADFruitMangosteen == 1 | PCMADVegEggplant == 1 | 
         PCMADVegWaxGourd == 1 | PCMADVegLettuce == 1 ~ 1,
-      TRUE ~ 0)) %>% 
+      TRUE ~ 0),
+    PCMADUnhealthyFds = case_when(
+      PCMADSweetsCakes == 1 | PCMADSweetsCandy == 1 |  PCMADOtherChips == 1 | PCMADOtherNoodles == 1 | PCMADOtherFriedChicken == 1| PCMADOtherEatOut == 1 ~ 1,
+      TRUE ~ 0)) %>%
   # Create the MDD Score variable
   mutate(
     MDDScore = PCMADBreastfeeding + PCMADStaples + 
@@ -267,83 +270,3 @@ HHCharacteristics <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>
 MADChildren <- MADChildren %>% 
   left_join(HHCharacteristics, by = c("interview__key", "interview__id"))
 
-# Calculate Relevant Indicators
-
-# 1. Proportion of children between 6 and 23 months who have been breastfed yesterday
-
-BreastFeeding <- MADChildren %>% 
-  filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 23) %>%
-  group_by(Treatment, Province) %>%
-  summarise(
-    N = n(),
-    N_Breastfed = sum(PCMADBreastfeeding == 1),
-    Pct_Breastfed = N_Breastfed / N * 100,
-    N_NotBreastfed = sum(PCMADBreastfeeding == 0),
-    Pct_NotBreastfed = N_NotBreastfed / N * 100)
-  
-    
-# 2. Proportion of children between 6 and 23 months who have met the MDD
-MDDChildren <- MADChildren %>% 
-  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
-  group_by(Treatment) %>%
-  summarise(
-    N = n(),
-    N_MDDMet = sum(MDDCat == 1),
-    Pct_MDDMet = N_MDDMet / N * 100,
-    N_MDDNotMet = sum(MDDCat == 0),
-    Pct_MDDNotMet = N_MDDNotMet / N * 100)
-    
-    
-# Calculate the proportion of children who met the MMF
-MMFChildren <- MADChildren %>% 
-  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
-  group_by(Treatment) %>%
-  summarise(
-    N = n(),
-    N_MMFMet = sum(MMF == 1),
-    Pct_MMFMet = N_MMFMet / N * 100,
-    N_MMFNotMet = sum(MMF == 0),
-    Pct_MMFNotMet = N_MMFNotMet / N * 100)
-
-
-# Calculate the proportion of children who met the MMFF
-MMFFChildren <- MADChildren %>% 
-  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
-  filter(!is.na(MMFF)) %>% # This code can be changed tp filter the children who are not being breastfed (Still gives the same results)
-  group_by(Treatment) %>%
-  summarise(
-    N = n(),
-    N_MMFFMet = sum(MMFF == 1),
-    Pct_MMFFMet = N_MMFFMet / N * 100,
-    N_MMFFNotMet = sum(MMFF == 0),
-    Pct_MMFFNotMet = N_MMFFNotMet / N * 100)
-
-# Calculate the percentage of children who meet MAD
-MADChildrenCat <- MADChildren %>% 
-  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
-  group_by(Treatment) %>%
-  summarise(
-    N = n(),
-    N_MADMet = sum(MAD == 1),
-    Pct_MADMet = N_MADMet / N * 100,
-    N_MADNotMet = sum(MAD == 0),
-    Pct_MADNotMet = N_MADNotMet / N * 100)
-
-    
-# calculate MIXED MILK FEEDING UNDER SIX MONTHS (MixMF)
-MADMixMF <- MADChildren %>% 
-  filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 5) %>% 
-  mutate(MixMF = case_when(
-    PCMADBreastfeeding == 1 & (PCMADInfFormula == 1 | PCMADMilk == 1) ~ 1,
-    TRUE ~ 0)) %>%
-  group_by(Province, Treatment) %>%
-  summarise(
-    N = n(),
-    N_MixMF = sum(MixMF == 1),
-    Pct_MixMF = N_MixMF / N * 100,
-    N_NotMixMF = sum(MixMF == 0),
-    Pct_NotMixMF = N_NotMixMF / N * 100)
-    
-    
-    
-    
