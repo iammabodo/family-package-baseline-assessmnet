@@ -43,15 +43,16 @@ SvyLCSENMax <- SvyLCSENData %>%
 
 # Calculate the proportion of the population using coping strategies to afford food
 SvyLCSENFood <- SvyLCSENData %>% 
-  filter(LCSENEngagedFood == "Yes") %>% 
-  group_by(Treatment, MaxcopingBehaviourEN) %>% 
-  summarize(Pct_LCSENFood = survey_mean() * 100) %>% 
-  select(MaxcopingBehaviourEN, Treatment, Pct_LCSENFood) %>% 
+  #filter(LCSENEngagedFood == "Yes") %>% 
+  group_by(Treatment, MaxcopingBehaviourEN, LCSENEngagedFood) %>% 
+  summarize(Pct_LCSENFood = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(MaxcopingBehaviourEN, Total, Treatment, Pct_LCSENFood) %>% 
   pivot_wider(names_from = Treatment, values_from = Pct_LCSENFood) %>% 
   mutate(Diff = `Control Group` - `Treatment Group`) %>% 
   mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>% 
   mutate(Indicator = "LCS - FS") %>%
-  select(Indicator, MaxcopingBehaviourEN, Overall, `Control Group`, `Treatment Group`, Diff)
+  select(Indicator, MaxcopingBehaviourEN, Total, Overall, `Control Group`, `Treatment Group`, Diff)
 
 # Calculate the mean RCSI score
 
@@ -86,7 +87,7 @@ SvyLCSENFoodProvince <- SvyLCSENData %>%
 meanRCSIProvince <- SvyrCSIData %>% 
   group_by(Treatment, Province) %>% 
   summarize(MeanRCSI = survey_mean(rCSI)) %>% 
-  select(Treatment, Province, MeanRCSI) %>% 
+  select(Treatment, Province, MeanRCSI) #%>% 
   pivot_wider(names_from = Treatment, values_from = MeanRCSI)
 
 ###################################################################################################################################################################

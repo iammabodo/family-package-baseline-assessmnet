@@ -4,7 +4,11 @@ library(labelled)
 library(survey)
 library(srvyr)
 
-
+## SOURCE Some files
+# Source MDD.R, FoodSecurity.R and MADChildren.R, files Relevant files for the Baseline indicators calculation 
+source("code/MDD.R")
+source("code/FoodSecurity.R")
+source("code/MADChildren.R")
 
 # Read cover data
 SurveyDesignData<- read_dta("data/cover.dta")
