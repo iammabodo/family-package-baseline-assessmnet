@@ -94,22 +94,27 @@ LSCENMap %>%
 
 LSCENMap %>%
   #filter(!is.na(`Emergency coping strategies`)) %>%
+  mutate(`Emergency coping strategies` = round(`Emergency coping strategies`, 2)) %>%
   ggplot() +
   geom_sf(aes(fill = `Emergency coping strategies`), color = "black") +
-  # # geom_text(aes(label = Province, geometry = geometry), 
-  #            size = 3,
-  #            stat = "sf_coordinates",
-  #            color = "white") +
+  geom_text(aes(label = `Emergency coping strategies`, geometry = geometry),
+             size = 3,
+             stat = "sf_coordinates",
+             color = "black") +
   facet_wrap(~Treatment) +
   scale_fill_gradient(
     low = "#F4BFBF",
     high = "#C00000") +
-  theme_minimal() +
+  #theme_minimal() +
   labs(
     title = "Max Livelihoods Coping Strategies Essential Needs (Crisis Coping Strategies) Index by Province",
     fill = "Max LCSEN"
   ) +
-  theme(legend.position = "bottom")
+  theme(legend.position = "bottom",
+        axis.title = element_blank(),
+        # Turn off axis text
+        axis.text.x = element_blank(),
+        axis.text.y =  element_blank())
 
 
 
