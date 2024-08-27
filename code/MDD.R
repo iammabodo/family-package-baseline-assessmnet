@@ -122,11 +122,11 @@ DietQuality <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>%
   ungroup() %>%
   # Mutate MDDCategory and MDDAllGroupscat variables
   mutate(MDDCategory = case_when(
-    MDDScore >= 5 ~ "MDD Met",
-    TRUE ~ "MDD not met"),
+    MDDScore >= 5 ~ 1,
+    TRUE ~ 0),
     MDDAllGroupsCat = case_when(
-      MDDAllGroupsScore == 5 ~ "All Food groups consumed",
-      TRUE ~ "All Food groups not consumed")) %>%
+      MDDAllGroupsScore == 5 ~ 1,
+      TRUE ~ 0)) %>%
   # Mutate the family package treatment group variable
   mutate(Treatment = case_when(
     IDPOOR == "POOR_1" | IDPOOR == "POOR_2" ~ "Treatment Group",
