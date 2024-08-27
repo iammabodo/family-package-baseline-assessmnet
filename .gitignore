@@ -60,5 +60,8 @@ report/*
 # results folder
 results/*
 
+# Reports tables
+report tables/*
+
 # D Store file
 .DS_Store
