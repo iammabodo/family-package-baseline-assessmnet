@@ -5,6 +5,7 @@ library(haven)
 
 # Calculate Nutrition Indicators
 calculate_proportions_and_ttest_nut <- function(design, outcome_var, group_var) {
+  
   Sixto23 <- c("MDDCat", "MMF", "MMFF", "MAD", "PCMADUnhealthyFds")
   # Step 1: Calculate Proportions
   proportions <- svyby(
