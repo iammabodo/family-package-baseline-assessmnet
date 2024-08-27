@@ -58,6 +58,15 @@ SvyDietQualityData <- DietQuality %>%
                    strata = strataid, 
                    weights = NULL)
 
+
+# Merge the Livelihoods Coping Strategies FoodSecurity data with the Survey Design Data
+SvyLCSFS <- LCSFS %>% 
+  left_join(SurveyDesignData, by = "interview__key") %>% 
+  #Set the data to survey designed data
+  as_survey_design(ids = clusterid, 
+                   strata = strataid, 
+                   weights = NULL)
+
 ## Complete setting the data for survey analysis
 
 ############################################################################################################################################################
