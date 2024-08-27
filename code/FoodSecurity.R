@@ -278,6 +278,14 @@ FIESData <- FoodSecurity %>%
     FIESRowScore = rowSums(select(., FIESWorried:FIESWholeDay), na.rm = TRUE)) %>% 
   select(Province, District, Commune, Village, IDPOOR, Treatment, FIESRowScore, everything())
 
+
+# Livelihoods Coping Strategies - Food Security Indicator
+LCSFS <- LCSEN %>% 
+  mutate(
+    MaxcopingBehaviourFS = case_when(
+      LCSENEngagedFood == "No" ~ "Household not adopting coping strategies",
+      TRUE ~ MaxcopingBehaviourEN))
+
 ##################################################################################################################################################################
 
 
