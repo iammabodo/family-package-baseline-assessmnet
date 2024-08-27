@@ -1,201 +1,98 @@
 # Load necessary libraries
 library(tidyverse)
 library(survey)
+library(haven)
 
-# Set root folder paths
-base <- "C:/Users/<username>/OneDrive - UNICEF/Cambodia Family Package"
-indta <- file.path(base, "Baseline data/Final clean baseline data/Datasets")
-out <- file.path(base, "Baseline data/Final data after field work/Output")
-
-# Load the cover data
-cover <- read_dta(file.path(indta, "Sections", "cover.dta"))
-
-# Merge with the main dataset (replace <<datafile>> with your actual data file)
-main_data <- read_dta(file.path(indta, "Indicator data", "<<datafile>>.dta"))
-
-# Merge the datasets on household ID (hhid)
-merged_data <- cover %>%
-  left_join(main_data, by = "hhid") %>%
-  drop_na()  # Remove rows with NA values resulting from the merge
-
-# Create treatment indicators
-merged_data <- merged_data %>%
-  mutate(
-    T = if_else(IDPOOR < 3, 1, 0),  # Treatment indicator based on IDPoor classification
-    T2 = if_else(poorscore < 0, 1, 0)  # Treatment indicator based on poverty score
+# Calculate Nutrition Indicators
+calculate_proportions_and_ttest_nut <- function(design, outcome_var, group_var) {
+  Sixto23 <- c("MDDCat", "MMF", "MMFF", "MAD", "PCMADUnhealthyFds")
+  # Step 1: Calculate Proportions
+  proportions <- svyby(
+    as.formula(paste0("~ I(", outcome_var, " == 1)")), 
+    as.formula(paste0("~", group_var)), 
+    design, 
+    svymean
   )
-
-# Survey design settings (cluster at the village level, control for strata)
-svy_design <- svydesign(
-  id = ~clusterid, 
-  strata = ~strataid, 
-  data = merged_data
-)
-
-# Create strata dummies
-strata_dummies <- model.matrix(~ factor(strataid) - 1, data = merged_data)
-colnames(strata_dummies) <- paste0("strata_", seq_along(unique(merged_data$strataid)))
-
-# Add the strata dummies to the main data
-merged_data <- bind_cols(merged_data, as_tibble(strata_dummies))
-
-# List of covariates for baseline balance
-covariates <- c("poorscore", paste0("strata_", 2:7))
-
-# Output to verify the structure of the prepared dataset
-glimpse(merged_data)
-
-# Save the prepared data (optional)
-write_csv(merged_data, file.path(out, "prepared_data.csv"))
-
-
-# Function for creating balance tables
-
-
-# Assume `merged_data` is your dataset with a treatment indicator, covariates, and survey design information.
-# Set up survey design object
-svy_design <- svydesign(
-  id = ~clusterid,            # Cluster ID
-  strata = ~strataid,         # Strata ID
-  weights = ~weight,          # Sampling weights
-  data = merged_data,
-  nest = TRUE
-)
-
-# Function to create balance table for one covariate in survey data
-create_survey_balance_table <- function(svy_design, covariate, treatment) {
   
-  if (is.numeric(svy_design$variables[[covariate]])) {
-    # Continuous variable balance
-    summary_df <- svyby(~ get(covariate), ~ get(treatment), svy_design, svymean) %>%
-      rename(
-        control_mean = `get(covariate)[get(treatment)==0]`,
-        treatment_mean = `get(covariate)[get(treatment)==1]`
-      ) %>%
-      mutate(
-        diff = treatment_mean - control_mean,
-        p_value = coef(svyttest(as.formula(paste(covariate, "~", treatment)), svy_design))['p-value'],
-        smd = diff / sqrt((var(get(covariate)[get(treatment)==0], na.rm = TRUE) +
-                             var(get(covariate)[get(treatment)==1], na.rm = TRUE)) / 2)
-      )
-    
-  } else if (is.factor(svy_design$variables[[covariate]]) || is.character(svy_design$variables[[covariate]])) {
-    # Categorical variable balance (proportions)
-    prop_df <- svytable(~ get(covariate) + get(treatment), svy_design)
-    prop_df <- prop_df / margin.table(prop_df, 2)  # Proportions
-    
-    summary_df <- as.data.frame(prop_df) %>%
-      filter(get(covariate) == 1) %>%
-      select(-get(covariate)) %>%
-      spread(get(treatment), Freq) %>%
-      mutate(
-        diff = `1` - `0`,
-        p_value = prop.test(x = c(prop_df[2,2], prop_df[2,1]),
-                            n = c(sum(svy_design$variables[[treatment]] == 1),
-                                  sum(svy_design$variables[[treatment]] == 0)),
-                            correct = TRUE)$p.value,
-        smd = diff / sqrt((`0` * (1 - `0`) + `1` * (1 - `1`)) / 2)
-      ) %>%
-      rename(
-        treatment_prop = `1`,
-        control_prop = `0`
-      )
-  }
+  # Step 2: Extract Proportions
+  control_proportion <- proportions %>%
+    filter(!!sym(group_var) == "Control Group") %>%
+    pull(paste0("I(", outcome_var, " == 1)TRUE")) * 100
   
-  summary_df %>%
-    mutate(covariate = covariate) %>%
-    select(covariate, control_mean = control_prop, treatment_mean = treatment_prop, diff, p_value, smd)
+  treatment_proportion <- proportions %>%
+    filter(!!sym(group_var) == "Treatment Group") %>%
+    pull(paste0("I(", outcome_var, " == 1)TRUE")) * 100
+  
+  # Overall Proportion
+  overall_proportion <- (control_proportion + treatment_proportion) / 2
+  
+  # Step 3: Perform T-test
+  svy_ttest <- svyttest(as.formula(paste0("I(", outcome_var, " == 1) ~ ", group_var)), design = design)
+  
+  # Step 4: Extract Difference and P-value
+  diff_proportion <- treatment_proportion - control_proportion
+  p_value <- svy_ttest$p.value
+  
+  # Step 5: Combine Results
+  results <- tibble(
+    Indicator = outcome_var,
+    Overall = overall_proportion,
+    `Control Group` = control_proportion,
+    `Treatment Group` = treatment_proportion,
+    Difference = diff_proportion,
+    `P-value` = p_value
+  )
+  
+  return(results)
 }
 
-# List of covariates to check for balance
-covariates <- c("poorscore", "strata_2", "strata_3", "strata_4", "strata_5", "strata_6", "strata_7")
+
+
+# Calculate Livelihoods Coping Strategies Indicators
 
 
   
-
-
-# Load necessary libraries
+library(srvyr)
 library(dplyr)
-library(broom)    # for tidying statistical test outputs
-library(officer)  # for creating Word documents
-library(flextable) # for creating nice tables in Word documents
 
-# Function to perform t-test or proportion test based on indicator type and output results to a Word document
-perform_tests <- function(data, indicators, group_var = "Treatment", output_file = "test_results.docx") {
+calculate_proportions_and_ttest_cs <- function(svy_design, outcome_var, group_var) {
   
-  # Initialize an empty list to store results
-  results <- list()
+  # Step 1: Calculate Proportions Using `srvyr`
+  proportions <- svy_design %>%
+    group_by(!!sym(group_var)) %>%
+    summarize(
+      proportion = survey_mean(!!sym(outcome_var) == 1, na.rm = TRUE) * 100,
+      .groups = 'drop'
+    )
   
-  for (indicator in indicators) {
-    
-    # Check if the indicator is binary (0 or 1)
-    is_binary <- all(data[[indicator]] %in% c(0, 1, NA))
-    
-    # Perform the appropriate test
-    if (is_binary) {
-      # Summarize data for proportion test
-      summary_data <- data %>%
-        group_by(!!sym(group_var)) %>%
-        summarise(
-          Successes = sum(!!sym(indicator), na.rm = TRUE),
-          Total = sum(!is.na(!!sym(indicator)))
-        )
-      
-      # Proportion test
-      test_result <- prop.test(summary_data$Successes, summary_data$Total)
-      
-      # Tidy the result and add it to the list
-      tidy_result <- tidy(test_result) %>%
-        mutate(Indicator = indicator,
-               Test = "Proportion Test")
-      
-    } else {
-      # T-test
-      test_result <- t.test(data[[indicator]] ~ data[[group_var]], na.rm = TRUE)
-      
-      # Tidy the result and add it to the list
-      tidy_result <- tidy(test_result) %>%
-        mutate(Indicator = indicator,
-               Test = "T-Test")
-    }
-    
-    # Append the result to the list
-    results[[indicator]] <- tidy_result
-  }
+  # Step 2: Extract Proportions
+  control_proportion <- proportions %>%
+    filter(!!sym(group_var) == "Control Group") %>%
+    pull(proportion)
   
-  # Combine all results into a single dataframe
-  results_table <- bind_rows(results)
+  treatment_proportion <- proportions %>%
+    filter(!!sym(group_var) == "Treatment Group") %>%
+    pull(proportion)
   
-  # Create a Word document
-  doc <- read_docx()
+  # Step 3: Perform T-test Using `svyttest`
+  svy_ttest <- svyttest(outcome_var ~  group_var, design = svy_design)
   
-  # Add a title
-  doc <- doc %>% 
-    body_add_par("Test Results Summary", style = "heading 1")
+  # Step 4: Extract Difference and P-value
+  diff_proportion <- treatment_proportion - control_proportion
+  p_value <- svy_ttest$p.value
   
-  # Convert the results table to a flextable for better formatting in Word
-  results_flextable <- flextable(results_table)
+  # Step 5: Combine Results
+  results <- tibble(
+    Indicator = outcome_var,
+    `Control Group` = control_proportion,
+    `Treatment Group` = treatment_proportion,
+    Difference = diff_proportion,
+    `P-value` = p_value
+  )
   
-  # Add the table to the Word document
-  doc <- doc %>% 
-    body_add_flextable(results_flextable)
-  
-  # Save the Word document
-  print(doc, target = output_file)
-  
-  return(results_table)
+  return(results)
 }
 
-# Example usage:
-
-# Define the indicators (continuous and binary variables)
-indicators <- c("MDDCategory", "GDRScore")
-
-# Call the function and save the results to a Word file
-test_results <- perform_tests(MADChildren, indicators, output_file = "MADChildren_test_results.docx")
-
-# Print the results (also stored in the Word file)
-print(test_results)
 
 
 
@@ -204,30 +101,4 @@ print(test_results)
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+calculate_proportions_and_ttest_cs(SvyLCSFS, "MaxcopingBehaviourFS", "Treatment")
