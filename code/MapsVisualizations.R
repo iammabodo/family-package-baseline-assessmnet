@@ -254,8 +254,41 @@ MDDProvincePlotData %>%
     legend.position = "bottom"
   )
 
+ProvinceFIES <- read_xlsx("report tables/FIES.xlsx")
 
 
+
+FIESGraph <- ggplot(ProvinceFIES, aes(x = FIES, y = reorder(Province, FIES))) +  
+  geom_bar(stat = "identity", fill = "#0072B2", width = 0.7) +  # Set a blue fill color similar to the image and adjust bar width
+  scale_x_continuous(expand = c(0, 0),
+                     limits = c(0,75),
+                     breaks = seq(0, 75, 10),
+                     position = "top") +  # Set x-axis limits and breaks
+  scale_y_discrete(expand = c(0, 0.5)) +  # Set y-axis limits
+  theme(
+    panel.background = element_rect(fill = "white"),  # Set panel background color
+    panel.grid.major.x = element_line(colour = 'grey', size = 0.1),  # Remove horizontal grid lines
+    axis.ticks.length = unit(0, "cm"),  # Remove axis ticks
+    axis.title = element_blank(),  # Remove axis title
+    axis.line.y.left = element_line(color = "black"),  # Set y-axis line color and size
+    axis.text.y = element_blank(),  # Set y-axis text size, font, and color
+    axis.text.x = element_blank()  # Set x-axis text size, font, and color
+  ) +
+  geom_text(aes(0,label = Province), 
+            hjust = 0, size = 3.5, 
+            family = "opensans", color = "white",
+            nudge_x = 0.3) + # Add data labels
+  geom_text(aes(x= 32, label = paste0(FIES, "%")), # Setting the x-axis position
+            hjust = 0, size = 3, 
+            family = "opensans", color = "white") +  # Add data labels
+  labs(
+    title = "Food Insecurity Experience Scale (FIES) by Province (%)",
+    subtitle = "Majority of households are food insecure in almost all provinces, except in Banteay Meanchey, where less than 50% \n of households are food insecure",
+    caption = "Data Source: Family Package Baseline"
+  ) + 
+  theme(plot.title = element_text(size = 12, family = "opensans", face = "bold"),
+        plot.subtitle = element_text(size = 10, family = "opensans", face = "italic", lineheight = 1.5),
+        plot.caption = element_text(size = 10, hjust = 0, family = "opensans", color = "black"))
 
 
 
