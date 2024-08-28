@@ -22,7 +22,7 @@ library(openxlsx)
 library(showtext)
 library(patchwork)
 library(cowplot)
-
+library(stringr)
 
 font_add_google("Open Sans","opensans")
 showtext_auto()
@@ -536,4 +536,231 @@ SvyChildMAD <- calculate_proportions_and_ttest_nut(SvyMADData, "MAD", "Treatment
 SvyChildUnhealthyFoods <- calculate_proportions_and_ttest_nut(SvyMADData, "PCMADUnhealthyFds", "Treatment")
 SvyChildBreastfeeding <- calculate_proportions_and_ttest_nut(SvyMADData, "PCMADBreastfeeding", "Treatment")
 SvyChildMixMF <- calculate_proportions_and_ttest_nut(SvyMADData, "MixMF", "Treatment")
+
+#####################################################################################################################################
+
+# Individual components of food security indicators
+# 1. FIES
+FIESWorriedProvince <- FIESData %>%
+  count(Province, FIESWorried) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(FIESWorried == 1) %>%
+  select(Province, Pct) %>%
+  rename(FIESWorried = Pct)
+
+FIESEatHealthyProvince <- FIESData %>%
+  count(Province, FIESEatHealthy) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(FIESEatHealthy == 1) %>% 
+  select(Province, Pct) %>%
+  rename(FIESEatHealthy = Pct)
+
+
+FIESFewFoodsProvince <- FIESData %>%
+  count(Province, FIESFewFoods) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(FIESFewFoods == 1) %>% 
+  select(Province, Pct) %>% 
+  rename(FIESFewFoods = Pct)
+  
+
+FIESSkipMealProvince <- FIESData %>%
+  count(Province, FIESSkipMeal) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(FIESSkipMeal == 1) %>% 
+  select(Province, Pct) %>% 
+  rename(FIESSkipMeal = Pct)
+
+FIESAteLessProvince <- FIESData %>%
+  count(Province, FIESAteLess) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(FIESAteLess == 1) %>% 
+  select(Province, Pct) %>%
+  rename(FIESAteLess = Pct)
+
+FIESRanOutProvince <- FIESData %>%
+  count(Province, FIESRanOut) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(FIESRanOut == 1) %>%
+  select(Province, Pct) %>%
+  rename(FIESRanOut = Pct)
+
+FIESHungryProvince <- FIESData %>%
+  count(Province, FIESHungry) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(FIESHungry == 1) %>%
+  select(Province, Pct) %>%
+  rename(FIESHungry = Pct)
+
+FIESWholeDayProvince <- FIESData %>%
+  count(Province, FIESWholeDay) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(FIESWholeDay == 1) %>% 
+  select(Province, Pct) %>%
+  rename(FIESWholeDay = Pct)
+
+# Join all the food security indicators together
+FIESProvince <- full_join(FIESWorriedProvince, FIESEatHealthyProvince, by = "Province") %>%
+  full_join(FIESFewFoodsProvince, by = "Province") %>%
+  full_join(FIESSkipMealProvince, by = "Province") %>%
+  full_join(FIESAteLessProvince, by = "Province") %>%
+  full_join(FIESRanOutProvince, by = "Province") %>%
+  full_join(FIESHungryProvince, by = "Province") %>%
+  full_join(FIESWholeDayProvince, by = "Province") 
+
+
+# 2. RCSI
+rCSILessQltyCatProvince <- rCSIData %>% 
+  count(Province, rCSILessQltyCat) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(rCSILessQltyCat == "Yes") %>%
+  select(Province, Pct) %>%
+  rename(rCSILessQltyCat = Pct)
+
+rCSIBorrowCatProvince <- rCSIData %>% 
+  count(Province, rCSIBorrowCat) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(rCSIBorrowCat == "Yes") %>%
+  select(Province, Pct) %>%
+  rename(rCSIBorrowCat = Pct)
+
+
+rCSIMealSizeCatProvince <- rCSIData %>% 
+  count(Province, rCSIMealSizeCat) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(rCSIMealSizeCat == "Yes") %>%
+  select(Province, Pct) %>% 
+  rename(rCSIMealSizeCat = Pct)
+
+rCSIMealNbCatProvince <- rCSIData %>% 
+  count(Province, rCSIMealNbCat) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(rCSIMealNbCat == "Yes") %>%
+  select(Province, Pct) %>%
+  rename(rCSIMealNbCat = Pct)
+
+rCSIMealAdultCatProvince <- rCSIData %>% 
+  count(Province, rCSIMealAdultCat) %>%
+  group_by(Province) %>%
+  mutate(Pct = n / sum(n) * 100) %>% 
+  filter(rCSIMealAdultCat == "Yes") %>%
+  select(Province, Pct) %>%
+  rename(rCSIMealAdultCat = Pct)
+
+# Join all the RCSI Indicators
+RCSIProvince <- full_join(rCSILessQltyCatProvince, rCSIBorrowCatProvince, by = "Province") %>%
+  full_join(rCSIMealSizeCatProvince, by = "Province") %>%
+  full_join(rCSIMealNbCatProvince, by = "Province") %>%
+  full_join(rCSIMealAdultCatProvince, by = "Province")
+
+
+# rCSI without disagregating by province
+rCSILessQltyCat <- rCSIData %>% 
+  count(rCSILessQltyCat) %>% 
+  mutate(Pct = n / sum(n) * 100) %>% 
+  select(rCSILessQltyCat, Pct) %>%
+  pivot_wider(names_from = rCSILessQltyCat, values_from = Pct) %>% 
+  mutate(strategy = "Relied on less prefered and less expensive food",
+         Percentage = Yes) %>%
+  select(strategy, Percentage)
+
+rCSIBorrowCat <- rCSIData %>%
+  count(rCSIBorrowCat) %>% 
+  mutate(Pct = n / sum(n) * 100) %>% 
+  select(rCSIBorrowCat, Pct) %>%
+  pivot_wider(names_from = rCSIBorrowCat, values_from = Pct) %>% 
+  mutate(strategy = "Borrowed food from relative or friend",
+         Percentage = Yes) %>%
+  select(strategy, Percentage)
+
+
+rCSIMealSizeCat <- rCSIData %>%
+  count(rCSIMealSizeCat) %>% 
+  mutate(Pct = n / sum(n) * 100) %>% 
+  select(rCSIMealSizeCat, Pct) %>%
+  pivot_wider(names_from = rCSIMealSizeCat, values_from = Pct) %>% 
+  mutate(strategy = "Reduced meal size or portions",
+         Percentage = Yes) %>%
+  select(strategy, Percentage)
+  
+
+rCSIMealNbCat <- rCSIData %>%
+  count(rCSIMealNbCat) %>% 
+  mutate(Pct = n / sum(n) * 100) %>% 
+  select(rCSIMealNbCat, Pct) %>%
+  pivot_wider(names_from = rCSIMealNbCat, values_from = Pct) %>% 
+  mutate(strategy = "Reduced number of meals",
+         Percentage = Yes) %>%
+  select(strategy, Percentage)
+
+rCSIMealAdultCat <- rCSIData %>%
+  count(rCSIMealAdultCat) %>% 
+  mutate(Pct = n / sum(n) * 100) %>% 
+  select(rCSIMealAdultCat, Pct) %>%
+  pivot_wider(names_from = rCSIMealAdultCat, values_from = Pct) %>% 
+  mutate(strategy = "Reduced meal size or portions for adults",
+         Percentage = Yes) %>%
+  select(strategy, Percentage)
+
+# Bind these coping strategies together
+rCSICopingStrategies <- bind_rows(rCSILessQltyCat, rCSIBorrowCat, rCSIMealSizeCat, rCSIMealNbCat, rCSIMealAdultCat) %>% 
+  # Round all the numeric variables to 2 decimal places
+  mutate_if(is.numeric, ~round(., 2)) %>% 
+  arrange(Percentage) %>% 
+  mutate(strategy = str_wrap(strategy, 20))
+
+
+
+
+rCSIMealSizeWho <- rCSIData %>% 
+  drop_na(rCSIMealSizeWho) %>% 
+  count(rCSIMealSizeWho) %>% 
+  mutate(Pct = n / sum(n) * 100) %>% 
+  select(rCSIMealSizeWho, Pct) %>%
+  pivot_wider(names_from = rCSIMealSizeWho, values_from = Pct) %>% 
+  mutate(Indicator = "Reduced meal sizes (All HH Members)") %>% 
+  select(Indicator, everything()) %>% 
+  rename(`Male Adults` = `Mainly adult male (18 and above)`,
+         `Female Adults` = `Mainly adult female (18 and above)`) %>% 
+  mutate(`Other Options` = `Mainly children &amp; youth male (&lt;18)` + `All adults equally` + `All family members equally`) %>%
+  select(Indicator, `Male Adults`, `Female Adults`, `Other Options`)
+
+
+rCSIMealAdultWho <- rCSIData %>% 
+  drop_na(rCSIMealAdultWho) %>% 
+  count(rCSIMealAdultWho) %>% 
+  mutate(Pct = n / sum(n) * 100) %>% 
+  select(rCSIMealAdultWho, Pct) %>%
+  pivot_wider(names_from = rCSIMealAdultWho, values_from = Pct) %>%
+  mutate(Indicator = "Reduced meal sizes (Adults only)") %>% 
+  select(Indicator, everything()) %>%
+  rename(`Male Adults` = `Mainly adult male (18 and above)`,
+         `Female Adults` = `Mainly adult female (18 and above)`,
+         `Other Options` = `All adults equally`) %>%
+  select(Indicator, `Male Adults`, `Female Adults`, `Other Options`)
+
+# Merge the two tables for the visualisation
+rCSIMealSizeWhoTable <- bind_rows(rCSIMealSizeWho, rCSIMealAdultWho) %>% 
+  # Round all the numeric variables to 2 decimal places
+  mutate_if(is.numeric, ~round(., 2))
+
+
+
+
+# 3. Coping Strategies
+
+
+
 
