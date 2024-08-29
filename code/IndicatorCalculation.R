@@ -52,6 +52,7 @@ SvyLCSENMax <- SvyLCSENData %>%
 
 
 
+
 # Calculate the proportion of the population using coping strategies to afford food
 # Livelihoods Coping Strategies Food Security Indicator
 # Calculate the proportion of households using coping strategies to meet food security needs
@@ -732,10 +733,10 @@ rCSIMealSizeWho <- rCSIData %>%
   pivot_wider(names_from = rCSIMealSizeWho, values_from = Pct) %>% 
   mutate(Indicator = "Reduced meal sizes (All HH Members)") %>% 
   select(Indicator, everything()) %>% 
-  rename(`Male Adults` = `Mainly adult male (18 and above)`,
-         `Female Adults` = `Mainly adult female (18 and above)`) %>% 
-  mutate(`Other Options` = `Mainly children &amp; youth male (&lt;18)` + `All adults equally` + `All family members equally`) %>%
-  select(Indicator, `Male Adults`, `Female Adults`, `Other Options`)
+  rename(`Male Adults (%)` = `Mainly adult male (18 and above)`,
+         `Female Adults (%)` = `Mainly adult female (18 and above)`) %>% 
+  mutate(`Other Options (%)` = `Mainly children &amp; youth male (&lt;18)` + `All adults equally` + `All family members equally`) %>%
+  select(Indicator, `Male Adults (%)`, `Female Adults (%)`, `Other Options (%)`)
 
 
 rCSIMealAdultWho <- rCSIData %>% 
@@ -746,10 +747,10 @@ rCSIMealAdultWho <- rCSIData %>%
   pivot_wider(names_from = rCSIMealAdultWho, values_from = Pct) %>%
   mutate(Indicator = "Reduced meal sizes (Adults only)") %>% 
   select(Indicator, everything()) %>%
-  rename(`Male Adults` = `Mainly adult male (18 and above)`,
-         `Female Adults` = `Mainly adult female (18 and above)`,
-         `Other Options` = `All adults equally`) %>%
-  select(Indicator, `Male Adults`, `Female Adults`, `Other Options`)
+  rename(`Male Adults (%)` = `Mainly adult male (18 and above)`,
+         `Female Adults (%)` = `Mainly adult female (18 and above)`,
+         `Other Options (%)` = `All adults equally`) %>%
+  select(Indicator, `Male Adults (%)`, `Female Adults (%)`, `Other Options (%)`)
 
 # Merge the two tables for the visualisation
 rCSIMealSizeWhoTable <- bind_rows(rCSIMealSizeWho, rCSIMealAdultWho) %>% 

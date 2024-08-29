@@ -8,6 +8,7 @@ library(cowplot)
 library(gridExtra)
 library(gt)
 library(grid)
+library(png)
 
 ## Selected Provinces: Banteay Meanchey Kampong Cham Kampong Speu Kampot  Kratie Phnom Penh Preah Sihanouk  Siemreap Tboung Khmum  
 ## Source the Indicator Calculation File
@@ -146,8 +147,8 @@ LCSFSGraph <- ggplot(SvyLCSENFoodProvinceTab, aes(x = Province, y = Pct_LCSENFoo
   )) +
   scale_color_identity() +  # This ensures the color mapping is applied directly
   labs(
-    title = "Majority of Households are adopting coping strategies in order to be able to afford food",
-    subtitle = "Although in Kampong Cham and Tboung Khmum, with a higher percentage of households were not adopting coping strategies",
+    title = "Livelihoods Coping Strategies - Food Security (%)",
+    subtitle = "Percentage og households adopting coping strategies for food security",
     x = "Province",
     y = "Percentage of Households",
     fill = "Coping Strategy"
@@ -175,7 +176,7 @@ LCSFSGraph <- ggplot(SvyLCSENFoodProvinceTab, aes(x = Province, y = Pct_LCSENFoo
   )
 
 # Save the graph
-ggsave("figures/Livelihoods_Coping_Strategies_by_Province_High_Quality.png", plot = LCSFSGraph)
+ggsave("figures/Livelihoods_Coping_Strategies_by_Province_High_Quality.png", plot = LCSFSGraph, width = 3.41, height = 2.57, units = "in")
 
 ####################################################################################################################################################
 
@@ -304,8 +305,8 @@ ReducedCopingStrategiesGraph <- ggplot(rCSICopingStrategies, aes(x = reorder(str
   geom_hline(yintercept = 0, color = "black", size = 1) +
   geom_text(aes(label = paste0(Percentage, "%")), vjust = 10, size = 3.5, family = "opensans", color = "#ffffff") +
   #coord_flip() + # Flips the coordinates for better readability
-  labs(title = "The most used consumption based was relying on less prefferd food",
-       subtitle = "Whenever reducing meal sizes or portions was adopted, women household members are making a big sacrifice compared to men",
+  labs(title = "Consumption Based Coping Strategies Adopted (%)",
+       subtitle = "Percentage of households using coping strategies to afford food, as measured by the rCSI",
        x = "Coping Strategies Adopted",
        y = "Percentage",
        caption = "Data Source: Family Package Baseline") +
@@ -319,33 +320,96 @@ ReducedCopingStrategiesGraph <- ggplot(rCSICopingStrategies, aes(x = reorder(str
     axis.title.x = element_text(family = "opensans", size = 10, color = "black", face = "bold", margin = margin(b = 10, t = 10)),
     axis.ticks.x  = element_blank(),
     # Theme the titles
-    plot.title = element_text(family = "opensans", size = 12, color = "black", face = "bold", margin = margin(b = 10, t = 10, l = 20)),
-    plot.subtitle = element_text(family = "opensans", size = 10, color = "black", face = "italic", margin = margin(b = 10, l = 20)),
-    plot.caption = element_text(family = "opensans", size = 10, color = "black", margin = margin(t = 10, l = 20, b = 10), hjust = 0))
+    plot.title = element_text(family = "opensans", size = 14, color = "black", face = "bold", margin = margin(l = 40, b = 20)),
+    plot.subtitle = element_text(family = "opensans", size = 10, color = "black", face = "italic", margin = margin(l = 20)),
+    plot.caption = element_text(family = "opensans", size = 10, color = "black", margin = margin(t = 10, l = 20, b = 10), hjust = 0),
+    plot.margin = margin(10, 10, 10, 10))
 
 
-StrategiesTable <- rCSIMealSizeWhoTable %>% 
+ggsave("figures/rCSI.png", plot = ReducedCopingStrategiesGraph, width = 3.41, height = 2.57, units = "in")
+
+library(gt)
+library(dplyr)
+
+# Assuming rCSIMealSizeWhoTable is already created
+library(gt)
+library(dplyr)
+
+# Assuming rCSIMealSizeWhoTable is already created
+
+StrategiesTable <- rCSIMealSizeWhoTable %>%
   gt() %>%
+  opt_table_font(
+    font = google_font("Open Sans")
+  ) %>% 
   tab_header(
-    title = "Who is reducing Meal Sizes (%)") %>% 
+    title = md("**When reducing meal sizes is an option...**"),
+    subtitle = md("*Female household members reducing meal sizes compared to men*")
+  ) %>%
+  tab_footnote(
+    footnote = md("***Include adults only or children only or all family members***"),
+    locations = cells_column_labels(`Other Options (%)`)
+  ) %>% 
   fmt_number(
-    columns = c(`Male Adults`, `Female Adults`, `Other Options`),
+    columns = c(`Male Adults (%)`, `Female Adults (%)`, `Other Options (%)`),
     decimals = 1
+  ) %>%
+  tab_style(
+    style = cell_fill(
+      color = "#7A96BF"  # Apply this color to the entire "Female Adults" column including header
+    ),
+    locations = cells_body(columns = "Female Adults (%)")
+  ) %>%
+  tab_style(
+    style = cell_fill(
+      color = "#7A96BF"  # Apply the lighter color to the header of the "Female Adults (%)" column
+    ),
+    locations = cells_column_labels(columns = `Female Adults (%)`)) %>% 
+  tab_style(
+    style = cell_text(weight = "bold"),  # Bold the column headers
+    locations = cells_column_labels(everything())
+  ) %>%
+  cols_label(
+    `Male Adults (%)` = md("Male<br>Adults (%)"),
+    `Female Adults (%)` = md("Female<br>Adults (%)"),
+    `Other Options (%)` = md("Other<br>Options (%)")
+  ) %>% 
+  cols_align(align = "center",
+             columns = c(`Male Adults (%)`, `Female Adults (%)`, `Other Options (%)`)) %>% 
+  tab_style(style = "vertical-align:center",
+            locations = cells_body(columns = Indicator)) %>% 
+  cols_width(
+    c(`Male Adults (%)`, `Female Adults (%)`, `Other Options (%)`)  ~ px(200)
   ) %>% 
   tab_options(
+    table.font.names = "Open Sans",
     heading.align = "left",
-    #table.font.sizes = 10,
-    table.align = "center",
-    data_row.padding = px(5)) %>% 
-  tab_style(
-    style = cell_text(
-      weight = "bold",
-      color = "black",
-      align = "center",
-      font = "opensans"
-    ),
-    locations = cells_column_labels(
-     everything()))
-  
+    heading.background.color = "#7A96BF",
+    #column_labels.align = "centre"  # Center the column headings
+  )
+
+# Display the table
+StrategiesTable
+
+
+
+gtsave(StrategiesTable, "figures/StrategiesTable.png")
+# combine the table and the reduced coping strategies grapgh using patchwork
+
+table_img <- readPNG("figures/StrategiesTable.png")
+
+table_grob <- rasterGrob(table_img, interpolate = T)
+
+RCSIGraph <- ReducedCopingStrategiesGraph +
+  #coord_cartesian(ylim = c(0, 75)) +
+  inset_element(table_grob,
+                left = 0.15,
+                top = 0.80,
+                bottom = 0.6,
+                right = 0.6)
+
+
+LCSFSGraph / RCSIGraph
+
 
 
