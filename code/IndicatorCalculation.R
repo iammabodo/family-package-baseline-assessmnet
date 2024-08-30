@@ -30,7 +30,7 @@ showtext_auto()
 source("code/SurveyDesign.R") # This file converts the data into survey designed data
 source("code/Functions.R") # Functions for significance tests and creating Word documents
 
-calculate_proportions_and_ttest(SvyMADData, "MAD", "Treatment")
+#calculate_proportions_and_ttest(SvyMADData, "MAD", "Treatment")
 
 ###################################################################################################################################################################
 
@@ -58,7 +58,7 @@ SvyLCSENMax <- SvyLCSENData %>%
 # Calculate the proportion of households using coping strategies to meet food security needs
 SvyLCSFSMax <- SvyLCSFS %>% 
   group_by(Treatment, MaxcopingBehaviourFS) %>% 
-  summarize(Pct_LCSFSMax = survey_prop() * 100) %>% 
+  summarise(Pct_LCSFSMax = survey_prop() * 100) %>% 
   select( MaxcopingBehaviourFS, Treatment, Pct_LCSFSMax) %>% 
   pivot_wider(names_from = Treatment, values_from = Pct_LCSFSMax) %>% 
   mutate(Diff = `Treatment Group` - `Control Group`) %>% 
@@ -79,7 +79,7 @@ write.xlsx(FoodSecurityCS, "report tables/FoodSecurityCS.xlsx")
 
 meanRCSI <- SvyrCSIData %>% 
   group_by(Treatment) %>% 
-  summarize(MeanRCSI = survey_mean(rCSI)) %>% 
+  summarise(MeanRCSI = survey_mean(rCSI)) %>% 
   select(Treatment, MeanRCSI) %>% 
   pivot_wider(names_from = Treatment, values_from = MeanRCSI) %>%
   mutate(Diff = `Treatment Group` - `Control Group`) %>% 
@@ -97,7 +97,7 @@ SvyLCSENMaxProvince <- SvyLCSENData %>%
                                                   "Crisis coping strategies",
                                                   "Emergency coping strategies"))) %>%
   group_by(Province, MaxcopingBehaviourEN) %>% 
-  summarize(Pct_LCSENMax = survey_prop() * 100) %>% 
+  summarise(Pct_LCSENMax = survey_prop() * 100) %>% 
   select(Province, MaxcopingBehaviourEN, Pct_LCSENMax) %>% 
   mutate(across(where(is.numeric), ~round(., 2))) %>%
   mutate(Province = if_else(Province == "Banteay Meanchey", "B. Meanchey", Province),
@@ -112,7 +112,7 @@ SvyLCSENFoodProvinceTab <- SvyLCSFS %>%
                                                   "Crisis coping strategies",
                                                   "Emergency coping strategies"))) %>%
   group_by(Province, MaxcopingBehaviourFS) %>% 
-  summarize(Pct_LCSENFood = survey_prop() * 100) %>% 
+  summarise(Pct_LCSENFood = survey_prop() * 100) %>% 
   select(Province, MaxcopingBehaviourFS, Pct_LCSENFood) %>%
   # Round all the numeric variables to 2 decimal places
   mutate_if(is.numeric, ~round(., 2)) %>% 
@@ -125,7 +125,7 @@ write.xlsx(SvyLCSENFoodProvinceTab, "report tables/SvyLCSENFoodProvince.xlsx")
 ## Reduced Coping Strategies Index (rCSI)
 meanRCSIProvince <- SvyrCSIData %>% 
   group_by(Province) %>% 
-  summarize(MeanRCSI = survey_mean(rCSI)) %>% 
+  summarise(MeanRCSI = survey_mean(rCSI)) %>% 
   select(Province, MeanRCSI) #%>% 
   pivot_wider(names_from = Treatment, values_from = MeanRCSI)
 
@@ -137,8 +137,8 @@ MDDWomen <- SvyDietQualityData %>%
   filter(MDDGender == "Female") %>%
   filter(MDDAge >= 15 & MDDAge <= 49) %>%
   group_by(Treatment, MDDCategory) %>% 
-  summarize(MDDWomen = survey_mean() * 100) %>% 
-  filter(MDDCategory == "MDD Met") %>% 
+  summarise(MDDWomen = survey_mean() * 100) %>% 
+  filter(MDDCategory == 1) %>% 
   select(-MDDWomen_se) %>% 
   pivot_wider(names_from = Treatment, values_from = MDDWomen) %>% 
   mutate(Diff = `Treatment Group` - `Control Group`) %>% 
@@ -164,8 +164,9 @@ MDDWomen <- SvyDietQualityData %>%
 
 # Calculate the Non Communicable Disease Risk Score
 NCDRiskScore <- SvyDietQualityData %>%
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDGender) %>%
-  summarize(NCDRiskScore = survey_mean(NCDRiskScore),
+  summarise(NCDRiskScore = survey_mean(NCDRiskScore),
             Total = survey_total()) %>% 
   select(-c("NCDRiskScore_se", "Total_se", "Total")) %>% 
   pivot_wider(names_from = Treatment, values_from = NCDRiskScore) %>% 
@@ -177,8 +178,9 @@ NCDRiskScore <- SvyDietQualityData %>%
 
 
 NCDDRiskTot <- SvyDietQualityData %>%
+  filter(MDDAge >= 15) %>%
   group_by(Treatment) %>%
-  summarize(NCDRiskScore = survey_mean(NCDRiskScore),
+  summarise(NCDRiskScore = survey_mean(NCDRiskScore),
             Total = survey_total()) %>% 
   select(-c("NCDRiskScore_se", "Total_se", "Total")) %>% 
   pivot_wider(names_from = Treatment, values_from = NCDRiskScore) %>% 
@@ -189,8 +191,9 @@ NCDDRiskTot <- SvyDietQualityData %>%
 
 # Calculate the Non Communicable Diseases Protective Foods Score
 NCDProtectiveFoods <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDGender) %>%
-  summarize(NCDProtectiveFoods = survey_mean(NCDProtScore),
+  summarise(NCDProtectiveFoods = survey_mean(NCDProtScore),
             Total = survey_total()) %>%
   select(-c("NCDProtectiveFoods_se", "Total_se", "Total")) %>%
   pivot_wider(names_from = Treatment, values_from = NCDProtectiveFoods) %>%
@@ -202,8 +205,9 @@ NCDProtectiveFoods <- SvyDietQualityData %>%
 
 # Calculate NCDProtectiveTot Score
 NCDProtectiveTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
   group_by(Treatment) %>%
-  summarize(NCDProtectiveFoods = survey_mean(NCDProtScore),
+  summarise(NCDProtectiveFoods = survey_mean(NCDProtScore),
             Total = survey_total()) %>% 
   select(-c("NCDProtectiveFoods_se", "Total_se", "Total")) %>%
   pivot_wider(names_from = Treatment, values_from = NCDProtectiveFoods) %>%
@@ -215,8 +219,9 @@ NCDProtectiveTot <- SvyDietQualityData %>%
 
 # Calculate the GDRS Score
 GDRSScore <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDGender) %>%
-  summarize(GDRSScore = survey_mean(GDRScore),
+  summarise(GDRSScore = survey_mean(GDRScore),
             Total = survey_total()) %>% 
   select(-c("GDRSScore_se", "Total_se", "Total")) %>%
   pivot_wider(names_from = Treatment, values_from = GDRSScore) %>%
@@ -228,8 +233,9 @@ GDRSScore <- SvyDietQualityData %>%
 
 # Calculate GDRSTot Score
 GDRSTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
   group_by(Treatment) %>%
-  summarize(GDRSScore = survey_mean(GDRScore),
+  summarise(GDRSScore = survey_mean(GDRScore),
             Total = survey_total()) %>% 
   select(-c("GDRSScore_se", "Total_se", "Total")) %>%
   pivot_wider(names_from = Treatment, values_from = GDRSScore) %>%
@@ -240,8 +246,9 @@ GDRSTot <- SvyDietQualityData %>%
 
 # Calculate MDDScore, by gender and treatment
 MDDScore <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDGender) %>%
-  summarize(MDDScore = survey_mean(MDDScore),
+  summarise(MDDScore = survey_mean(MDDScore),
             Total = survey_total()) %>% 
   select(-c("MDDScore_se", "Total_se", "Total")) %>%
   pivot_wider(names_from = Treatment, values_from = MDDScore) %>%
@@ -253,8 +260,9 @@ MDDScore <- SvyDietQualityData %>%
 
 # Calculate MDDScore, by treatment
 MDDScoreTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
   group_by(Treatment) %>%
-  summarize(MDDScore = survey_mean(MDDScore),
+  summarise(MDDScore = survey_mean(MDDScore),
             Total = survey_total()) %>% 
   select(-c("MDDScore_se", "Total_se", "Total")) %>%
   pivot_wider(names_from = Treatment, values_from = MDDScore) %>%
@@ -276,11 +284,11 @@ write.xlsx(DQQNutritionIndicators, "report tables/DQQNutritionIndicators.xlsx")
 
 # Calculate the same indicators based on province - important for future visualisations
 ## Minimum Dietary Diversity for womwn of reproductive age
-SvyMDDWomenProvince <- SvyDietQualityData %>% 
+SvyMDDWomenRegion <- SvyDietQualityData %>% 
   filter(MDDGender == "Female") %>%
   filter(MDDAge >= 15 & MDDAge <= 49) %>%
-  group_by(Province, MDDCategory) %>%
-  summarize(MDDWomen = survey_prop() * 100,
+  group_by(regiontype, MDDCategory) %>%
+  summarise(MDDWomen = survey_prop() * 100,
             MDDTot = survey_total()) %>% 
   filter(MDDCategory == 1) %>%
   select(-c("MDDWomen_se", "MDDTot_se", "MDDTot", "MDDCategory"))
@@ -295,15 +303,16 @@ SvyMDDWomenProvince <- SvyDietQualityData %>%
 #   filter(MDDAllGroupsCat == "All Food groups consumed")
 
 # Calculate the Non Communicable Disease Risk Score
-NCDRiskScoreProvince <- SvyDietQualityData %>% 
-  group_by(Treatment, Province) %>%
-  summarize(NCDRiskScore = survey_mean(NCDRiskScore),
+NCDRiskScoreRegion <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(Treatment, regiontype) %>%
+  summarise(NCDRiskScore = survey_mean(NCDRiskScore),
             Total = survey_total())
 
 # Calcualte the Non Communicable Diseases Protective Foods Score
-NCDProtectiveFoodsProvince <- SvyDietQualityData %>% 
-  group_by(Treatment, Province) %>%
-  summarize(NCDProtectiveFoods = survey_mean(NCDProtScore),
+NCDProtectiveFoodsRegion <- SvyDietQualityData %>% 
+  group_by(Treatment, regiontype) %>%
+  summarise(NCDProtectiveFoods = survey_mean(NCDProtScore),
             Total = survey_total())
 
 ###########################################################################################################################
@@ -314,7 +323,7 @@ NCDProtectiveFoodsProvince <- SvyDietQualityData %>%
 SvyMADBreasfed <- SvyMADData %>% 
   filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 23) %>%
   group_by(Treatment, PCMADBreastfeeding) %>%
-  summarize(PropotionBreastfed = survey_mean() * 100,
+  summarise(PropotionBreastfed = survey_mean() * 100,
             Total = survey_total()) %>% 
   select(-c("PropotionBreastfed_se", "Total_se", "Total")) %>% 
   mutate(PCMADBreastfeeding = as_factor(PCMADBreastfeeding)) %>% 
@@ -331,7 +340,7 @@ SvyMADBreasfed <- SvyMADData %>%
 SvyMADBreasfedGender <- SvyMADData %>% 
   filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 23) %>%
   group_by(Treatment, PCMADBreastfeeding, ChildGender) %>%
-  summarize(PropotionBreastfed = survey_mean() * 100,
+  summarise(PropotionBreastfed = survey_mean() * 100,
             Total = survey_total()) %>% 
   select(-c("PropotionBreastfed_se", "Total_se", "Total")) %>% 
   mutate(PCMADBreastfeeding = as_factor(PCMADBreastfeeding)) %>% 
@@ -349,7 +358,7 @@ MADBrestfedProptest <- svyttest(PCMADBreastfeeding == "Yes" ~ Treatment, design 
 SvyMDDChildren <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
   group_by(Treatment, MDDCat) %>%
-  summarize(MDDChilden = survey_mean() * 100,
+  summarise(MDDChilden = survey_mean() * 100,
             Total = survey_total()) %>% 
   select(-c("MDDChilden_se", "Total_se", "Total")) %>% 
   filter(MDDCat == 1) %>% 
@@ -365,7 +374,7 @@ SvyMDDChildren <- SvyMADData %>%
 SvyMDDChildrenGender <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
   group_by(Treatment, MDDCat, ChildGender) %>%
-  summarize(MDDChilden = survey_mean() * 100,
+  summarise(MDDChilden = survey_mean() * 100,
             Total = survey_total()) %>% 
   select(-c("MDDChilden_se", "Total_se", "Total")) %>% 
   filter(MDDCat == 1) %>% 
@@ -384,7 +393,7 @@ MDDChldrenProptest <- svyttest(MDDCat == 1 ~ Treatment, design = SvyMADData)
 SvyMMFChildren <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
   group_by(Treatment, MMF) %>%
-  summarize(MMFChildren = survey_mean() * 100,
+  summarise(MMFChildren = survey_mean() * 100,
             Total = survey_total()) %>% 
   select(-c("MMFChildren_se", "Total_se", "Total")) %>% 
   filter(MMF == 1) %>% 
@@ -400,9 +409,9 @@ SvyMMFChildren <- SvyMADData %>%
 SvyMMFChildrenGender <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
   group_by(Treatment, MMF, ChildGender) %>%
-  summarize(MMFChildren = survey_mean() * 100,
+  summarise(MMFChildren = survey_mean() * 100,
             Total = survey_total()) %>% 
-  select(-c("MMFChildren_se", "Total_se", "Total")) %>% 
+  select(-c("MMFChildren_se", "Total_se")) %>% 
   filter(MMF == 1) %>% 
   pivot_wider(names_from = Treatment, values_from = MMFChildren) %>%
   mutate(Diff = `Treatment Group` - `Control Group`) %>%
@@ -418,7 +427,7 @@ SvyMMFFChildren <- SvyMADData %>%
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
   filter(!is.na(MMFF)) %>% # This code can be changed tp filter the children who are not being breastfed (Still gives the same results)
   group_by(Treatment, MMFF) %>%
-  summarize(MMFFChildren = survey_mean() * 100,
+  summarise(MMFFChildren = survey_mean() * 100,
             Total = survey_total()) %>% 
   select(-c("MMFFChildren_se", "Total_se", "Total")) %>% 
   filter(MMFF == 1) %>% 
@@ -435,7 +444,7 @@ SvyMMFFChildrenGender <- SvyMADData %>%
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
   filter(!is.na(MMFF)) %>% # This code can be changed tp filter the children who are not being breastfed (Still gives the same results)
   group_by(Treatment, MMFF, ChildGender) %>%
-  summarize(MMFFChildren = survey_mean() * 100,
+  summarise(MMFFChildren = survey_mean() * 100,
             Total = survey_total()) %>% 
   select(-c("MMFFChildren_se", "Total_se", "Total")) %>% 
   filter(MMFF == 1) %>% 
@@ -449,13 +458,13 @@ SvyMMFFChildrenGender <- SvyMADData %>%
          ChildGender = as_factor(ChildGender))
 
 
-MMFProptest <- svyttest(MMF == 1 ~ Treatment, design = SvyMADData)
+MMFProptest <- svyttest(MMF == 1 ~ ChildGender, design = SvyMADData)
 
 # Calculate the proportion of children who met MAD
 SvyMADChildren <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
   group_by(Treatment, MAD) %>%
-  summarize(MADChildren = survey_mean() * 100,
+  summarise(MADChildren = survey_mean() * 100,
             Total = survey_total()) %>% 
   select(-c("MADChildren_se", "Total_se", "Total")) %>% 
   filter(MAD == 1) %>% 
@@ -467,12 +476,13 @@ SvyMADChildren <- SvyMADData %>%
   rename(Category = MAD) %>% 
   mutate(Category = as_factor(Category))
 
-
+MADProptest <- svyttest(MAD == 1 ~ Treatment, design = SvyMADData)
 # MAD for children by province - for visualisation purposes - This will be useful if the sample is huge enough
+
 SvyMADChildrenProvince <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
-  group_by(Province, MAD) %>%
-  summarize(MADChildren = survey_mean() * 100,
+  group_by(regiontype, MAD) %>%
+  summarise(MADChildren = survey_mean() * 100,
             Total = survey_total()) %>% 
   filter(MAD == 1) %>%
   select(-MAD)
@@ -486,7 +496,7 @@ SvyMADMixMF <- SvyMADData %>%
     PCMADBreastfeeding == 1 & (PCMADInfFormula == 1 | PCMADMilk == 1) ~ 1,
     TRUE ~ 0)) %>%
   group_by(Treatment, MixMF) %>%
-  summarize(MixMFChildren = survey_mean() * 100,
+  summarise(MixMFChildren = survey_mean() * 100,
             Total = survey_total()) %>% 
   select(-c("MixMFChildren_se", "Total_se", "Total")) %>% 
   filter(MixMF == 1) %>% 
@@ -504,7 +514,7 @@ SvyMADMixMF <- SvyMADData %>%
 SvyMADUnhealthyFoods <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
   group_by(Treatment, PCMADUnhealthyFds) %>%
-  summarize(UnhealthyFoods = survey_mean() * 100,
+  summarise(UnhealthyFoods = survey_mean() * 100,
             Total = survey_total()) %>% 
   select(-c("UnhealthyFoods_se", "Total_se", "Total")) %>% 
   filter(PCMADUnhealthyFds == 1) %>% 
@@ -530,7 +540,7 @@ write.xlsx(DQQChildNutritionIndicators, "report tables/DQQChildNutritionIndicato
 ######################################################################################################################################
 
 ## Calculate the nutrition indicators using the formula
-SvyChildMDD <- calculate_proportions_and_ttest_nut(SvyMADData, "MDDCat", "Treatment")
+SvyChildMDD <-  SvyMADData %>%  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>% calculate_proportions_and_ttest_nut(., "MDDCat", "Treatment")
 SvyChildMMF <- calculate_proportions_and_ttest_nut(SvyMADData, "MMF", "Treatment")
 SvyChildMMFF <- calculate_proportions_and_ttest_nut(SvyMADData, "MMFF", "Treatment")
 SvyChildMAD <- calculate_proportions_and_ttest_nut(SvyMADData, "MAD", "Treatment")

@@ -6,7 +6,6 @@ library(haven)
 # Calculate Nutrition Indicators
 calculate_proportions_and_ttest_nut <- function(design, outcome_var, group_var) {
   
-  Sixto23 <- c("MDDCat", "MMF", "MMFF", "MAD", "PCMADUnhealthyFds")
   # Step 1: Calculate Proportions
   proportions <- svyby(
     as.formula(paste0("~ I(", outcome_var, " == 1)")), 
@@ -49,19 +48,13 @@ calculate_proportions_and_ttest_nut <- function(design, outcome_var, group_var) 
 
 
 
-# Calculate Livelihoods Coping Strategies Indicators
-
-
-  
-library(srvyr)
-library(dplyr)
 
 calculate_proportions_and_ttest_cs <- function(svy_design, outcome_var, group_var) {
   
   # Step 1: Calculate Proportions Using `srvyr`
   proportions <- svy_design %>%
     group_by(!!sym(group_var)) %>%
-    summarize(
+    summarise(
       proportion = survey_mean(!!sym(outcome_var) == 1, na.rm = TRUE) * 100,
       .groups = 'drop'
     )
@@ -94,12 +87,3 @@ calculate_proportions_and_ttest_cs <- function(svy_design, outcome_var, group_va
   return(results)
 }
 
-
-
-
-
-
-
-
-
-calculate_proportions_and_ttest_cs(SvyLCSFS, "MaxcopingBehaviourFS", "Treatment")
