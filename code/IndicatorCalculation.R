@@ -41,7 +41,7 @@ source("code/Functions.R") # Functions for significance tests and creating Word 
 # Calculate the percentage of households using coping strategies to meet essential needs
 SvyLCSENMax <- SvyLCSENData %>% 
   group_by(Treatment, MaxcopingBehaviourEN) %>% 
-  summarize(Pct_LCSENMax = survey_prop() * 100) %>% 
+  summarise(Pct_LCSENMax = survey_prop() * 100) %>% 
   select( MaxcopingBehaviourEN, Treatment, Pct_LCSENMax) %>% 
   pivot_wider(names_from = Treatment, values_from = Pct_LCSENMax) %>% 
   mutate(Diff = `Treatment Group` - `Control Group`) %>% 
@@ -145,6 +145,21 @@ MDDWomen <- SvyDietQualityData %>%
   mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>% 
   mutate(Indicator = "MDD-W") %>%
   select(Indicator, MDDCategory, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
+  rename(Category = MDDCategory)
+  
+# Calculate MDD-W disagreggated by regiontype
+MDDWomenRegion <- SvyDietQualityData %>% 
+  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15 & MDDAge <= 49) %>%
+  group_by(regiontype, MDDCategory) %>%
+  summarise(MDDWomen = survey_mean() * 100) %>%
+  filter(MDDCategory == 1) %>%
+  select(-MDDWomen_se) %>%
+  pivot_wider(names_from = regiontype, values_from = MDDWomen) %>%
+  mutate(Diff = URBAN - RURAL) %>%
+  mutate(Overall = (URBAN + RURAL)/2) %>%
+  mutate(Indicator = "MDD-W") %>%
+  select(Indicator, MDDCategory, Overall, RURAL, URBAN, Diff) %>%
   rename(Category = MDDCategory)
 
 # # Calculate the proportion of women consuming all five food groups
@@ -352,7 +367,7 @@ SvyMADBreasfedGender <- SvyMADData %>%
   select(Indicator, PCMADBreastfeeding, ChildGender, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
   mutate(ChildGender = as_factor(ChildGender))
 
-MADBrestfedProptest <- svyttest(PCMADBreastfeeding == "Yes" ~ Treatment, design = SvyMADData)
+MADBrestfedProptest <- svyttest(PCMADBreastfeeding == 1 ~ Treatment, design = SvyMADData)
 
 # Calculate the proportion of children meeting minimum diteray diversity
 SvyMDDChildren <- SvyMADData %>% 
@@ -486,6 +501,7 @@ SvyMADChildrenProvince <- SvyMADData %>%
             Total = survey_total()) %>% 
   filter(MAD == 1) %>%
   select(-MAD)
+
 
 MADProptest <- svyttest(MAD == 1 ~ Treatment, design = SvyMADData)
 
