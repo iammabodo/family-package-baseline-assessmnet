@@ -226,11 +226,46 @@ LCSENGraph <- ggplot(SvyLCSENMaxProvince, aes(x = Province, y = Pct_LCSENMax, fi
     legend.box.margin = margin(t = -10, b = 10))    # Margin around the legend box
 
 
-## Combined Coping Srategies Indicator Graph
-CombinedCopingStrategiesGraph <- LCSFSGraph + LCSENGraph
-
-
 ####################################################################################################################################################
+# Stack Graph - Livelihoods Coping Strategies Essential Needs Indicator by HighLvlLCSEN
+
+HighLvlLCSENGraph <- ggplot(HighLvlLCSEN, aes(x = Disagregation, y = Proportion, fill = MaxcopingBehaviourEN)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.9) +
+  coord_flip() +
+  geom_text(aes(
+    label = sprintf("%.1f%%", Proportion),
+    color = ifelse(MaxcopingBehaviourEN %in% c("Household not adopting coping strategies", "Stress coping strategies"), "#4B2E2A", "white")
+  ), 
+  position = position_stack(vjust = 0.5), 
+  size = 3.5) +
+  facet_wrap(~MaxcopingBehaviourEN) +
+  scale_fill_manual(values = c(
+    'Household not adopting coping strategies' = '#F1ECE8',
+    'Stress coping strategies' = '#D5B868',
+    'Crisis coping strategies' = '#F37847',
+    'Emergency coping strategies' = '#C00000'
+  )) +
+  scale_color_identity() +  # This ensures the color mapping is applied directly
+  labs(
+    title = "Majority of Households are adopting coping strategies in order to meet essential needs",
+    subtitle = "Although the situation in Kampong Cham and Tboung Khmum is different",
+    x = "Province",
+    y = "Percentage of Households",
+    fill = "Coping Strategy"
+  ) +
+  theme_void() +
+  theme(
+    axis.text.x = element_text(family = "opensans", colour =  "#4B2E2A", size = 8, face = "bold",
+                               margin = margin(t = -5, b = 20)),
+    axis.text.y = element_blank(),
+    axis.title = element_text(family = "opensans", size = 10, face = "bold"),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(margin = margin(r = 10, l = 10), angle = 90),
+    plot.title = element_text(family = "opensans", size = 12, face = "bold", hjust = 0.5),
+    plot.subtitle = element_text(family = "opensans", size = 10, face = "italic", hjust = 0.5),
+    legend.position = "bottom")
+    
+    # Legend
 
 
 #Minimum Dietary Diversity for Women of Reproductive Age Nutrition Indicators Visualisation

@@ -50,8 +50,32 @@ SvyLCSENMax <- SvyLCSENData %>%
   select(Indicator, MaxcopingBehaviourEN, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
   rename(Category = MaxcopingBehaviourEN)
 
+# Calculate the proportion of households using coping strategies to meet essential needs disgragated by regiontype
+SvyLCSENMaxRegion <- SvyLCSENData %>% 
+  group_by(regiontype, MaxcopingBehaviourEN) %>% 
+  summarise(Pct_LCSENMax = survey_prop() * 100) %>% 
+  select(regiontype, MaxcopingBehaviourEN, Pct_LCSENMax) %>% 
+  rename(Proportion = Pct_LCSENMax,
+         Disagregation = regiontype)
 
+# Calculate the indicator by diability 
+SvyLCSENMaxDisability <- SvyLCSENData %>% 
+  group_by(DisabCategory, MaxcopingBehaviourEN) %>% 
+  summarise(Pct_LCSENMax = survey_prop() * 100) %>% 
+  select(DisabCategory, MaxcopingBehaviourEN, Pct_LCSENMax) %>% 
+  rename(Proportion = Pct_LCSENMax,
+         Disagregation = DisabCategory)
 
+# Calculate the indicator by treatment/cpmtro
+SvyLCSENMaxTreatment <- SvyLCSENData %>% 
+  group_by(Treatment, MaxcopingBehaviourEN) %>% 
+  summarise(Pct_LCSENMax = survey_prop() * 100) %>% 
+  select(Treatment, MaxcopingBehaviourEN, Pct_LCSENMax) %>% 
+  rename(Proportion = Pct_LCSENMax,
+         Disagregation = Treatment)
+
+# merge the data for hihger level disaggregation visualisations - Visualise this
+HighLvlLCSEN <- bind_rows(SvyLCSENMaxRegion, SvyLCSENMaxDisability, SvyLCSENMaxTreatment)
 
 # Calculate the proportion of the population using coping strategies to afford food
 # Livelihoods Coping Strategies Food Security Indicator

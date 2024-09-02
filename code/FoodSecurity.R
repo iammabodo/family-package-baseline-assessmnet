@@ -8,13 +8,21 @@ library(eRm)
 
 FoodSecurity <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>% 
   select(interview__key, interview__id, Province, District, Commune, Village, HHID,
-         IDPOOR, equitycardno, householduuid, Sex, starts_with("S8_")) 
+         IDPOOR, equitycardno, householduuid, Sex, starts_with("S8_"), Count_HH_Disability) %>% 
+  rename(DisabNmbr = Count_HH_Disability) %>% 
+  mutate(DisabCategory = case_when(
+    DisabNmbr == 0 ~ "No Disability",
+    DisabNmbr > 0 ~ "With Disability",
+    TRUE ~ "Missing"))
+
+# Load the data with disabilities
+
 
 # Livelihoods Copying Strategies Data
 
 LCSEN <- FoodSecurity %>% 
   select(interview__key, interview__id, Province, District, Commune, Village, HHID,
-         IDPOOR, equitycardno, householduuid, Sex, 
+         IDPOOR, equitycardno, householduuid, Sex, DisabCategory,
          # Livelihoods Copying Strategies Variables
          S8_4a:S8_4k_OTHER) %>% 
   # Rename the variables
@@ -159,7 +167,7 @@ LCSEN <- FoodSecurity %>%
 
 rCSIData <- FoodSecurity %>% 
   select(interview__key, interview__id, Province, District, Commune, Village, HHID,
-         IDPOOR, equitycardno, householduuid, Sex, S8_5:S8_9b) %>% 
+         IDPOOR, equitycardno, householduuid, Sex, S8_5:S8_9b, DisabCategory) %>% 
   # Rename Variables
   rename(
     rCSILessQlty = S8_5,
@@ -244,14 +252,15 @@ rCSIData <- FoodSecurity %>%
 # FOOD INSECURITY EXPERIENCE SCALE (FIES) INDICATORS
 
 FIESData <- FoodSecurity %>% 
-  select(interview__key, Province, District, Commune, Village, IDPOOR, S8_3a:S8_3h) %>%
+  select(interview__key, Province, District, Commune, Village, IDPOOR, S8_3a:S8_3h, DisabCategory) %>%
   # Change the variables to factor variables
   mutate(
     Province = as_factor(Province),
     District = as_factor(District),
     Commune = as_factor(Commune),
     Village = as_factor(Village),
-    IDPOOR = as_factor(IDPOOR)) %>% 
+    IDPOOR = as_factor(IDPOOR), 
+    DisabCategory == as_factor(DisabCategory)) %>% 
   # Rename the variables
   rename(
     FIESWorried = S8_3a,
