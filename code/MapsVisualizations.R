@@ -156,7 +156,7 @@ LCSFSGraph <- ggplot(SvyLCSENFoodProvinceTab, aes(x = Province, y = Pct_LCSENFoo
   theme_void() +
   theme(
     axis.text.x = element_text(family = "opensans", colour =  "#4B2E2A", size = 8, face = "bold",
-                               margin = margin(t = 0, b = 20)),
+                               margin = margin(t = -20, b = 20)),
     axis.text.y = element_blank(),
     axis.title = element_text(family = "opensans", size = 10, face = "bold"),
     axis.title.x = element_blank(),
@@ -223,7 +223,7 @@ LCSENGraph <- ggplot(SvyLCSENMaxProvince, aes(x = Province, y = Pct_LCSENMax, fi
     legend.key.size = unit(0.5, "cm"),  # Size of the legend keys
     legend.spacing.x = unit(0.2, "cm"),  # Horizontal spacing between legend items
     #legend.box.background = element_rect(color = "black", size = 0.5),  # Border around the legend box
-    legend.box.margin = margin(t = -10, b = 10))    # Margin around the legend box
+    legend.box.margin = margin(t = -20, b = 10))    # Margin around the legend box
 
 
 ####################################################################################################################################################
