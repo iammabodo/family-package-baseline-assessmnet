@@ -574,4 +574,6 @@ SvyNutTable <- SvyMADChildrenAgeTab %>%
   left_join(SvyMDDChildrenAgeTab, by = "Disaggregation") %>% 
   # Change all numeric columns to 2 dp
   mutate(across(is.numeric, ~round(., 2))) %>%
-  pivot_longer(cols = c("MADChildren" : "MDDChilden"), names_to = "Indicator", values_to = "Percentage")
+  pivot_longer(cols = c("MADChildren" : "MDDChilden"), names_to = "Indicator", values_to = "Percentage") %>% 
+  mutate(Indicator = factor(Indicator, levels = c("MDDChilden", "MMFChildren", "MADChildren")),
+         Disaggregation = factor(Disaggregation, levels = c("6-11 Months", "12-17 Months", "18-23 Months")))
