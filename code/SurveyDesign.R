@@ -6,9 +6,9 @@ library(srvyr)
 
 ## SOURCE Some files
 # Source MDD.R, FoodSecurity.R and MADChildren.R, files Relevant files for the Baseline indicators calculation 
-source("code/MDD.R")
-source("code/FoodSecurity.R")
-source("code/MADChildren.R")
+source("code/MDDDataCleaning.R")
+source("code/FoodSecurityDataCleaning.R")
+source("code/MADChildrenDataCleaning.R")
 
 # Read cover data
 SurveyDesignData<- read_dta("data/cover.dta")
@@ -21,9 +21,9 @@ SurveyDesignData <- SurveyDesignData %>%
 SvyLCSENData <- LCSEN %>% 
   left_join(SurveyDesignData, by = "interview__key") %>% 
   #Set the data to survey designed data
-  as_survey_design(ids = clusterid, 
-                   strata = strataid, 
-                   weights = NULL)
+  as_survey(ids = clusterid, 
+            strata = strataid, 
+            weights = NULL)
 
 # Merge the FIES Data with the Survey Design Data
 SvyFIESData <- FIESData %>% 

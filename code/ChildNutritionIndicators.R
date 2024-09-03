@@ -1,4 +1,19 @@
 
+
+## Loading libraries
+
+library(tidyverse)
+library(openxlsx)
+library(showtext)
+library(patchwork)
+library(cowplot)
+library(stringr)
+
+
+source("code/SurveyDesign.R") # This file converts the data into survey designed data
+source("code/Functions.R") # Functions for significance tests and creating Word documents
+
+
 # Nutrition for children under the age of 2 years (23 months)
 
 # Calculate the proportion of children who were breastfed over the last 24 hours
@@ -527,7 +542,4 @@ write.xlsx(DQQChildNutritionIndicators, "report tables/DQQChildNutritionIndicato
 # SvyChildBreastfeeding <- calculate_proportions_and_ttest_nut(SvyMADData, "PCMADBreastfeeding", "Treatment")
 # SvyChildMixMF <- calculate_proportions_and_ttest_nut(SvyMADData, "MixMF", "Treatment")
 
-
-
-
-
+#####################################################################################################################################
