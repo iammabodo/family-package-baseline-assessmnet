@@ -13,7 +13,13 @@ library(png)
 ## Selected Provinces: Banteay Meanchey Kampong Cham Kampong Speu Kampot  Kratie Phnom Penh Preah Sihanouk  Siemreap Tboung Khmum  
 ## Source the Indicator Calculation File
 
-source("code/IndicatorCalculation.R")
+source("code/FoodSecurityIndicators.R")
+source("code/AdultNutritionIndicators.R")
+source("code/ChildNutritionIndicators.R")
+
+#Text for the graphs
+font_add_google("Open Sans","opensans")
+showtext_auto()
 
 
 ## This data can be used to create the map of the country - visualisation of indicators by provinces
@@ -178,6 +184,8 @@ LCSFSGraph <- ggplot(SvyLCSENFoodProvinceTab, aes(x = Province, y = Pct_LCSENFoo
 # Save the graph
 ggsave("figures/Livelihoods_Coping_Strategies_by_Province_High_Quality.png", plot = LCSFSGraph, width = 3.41, height = 2.57, units = "in")
 
+
+
 ####################################################################################################################################################
 
 #Stacked Graph - Livelihoods Coping Strategies Essential Needs Indicator by Province
@@ -230,7 +238,7 @@ LCSENGraph <- ggplot(SvyLCSENMaxProvince, aes(x = Province, y = Pct_LCSENMax, fi
 # Stack Graph - Livelihoods Coping Strategies Essential Needs Indicator by HighLvlLCSEN
 
 HighLvlLCSENGraph <- ggplot(HighLvlLCSEN, aes(x = Disagregation, y = Proportion, fill = MaxcopingBehaviourEN)) +
-  geom_bar(stat = "identity", position = "stack", width = 0.9) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7) +
   coord_flip() +
   geom_text(aes(
     label = sprintf("%.1f%%", Proportion),
@@ -238,7 +246,9 @@ HighLvlLCSENGraph <- ggplot(HighLvlLCSEN, aes(x = Disagregation, y = Proportion,
   ), 
   position = position_stack(vjust = 0.5), 
   size = 3.5) +
-  facet_wrap(~MaxcopingBehaviourEN) +
+  facet_wrap(~MaxcopingBehaviourEN,
+             nrow = 1,
+             strip.position = "bottom") +
   scale_fill_manual(values = c(
     'Household not adopting coping strategies' = '#F1ECE8',
     'Stress coping strategies' = '#D5B868',
@@ -247,23 +257,45 @@ HighLvlLCSENGraph <- ggplot(HighLvlLCSEN, aes(x = Disagregation, y = Proportion,
   )) +
   scale_color_identity() +  # This ensures the color mapping is applied directly
   labs(
-    title = "Majority of Households are adopting coping strategies in order to meet essential needs",
-    subtitle = "Although the situation in Kampong Cham and Tboung Khmum is different",
+    title = "Coping Mechanisms Adopted by Households to Meet Essential Needs",
+    subtitle = "With a higher percentage of urban households adopting these mechanisms compared to other groups",
+    caption = "Data Source: Family Package Baseline",
     x = "Province",
     y = "Percentage of Households",
     fill = "Coping Strategy"
   ) +
-  theme_void() +
+  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
+  theme_minimal() +  # Use theme_minimal() instead of theme_void()
   theme(
-    axis.text.x = element_text(family = "opensans", colour =  "#4B2E2A", size = 8, face = "bold",
-                               margin = margin(t = -5, b = 20)),
-    axis.text.y = element_blank(),
+    axis.text.x = element_blank(),
+    axis.text.y = element_text(family = "opensans", colour =  "#4B2E2A", size = 8, 
+                               face = "bold", lineheight = 1.5, hjust = 0, margin = margin(r = 10, l = 15)),
     axis.title = element_text(family = "opensans", size = 10, face = "bold"),
     axis.title.x = element_blank(),
-    axis.title.y = element_text(margin = margin(r = 10, l = 10), angle = 90),
-    plot.title = element_text(family = "opensans", size = 12, face = "bold", hjust = 0.5),
-    plot.subtitle = element_text(family = "opensans", size = 10, face = "italic", hjust = 0.5),
-    legend.position = "bottom")
+    #axis.title.y = element_text(margin = margin(r = 10, l = 10), angle = 90),
+    axis.title.y = element_blank(),
+    plot.title = element_text(family = "opensans", size = 12, face = "bold", hjust = 0, 
+                              margin = margin(l = 13, b = 10)),
+    plot.subtitle = element_text(family = "opensans", size = 10, face = "italic", hjust = 0,
+                                 margin = margin(l = 13)),
+    plot.caption = element_text(family = "opensans", size = 10, hjust = 0, color = "black"),
+    panel.grid = element_blank(),
+    legend.position = "none",
+    #strip.background = element_rect(fill = "#4B2E2A", color = NA),  # Customize facet strip background color
+    strip.text.x = element_text(family = "opensans", size = 10, face = "bold", colour = "#4B2E2A", hjust = 0, 
+                                margin = margin(l = 13, b = 10)),  # Left-align facet labels
+    #strip.placement = "outside",  # Place the strips outside the plotting area
+    #panel.spacing = unit(1, "lines")  # Increase spacing between facets
+  )
+
+ggsave(
+  filename = "HighLvlLCSENGraph_A4.png",
+  plot = HighLvlLCSENGraph,
+  width = 7.5,       # Width that fits well within A4 width with margins
+  height = 4.5,      # Adjusted height for proportionate scaling
+  dpi = 300,         # Resolution suitable for print
+  bg = "white"       # Ensure the background is white
+)
     
     # Legend
 
