@@ -481,4 +481,45 @@ RCSIGraph <- ReducedCopingStrategiesGraph +
 LCSFSGraph / RCSIGraph
 
 
+##############################################################################################################
+
+SvyNutTable %>% 
+  ggplot(aes(x = Disaggregation, y = Percentage)) +
+  geom_bar(stat = "identity", fill = "#254769", width = 0.6) + 
+  geom_text(aes(label = paste0(Percentage, "%"), y = Percentage / 2), 
+            size = 3.5, family = "opensans", color = "#ffffff") +
+  coord_flip() +
+  facet_wrap(~Indicator) +
+  theme_minimal() +
+  labs(
+    title = "Child Nutrition Indicators (MDD, MMF and MAD), by age group",
+    subtitle = "Percentage of children under 2 years old who meet MDD, MMF and MAD",
+    x = "Age Group",
+    y = "Percentage",
+    caption = "Data Source: Family Package Baseline"
+  ) + 
+  theme(
+    # Theme the panel
+    panel.background = element_rect(fill = "white", color = "white", size = 0.5),
+    panel.grid.major.y = element_blank(),
+    # Theme the x-axis
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank(),
+    axis.ticks.x  = element_blank(),
+    # Theme the y-axis
+    axis.text.y = element_text(family = "opensans", size = 8, color = "black", face = "bold"),
+    axis.title.y = element_blank(),
+    # Theme the titles
+    plot.title = element_text(family = "opensans", size = 12, color = "black", face = "bold",
+                              margin = margin(l = 40, b = 10)),
+    plot.subtitle = element_text(family = "opensans", size = 10, color = "black", face = "italic",
+                                 margin = margin(l = 40, b = 10)),
+    plot.caption = element_text(family = "opensans", size = 10, color = "black", hjust = 0, margin = margin(t = 10, l = 40, b = 10)),
+    # Underline strip text by adding a bottom border to the strip
+    strip.background = element_rect(fill = NA, color = "black", size = 0.5, linetype = "solid"),  # Adds a border around the strip
+    strip.text = element_text(family = "opensans", size = 10, color = "black", face = "bold")
+  )
+
+
+
 
