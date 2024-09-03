@@ -33,22 +33,6 @@ SvyMADBreasfed <- SvyMADData %>%
   rename(Category = PCMADBreastfeeding) %>% 
   mutate(Category = as_factor(Category))
 
-## Proportion of breasfed children in the last day, by child gender
-SvyMADBreasfedGender <- SvyMADData %>% 
-  filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 23) %>%
-  group_by(PCMADBreastfeeding, ChildGender) %>%
-  summarise(PropotionBreastfed = survey_mean() * 100,
-            Total = survey_total()) %>% 
-  select(-c("PropotionBreastfed_se", "Total_se", "Total")) %>% 
-  mutate(PCMADBreastfeeding = as_factor(PCMADBreastfeeding)) %>% 
-  filter(PCMADBreastfeeding == "Yes") %>% 
-  pivot_wider(names_from = Treatment, values_from = PropotionBreastfed) %>% 
-  mutate(Diff = `Treatment Group` - `Control Group`) %>%
-  mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
-  mutate(Indicator = "Breastfeeding") %>%
-  select(Indicator, PCMADBreastfeeding, ChildGender, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
-  mutate(ChildGender = as_factor(ChildGender)) 
-
 ## Proportion of breasfed children in the last day, by regiontype
 SvyMADBreastFeedindRegionTab <- SvyMADData %>% 
   filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 23) %>%
@@ -90,9 +74,9 @@ SvyMADBreastfedTab <- rbind(SvyMADBreastFeedindRegionTab, SvyMADBreasfedGenderTa
 
 ###############################################################################################################################
 ##Testing the difference in the proportions of children who were breastfed in the last 24 hours
-MADBrestfedProptestIE <- svyttest(PCMADBreastfeeding == 1 ~ Treatment, design = SvyMADData)
-MADBrestfedProptestGender <- svyttest(PCMADBreastfeeding == 1 ~ ChildGender, design = SvyMADData)
-MADBrestfedProptestRegion <- svyttest(PCMADBreastfeeding == 1 ~ regiontype, design = SvyMADData)
+MADBrestfedProptestIE <- svychisq(~PCMADBreastfeeding + Treatment, design = SvyMADData) # Not statistically significant at all levels
+MADBrestfedProptestGender <- svychisq(~PCMADBreastfeeding + ChildGender, design = SvyMADData) # Not Statistically significant at all levels
+MADBrestfedProptestRegion <- svychisq(~PCMADBreastfeeding + regiontype, design = SvyMADData) # Not statistically significant
 ###############################################################################################################################
 
 
@@ -146,11 +130,24 @@ SvyMDDChildrenGenderTab <- SvyMADData %>%
 SvyMDDChildrenTab <- rbind(SvyMDDChildrenTreatTab, SvyMDDChildrenRegionTab, SvyMDDChildrenGenderTab) %>% 
   select(-c("MDDCat"))
 
+#SvyMDD by age group
+SvyMDDChildrenAgeTab <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+  group_by(ChildAgeGroup, MDDCat) %>%
+  summarise(MDDChilden = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("MDDChilden_se", "Total_se", "Total")) %>% 
+  filter(MDDCat == 1) %>% 
+  rename(Disaggregation = ChildAgeGroup) %>% 
+  select(Disaggregation, MDDChilden)
+
+
 ##################################################################################################################################
 #Testing the difference in the proportions of children who met the minimum dietary diversity
 MDDChisqtestIE <- svychisq(~MDDCat + Treatment, design = SvyMADData) ## Biig difference and statistically Significant at 5% level
 MDDChisqtestRegion <- svychisq(~MDDCat + regiontype, design = SvyMADData) ## Small difference and not statistically significant at all levels
 MDDChisqtestGender <- svychisq(~MDDCat + ChildGender, design = SvyMADData) ## Not statistically significant at all levels
+MDDChisqAge <- svychisq(~MDDCat + ChildAgeGroup, design = SvyMADData) ## Highly statistically significant at all levels
 ##################################################################################################################################
 ## Calculate the proportion of children meeting minimum dietary diversity, by child gender
 SvyMDDChildrenGender <- SvyMADData %>% 
@@ -220,11 +217,23 @@ SvyMMFChildrenGenderTab <- SvyMADData %>%
 SvyMMFChildrenTab <- rbind(SvyMMFChildrenTreatTab, SvyMMFChildrenRegionTab, SvyMMFChildrenGenderTab) %>% 
   select(-c("MMF"))
 
+# Calculate the proportion of children who MMF  by age group
+SvyMMFChildrenAgeTab <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+  group_by(ChildAgeGroup, MMF) %>%
+  summarise(MMFChildren = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("MMFChildren_se", "Total_se", "Total")) %>% 
+  filter(MMF == 1) %>% 
+  rename(Disaggregation = ChildAgeGroup) %>% 
+  select(Disaggregation, MMFChildren)
+
 ##################################################################################################################################
 #testing the difference in the proportions of children who met the minimum meal frequency using the chisq test
 MMFChisqtestIE <- svychisq(~MMF + Treatment, design = SvyMADData) ## Not statistically significant at all levels
 MMFChisqtestRegion <- svychisq(~MMF + regiontype, design = SvyMADData) ## Not statistically significant at all levels
 MMFChisqtestGender <- svychisq(~MMF + ChildGender, design = SvyMADData) ## Not statistically significant at all levels
+MMFChisqAge <- svychisq(~MMF + ChildAgeGroup, design = SvyMADData) ## Highly statistically significant at all levels
 #################################################################################################################################
 # Calculate the proportion of children meeting MMF in each group
 ## Calculate the percentage of children who met MMF, by child gender
@@ -374,12 +383,25 @@ SvyMADChildrenGenderTab <- SvyMADData %>%
 # combine the tables
 SvyChildrenMADTab <- rbind(SvyMADChildrenTreatTab, SvyMADChildrenRegionTab, SvyMADChildrenGenderTab) %>% 
   select(-c("MAD"))
+
+# Calculate the proportion of children who met MAD, by age group
+
+SvyMADChildrenAgeTab <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+  group_by(ChildAgeGroup, MAD) %>%
+  summarise(MADChildren = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("MADChildren_se", "Total_se", "Total")) %>% 
+  filter(MAD == 1) %>% 
+  rename(Disaggregation = ChildAgeGroup) %>% 
+  select(Disaggregation, MADChildren)
 ##################################################################################################################################
 
 # Perfom the chisq test to test the difference in the proportions of children who met the minimum acceptable diet
 MADChisqtestIE <- svychisq(~MAD + Treatment, design = SvyMADData) ## The difference is weeakily statistically significant at 10% level
 MADChisqtestRegion <- svychisq(~MAD + regiontype, design = SvyMADData) ## The difference is not statistically significant at all levels
 MADChisqtestGender <- svychisq(~MAD + ChildGender, design = SvyMADData) ## The difference is not statistically significant at all levels
+MADChisqtestAge <- svychisq(~MAD + ChildAgeGroup, design = SvyMADData) ## The difference is highly statistically significant at all levels
 
 ##################################################################################################################################
 # calculate MIXED MILK FEEDING UNDER SIX MONTHS (MixMF)
@@ -527,10 +549,14 @@ SvyMADNutritionIndicators <- SvyMADBreastfedTab %>%
   left_join(SvyChildrenMADTab, by = "Disaggregation") %>%
   left_join(SvyChildrenMixMFTab, by = "Disaggregation") %>%
   left_join(SvyChildrenUnhealthyFoodsTab, by = "Disaggregation") %>% 
-  pivot_longer(cols = c("PropotionBreastfed" : "UnhealthyFoods"), names_to = "Indicator", values_to = "Percentage")
+  pivot_longer(cols = c("PropotionBreastfed" : "UnhealthyFoods"), names_to = "Indicator", values_to = "Percentage") %>% 
+  pivot_wider(names_from = Disaggregation, values_from = Percentage) %>% 
+  # round the values to 2 decimal places
+  mutate(across(is.numeric, ~round(., 2)))
 
-#write an excel file
-write.xlsx(DQQChildNutritionIndicators, "report tables/DQQChildNutritionIndicators.xlsx")
+# Write an excel file
+write.xlsx(SvyMADNutritionIndicators, "results/SvyMADNutritionIndicators.xlsx")
+
 ######################################################################################################################################
 
 # ## Calculate the nutrition indicators using the formula
@@ -543,3 +569,9 @@ write.xlsx(DQQChildNutritionIndicators, "report tables/DQQChildNutritionIndicato
 # SvyChildMixMF <- calculate_proportions_and_ttest_nut(SvyMADData, "MixMF", "Treatment")
 
 #####################################################################################################################################
+SvyNutTable <- SvyMADChildrenAgeTab %>% 
+  left_join(SvyMMFChildrenAgeTab, by = "Disaggregation") %>% 
+  left_join(SvyMDDChildrenAgeTab, by = "Disaggregation") %>% 
+  # Change all numeric columns to 2 dp
+  mutate(across(is.numeric, ~round(., 2))) %>%
+  pivot_longer(cols = c("MADChildren" : "MDDChilden"), names_to = "Indicator", values_to = "Percentage")

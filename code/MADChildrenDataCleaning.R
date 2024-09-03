@@ -268,5 +268,13 @@ HHCharacteristics <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>
 # Merge the data with household data
 
 MADChildren <- MADChildren %>% 
-  left_join(HHCharacteristics, by = c("interview__key", "interview__id"))
+  left_join(HHCharacteristics, by = c("interview__key", "interview__id")) %>% 
+  # Mutate child age groups
+  mutate(
+    ChildAgeGroup = case_when(
+      ChildAgeMonths >= 0 & ChildAgeMonths <= 5 ~ "0-5 Months",
+      ChildAgeMonths >= 6 & ChildAgeMonths <= 11 ~ "6-11 Months",
+      ChildAgeMonths >= 12 & ChildAgeMonths <= 17 ~ "12-17 Months",
+      ChildAgeMonths >= 18 & ChildAgeMonths <= 23 ~ "18-23 Months",
+      TRUE ~ "Other"))
 
