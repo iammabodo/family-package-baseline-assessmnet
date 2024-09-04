@@ -521,5 +521,20 @@ SvyNutTable %>%
   )
 
 
+############################################################################################################################################################
 
+# Visualising the big nutrition indicators (MDD-W and MAD
+NutDataTable <- bind_rows(MDDTable, SvyMADChildrenTab)
+
+NutDataTable %>%
+  ggplot(aes(x = Indicator, y = Percentage)) +
+  geom_bar(stat = "identity", fill = "#254769", width = 0.6) + 
+  geom_text(aes(label = paste0(Percentage, "%"), y = Percentage / 2), 
+            size = 3.5, family = "opensans", color = "#ffffff") +
+  coord_flip() +
+  facet_wrap(~Category) +
+  theme_minimal() +
+  labs(
+    title = "Nutrition Indicators (MDD-W and MAD), by age group",
+    subtitle
 
