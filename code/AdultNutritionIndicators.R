@@ -40,14 +40,14 @@ MDDWomenRegion <- SvyDietQualityData %>%
   filter(MDDAge >= 15 & MDDAge <= 49) %>%
   group_by(regiontype, MDDCategory) %>%
   summarise(MDDWomen = survey_mean() * 100) %>%
+  ungroup() %>%
   filter(MDDCategory == 1) %>%
   select(-MDDWomen_se) %>%
-  pivot_wider(names_from = regiontype, values_from = MDDWomen) %>%
-  mutate(Diff = URBAN - RURAL) %>%
-  mutate(Overall = (URBAN + RURAL)/2) %>%
-  mutate(Indicator = "MDD-W") %>%
-  select(Indicator, MDDCategory, Overall, RURAL, URBAN, Diff) %>%
-  rename(Category = MDDCategory)
+  rename(Percentage = MDDWomen) %>%
+  mutate(Indicator = "MDD-W",
+         MDDCategory = regiontype) %>%
+  select(Indicator, MDDCategory, Percentage)
+  
 
 # Calculate MDDWomen - uncategorised
 MDDWomenTot <- SvyDietQualityData %>% 
@@ -55,7 +55,18 @@ MDDWomenTot <- SvyDietQualityData %>%
   filter(MDDAge >= 15 & MDDAge <= 49) %>%
   group_by(MDDCategory) %>%
   summarise(MDDWomen = survey_mean() * 100) %>%
-  filter(MDDCategory == 1)
+  filter(MDDCategory == 1) %>% 
+  select(-MDDWomen_se) %>%
+  rename(Percentage = MDDWomen) %>% 
+  mutate(Indicator = "MDD-W",
+         MDDCategory = "Overall") %>%
+  select(Indicator, MDDCategory, Percentage)
+
+# Bind the rows
+MDDTable <- bind_rows(MDDWomenTot, MDDWomenRegion) %>% 
+  # Round all the numeric variables to 2 decimal places
+  mutate_if(is.numeric, ~round(., 2)) %>% 
+  rename(Category = MDDCategory)
 
 #################################################################################################################
 
