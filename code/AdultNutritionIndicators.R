@@ -762,6 +762,13 @@ SvyNCDProtectiveFoodsGender <- SvyDietQualityData %>%
          Indicator = "NCD Protective Foods") %>%
   select(Indicator, everything())
 
+# NCD Protective Foods overall
+NCDProtectiveFoodsOveral <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  summarise(NCDProtScore = survey_mean(NCDProtScore)) %>% 
+  select(-c(NCDProtScore_se)) %>%
+  mutate(Indicator = "NCD Protective Foods")
+
 # Join the three dataframes - using the left join function
 NCDProtectiveFoodsTable <- SvyNCDProtectiveFoods %>% 
   left_join(SvyNCDProtectiveFoodsRegion, by = "Indicator") %>% 
@@ -815,6 +822,13 @@ SvyNCDRiskScoreGender <- SvyDietQualityData %>%
   mutate(DiffGender = Male - Female,
          Indicator = "NCD Risk Score") %>%
   select(Indicator, everything())
+
+# NCD Risk score overall
+NCDRiskScoreOveral <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  summarise(NCDRiskScore = survey_mean(NCDRiskScore)) %>% 
+  select(-c(NCDRiskScore_se)) %>%
+  mutate(Indicator = "NCD Risk Score")
 
 # Join the three dataframes - using the left join function
 NCDRiskScoreTable <- SvyNCDRiskScore %>% 
@@ -871,6 +885,15 @@ SvyGDSGender <- SvyDietQualityData %>%
   mutate(DiffGender = Male - Female,
          Indicator = "GDS Score") %>%
   select(Indicator, everything())
+
+# Overall DGS Score
+GDSScoreOveral <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  summarise(GDRScore = survey_mean(GDRScore)) %>% 
+  select(-c(GDRScore_se)) %>%
+  mutate(Indicator = "GDS Score")
+
+
 
 # Join the three dataframes - using the left join function
 GDSScoreTable <- SvyGDS %>% 
