@@ -357,7 +357,29 @@ SvyMADChildrenRegionTab <- SvyMADData %>%
             Total = survey_total()) %>% 
   select(-c("MADChildren_se", "Total_se", "Total")) %>% 
   filter(MAD == 1) %>% 
-  rename(Disaggregation  = regiontype)
+  rename(Category  = regiontype,
+         Percentage = MADChildren) %>% 
+  mutate(Indicator = "MAD") %>% 
+  select(Indicator, Category, Percentage)
+
+#Calculate Overall MAD
+SvyMADChildrenOverall <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+  group_by(MAD) %>%
+  summarise(MADChildren = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("MADChildren_se", "Total_se", "Total")) %>% 
+  filter(MAD == 1) %>% 
+  rename(Percentage = MADChildren) %>%
+  mutate(Indicator = "MAD", 
+         Category = "Overall") %>% 
+  select(Indicator, Category, Percentage)
+
+# Bind rows
+
+SvyMADChildrenTab <- rbind(SvyMADChildrenOverall, SvyMADChildrenRegionTab) %>% 
+  # round numeric values to 2dp
+  mutate(Percentage = round(Percentage, 2))
 
 # Calculate the percentage of children who met MAD, by treatment
 SvyMADChildrenTreatTab <- SvyMADData %>% 
