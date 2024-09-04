@@ -68,6 +68,15 @@ SvyMADBreastfedTreatTab <- SvyMADData %>%
   filter(PCMADBreastfeeding == "Yes") %>% 
   rename(Disaggregation = Treatment)
 
+OveralBreastFed <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 23) %>%
+  group_by(PCMADBreastfeeding) %>%
+  summarise(PropotionBreastfed = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("PropotionBreastfed_se", "Total_se", "Total")) %>% 
+  mutate(PCMADBreastfeeding = as_factor(PCMADBreastfeeding)) %>% 
+  filter(PCMADBreastfeeding == "Yes")
+
 # Combine the tables
 SvyMADBreastfedTab <- rbind(SvyMADBreastFeedindRegionTab, SvyMADBreasfedGenderTab, SvyMADBreastfedTreatTab) %>% 
   select(-c("PCMADBreastfeeding"))
@@ -551,6 +560,21 @@ SvyMADUnhealthyFoodsGenderTab <- SvyMADData %>%
   filter(PCMADUnhealthyFds == 1) %>% 
   mutate(ChildGender = as_factor(ChildGender)) %>% 
   rename(Disaggregation = ChildGender)
+
+# Overall Unhealthy Foods
+SvyMADUnhealthyFoodsOverall <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+  group_by(PCMADUnhealthyFds) %>%
+  summarise(UnhealthyFoods = survey_mean() * 100,
+            Total = survey_total()) %>% 
+  select(-c("UnhealthyFoods_se", "Total_se", "Total")) %>% 
+  filter(PCMADUnhealthyFds == 1) %>% 
+  rename(Percentage = UnhealthyFoods) %>% 
+  mutate(Indicator = "UnhealthyFoods", 
+         Category = "Overall") %>% 
+  select(Indicator, Category, Percentage)
+
+
 
 # Combine the tables
 SvyChildrenUnhealthyFoodsTab <- rbind(SvyMADUnhealthyFoodsTreatTab, SvyMADUnhealthyFoodsRegionTab, SvyMADUnhealthyFoodsGenderTab) %>% 
