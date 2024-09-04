@@ -99,6 +99,11 @@ meanRCSI <- SvyrCSIData %>%
   mutate(Indicator = "rCSI") %>%
   select(Indicator, Overall, `Control Group`, `Treatment Group`, Diff)
 
+meanRCSIOveral <- SvyrCSIData %>% 
+  summarise(MeanRCSI = survey_mean(rCSI)) %>% 
+  mutate(Indicator = "rCSI") %>% 
+  select(Indicator, MeanRCSI)
+
 meanRCSIRegion <- SvyrCSIData %>% 
   group_by(DisabCategory) %>% 
   summarise(MeanRCSI = survey_mean(rCSI)) %>% 
