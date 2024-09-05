@@ -11,7 +11,7 @@ source("code/FoodSecurityDataCleaning.R")
 source("code/MADChildrenDataCleaning.R")
 
 # Read cover data
-SurveyDesignData<- read_dta("new data/cover.dta")
+SurveyDesignData <- read_dta("new data/cover.dta")
 
 
 SurveyDesignData <- SurveyDesignData %>%
@@ -27,7 +27,7 @@ SvyLCSENData <- LCSEN %>%
 
 # Merge the FIES Data with the Survey Design Data
 SvyFIESData <- FIESData %>% 
-  left_join(SurveyDesignData, by = "interview__key") %>% 
+  left_join(SurveyDesignData, by = "hhid") %>% 
   # Set the data to survey designed data
   as_survey_design(ids = clusterid, 
                    strata = strataid, 
@@ -35,7 +35,7 @@ SvyFIESData <- FIESData %>%
 
 # Merge the rCSI Data with the Survey Design Data
 SvyrCSIData <- rCSIData %>% 
-  left_join(SurveyDesignData, by = "interview__key") %>% 
+  left_join(SurveyDesignData, by = "hhid") %>% 
   #Set the data to survey designed data
   as_survey_design(ids = clusterid, 
                    strata = strataid, 
