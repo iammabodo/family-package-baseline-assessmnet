@@ -160,18 +160,18 @@ LCSEN <- FoodSecurity %>%
 
 
 rCSIData <- FoodSecurity %>% 
-  select(interview__key, interview__id, Province, District, Commune, Village, HHID,
-         IDPOOR, equitycardno, householduuid, Sex, S8_5:S8_9b, DisabCategory) %>% 
+  select(hhid, Province, District, Commune, Village, HHID,
+         IDPOOR, sec8_5:sec8_9b) %>% 
   # Rename Variables
   rename(
-    rCSILessQlty = S8_5,
-    rCSIBorrow = S8_6a,
-    rCSIMealSize = S8_7a,
-    rCSIMealSizeWho = S8_7b,
-    rCSIMealNb = S8_9a,
-    rCSIMealNbWho = S8_9b,
-    rCSIMealAdult = S8_8a,
-    rCSIMealAdultWho = S8_8b) %>%
+    rCSILessQlty = sec8_5,
+    rCSIBorrow = sec8_6a,
+    rCSIMealSize = sec8_7a,
+    rCSIMealSizeWho = sec8_7b,
+    rCSIMealNb = sec8_9a,
+    rCSIMealNbWho = sec8_9b,
+    rCSIMealAdult = sec8_8a,
+    rCSIMealAdultWho = sec8_8b) %>%
   # Change rCSIMealSizeWho,  rCSIMealAdultWho and rCSIMealNbWho to factor variables
   mutate(
     rCSIMealSizeWho = as_factor(rCSIMealSizeWho),
@@ -195,8 +195,7 @@ rCSIData <- FoodSecurity %>%
     District = as_factor(District),
     Commune = as_factor(Commune),
     Village = as_factor(Village),
-    IDPOOR = as_factor(IDPOOR),
-    Sex = as_factor(Sex)) %>% 
+    IDPOOR = as_factor(IDPOOR)) %>% 
   # Create reduced Coping strategies indicator
   mutate(rCSI = rCSILessQlty +
            (rCSIBorrow * 2) +
@@ -246,25 +245,24 @@ rCSIData <- FoodSecurity %>%
 # FOOD INSECURITY EXPERIENCE SCALE (FIES) INDICATORS
 
 FIESData <- FoodSecurity %>% 
-  select(interview__key, Province, District, Commune, Village, IDPOOR, S8_3a:S8_3h, DisabCategory) %>%
+  select(hhid, Province, District, Commune, Village, IDPOOR, sec8_3a:sec8_3h) %>%
   # Change the variables to factor variables
   mutate(
     Province = as_factor(Province),
     District = as_factor(District),
     Commune = as_factor(Commune),
     Village = as_factor(Village),
-    IDPOOR = as_factor(IDPOOR), 
-    DisabCategory == as_factor(DisabCategory)) %>% 
+    IDPOOR = as_factor(IDPOOR)) %>% 
   # Rename the variables
   rename(
-    FIESWorried = S8_3a,
-    FIESEatHealthy = S8_3b,
-    FIESFewFoods = S8_3c,
-    FIESSkipMeal = S8_3d,
-    FIESAteLess = S8_3e,
-    FIESRanOut = S8_3f,
-    FIESHungry = S8_3g,
-    FIESWholeDay = S8_3h) %>%
+    FIESWorried = sec8_3a,
+    FIESEatHealthy = sec8_3b,
+    FIESFewFoods = sec8_3c,
+    FIESSkipMeal = sec8_3d,
+    FIESAteLess = sec8_3e,
+    FIESRanOut = sec8_3f,
+    FIESHungry = sec8_3g,
+    FIESWholeDay = sec8_3h) %>%
   # Change -99 and -96 values to NA
   mutate(across(c(FIESWorried:FIESWholeDay), ~ na_if(., -99))) %>%
   mutate(across(c(FIESWorried:FIESWholeDay), ~ na_if(., -96))) %>%
