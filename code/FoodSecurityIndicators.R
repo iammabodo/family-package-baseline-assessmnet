@@ -152,10 +152,14 @@ write.xlsx(SvyLCSENFoodProvinceTab, "report tables/SvyLCSENFoodProvince.xlsx")
 meanRCSIProvince <- SvyrCSIData %>% 
   group_by(Province) %>% 
   summarise(MeanRCSI = survey_mean(rCSI)) %>% 
-  select(Province, MeanRCSI) #%>% 
-pivot_wider(names_from = Treatment, values_from = MeanRCSI)
-
+  select(Province, MeanRCSI) 
 ###################################################################################################################################################################
+
+# Test whether rCSI is difference between provinces
+rCSITest <- svyglm(rCSI ~ Province, design = SvyrCSIData)
+pairwies_comparison <- glht(rCSITest, linfct = mcp(Province = "Tukey"))
+
+##################################################################################################################################################################
 
 # Individual components of food security sub-indicators
 # 1. FIES
@@ -344,7 +348,7 @@ rCSICopingStrategies <- bind_rows(rCSILessQltyCat, rCSIBorrowCat, rCSIMealSizeCa
 
 rCSIMealSizeWho <- rCSIData %>% 
   drop_na(rCSIMealSizeWho) %>% 
-  count(rCSIMealSizeWho) %>% 
+  count(province, rCSIMealSizeWho) %>% 
   mutate(Pct = n / sum(n) * 100) %>% 
   select(rCSIMealSizeWho, Pct) %>%
   pivot_wider(names_from = rCSIMealSizeWho, values_from = Pct) %>% 
