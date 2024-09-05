@@ -26,12 +26,12 @@ MDDWomen <- SvyDietQualityData %>%
   group_by(Treatment, MDDCategory) %>% 
   summarise(MDDWomen = survey_mean() * 100) %>% 
   filter(MDDCategory == 1) %>% 
-  select(-MDDWomen_se) %>% 
+  dplyr::select(-MDDWomen_se) %>% 
   pivot_wider(names_from = Treatment, values_from = MDDWomen) %>% 
   mutate(Diff = `Treatment Group` - `Control Group`) %>% 
   mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>% 
   mutate(Indicator = "MDD-W") %>%
-  select(Indicator, MDDCategory, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
+  dplyr::select(Indicator, MDDCategory, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
   rename(Category = MDDCategory)
 
 # Calculate MDD-W disagreggated by regiontype
@@ -42,11 +42,11 @@ MDDWomenRegion <- SvyDietQualityData %>%
   summarise(MDDWomen = survey_mean() * 100) %>%
   ungroup() %>%
   filter(MDDCategory == 1) %>%
-  select(-MDDWomen_se) %>%
+  dplyr::select(-MDDWomen_se) %>%
   rename(Percentage = MDDWomen) %>%
   mutate(Indicator = "MDD-W",
          MDDCategory = regiontype) %>%
-  select(Indicator, MDDCategory, Percentage)
+  dplyr::select(Indicator, MDDCategory, Percentage)
   
 
 # Calculate MDDWomen - uncategorised
@@ -56,11 +56,11 @@ MDDWomenTot <- SvyDietQualityData %>%
   group_by(MDDCategory) %>%
   summarise(MDDWomen = survey_mean() * 100) %>%
   filter(MDDCategory == 1) %>% 
-  select(-MDDWomen_se) %>%
+  dplyr::select(-MDDWomen_se) %>%
   rename(Percentage = MDDWomen) %>% 
   mutate(Indicator = "MDD-W",
          MDDCategory = "Overall") %>%
-  select(Indicator, MDDCategory, Percentage)
+  dplyr::select(Indicator, MDDCategory, Percentage)
 
 # Bind the rows
 MDDTable <- bind_rows(MDDWomenTot, MDDWomenRegion) %>% 
@@ -74,6 +74,21 @@ MDDTable <- bind_rows(MDDWomenTot, MDDWomenRegion) %>%
 MDDWomenChisq <- svychisq(~MDDCategory + regiontype, design = SvyDietQualityData) # Not significant
 
 #################################################################################################################
+
+# Calculate calculate MDD by province
+MDDWomenProvince <- SvyDietQualityData %>% 
+  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15 & MDDAge <= 49) %>%
+  group_by(Province, MDDCategory) %>%
+  summarise(MDDWomen = survey_mean() * 100) %>%
+  filter(MDDCategory == 1) %>%
+  dplyr::select(-MDDWomen_se) %>%
+  rename(Percentage = MDDWomen) %>%
+  mutate(Indicator = "MDD-W",
+         MDDCategory = Province) %>%
+  dplyr::select(Indicator, MDDCategory, Percentage)
+
+
 
 # # Calculate the proportion of women consuming all five food groups
 # MDDWomen5Groups <- SvyDietQualityData %>% 
@@ -96,12 +111,12 @@ NCDRiskScore <- SvyDietQualityData %>%
   group_by(Treatment, MDDGender) %>%
   summarise(NCDRiskScore = survey_mean(NCDRiskScore),
             Total = survey_total()) %>% 
-  select(-c("NCDRiskScore_se", "Total_se", "Total")) %>% 
+  dplyr::select(-c("NCDRiskScore_se", "Total_se", "Total")) %>% 
   pivot_wider(names_from = Treatment, values_from = NCDRiskScore) %>% 
   mutate(Diff = `Treatment Group` - `Control Group`) %>%
   mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
   mutate(Indicator = "NCD Risk") %>% 
-  select(Indicator, MDDGender, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
+  dplyr::select(Indicator, MDDGender, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
   rename(Category = MDDGender)
 
 
@@ -110,12 +125,12 @@ NCDDRiskTot <- SvyDietQualityData %>%
   group_by(Treatment) %>%
   summarise(NCDRiskScore = survey_mean(NCDRiskScore),
             Total = survey_total()) %>% 
-  select(-c("NCDRiskScore_se", "Total_se", "Total")) %>% 
+  dplyr::select(-c("NCDRiskScore_se", "Total_se", "Total")) %>% 
   pivot_wider(names_from = Treatment, values_from = NCDRiskScore) %>% 
   mutate(Diff = `Treatment Group` - `Control Group`) %>%
   mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
   mutate(Indicator = "NCD Risk") %>% 
-  select(Indicator, Overall, `Control Group`, `Treatment Group`, Diff) 
+  dplyr::select(Indicator, Overall, `Control Group`, `Treatment Group`, Diff) 
 
 # Calculate the Non Communicable Diseases Protective Foods Score
 NCDProtectiveFoods <- SvyDietQualityData %>% 
@@ -123,12 +138,12 @@ NCDProtectiveFoods <- SvyDietQualityData %>%
   group_by(Treatment, MDDGender) %>%
   summarise(NCDProtectiveFoods = survey_mean(NCDProtScore),
             Total = survey_total()) %>%
-  select(-c("NCDProtectiveFoods_se", "Total_se", "Total")) %>%
+  dplyr::select(-c("NCDProtectiveFoods_se", "Total_se", "Total")) %>%
   pivot_wider(names_from = Treatment, values_from = NCDProtectiveFoods) %>%
   mutate(Diff = `Treatment Group` - `Control Group`) %>%
   mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
   mutate(Indicator = "NCD Protective Foods") %>%
-  select(Indicator, MDDGender, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
+  dplyr::select(Indicator, MDDGender, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
   rename(Category = MDDGender)
 
 # Calculate NCDProtectiveTot Score
@@ -137,12 +152,12 @@ NCDProtectiveTot <- SvyDietQualityData %>%
   group_by(Treatment) %>%
   summarise(NCDProtectiveFoods = survey_mean(NCDProtScore),
             Total = survey_total()) %>% 
-  select(-c("NCDProtectiveFoods_se", "Total_se", "Total")) %>%
+  dplyr::select(-c("NCDProtectiveFoods_se", "Total_se", "Total")) %>%
   pivot_wider(names_from = Treatment, values_from = NCDProtectiveFoods) %>%
   mutate(Diff = `Treatment Group` - `Control Group`) %>%
   mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
   mutate(Indicator = "NCD Protective Foods") %>%
-  select(Indicator, Overall, `Control Group`, `Treatment Group`, Diff)
+  dplyr::select(Indicator, Overall, `Control Group`, `Treatment Group`, Diff)
 
 
 # Calculate the GDRS Score
@@ -151,12 +166,12 @@ GDRSScore <- SvyDietQualityData %>%
   group_by(Treatment, MDDGender) %>%
   summarise(GDRSScore = survey_mean(GDRScore),
             Total = survey_total()) %>% 
-  select(-c("GDRSScore_se", "Total_se", "Total")) %>%
+  dplyr::select(-c("GDRSScore_se", "Total_se", "Total")) %>%
   pivot_wider(names_from = Treatment, values_from = GDRSScore) %>%
   mutate(Diff = `Treatment Group` - `Control Group`) %>%
   mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
   mutate(Indicator = "GDRS") %>%
-  select(Indicator, MDDGender, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
+  dplyr::select(Indicator, MDDGender, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
   rename(Category = MDDGender)
 
 # Calculate GDRSTot Score
@@ -165,12 +180,12 @@ GDRSTot <- SvyDietQualityData %>%
   group_by(Treatment) %>%
   summarise(GDRSScore = survey_mean(GDRScore),
             Total = survey_total()) %>% 
-  select(-c("GDRSScore_se", "Total_se", "Total")) %>%
+  dplyr::select(-c("GDRSScore_se", "Total_se", "Total")) %>%
   pivot_wider(names_from = Treatment, values_from = GDRSScore) %>%
   mutate(Diff = `Treatment Group` - `Control Group`) %>%
   mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
   mutate(Indicator = "GDRS") %>%
-  select(Indicator, Overall, `Control Group`, `Treatment Group`, Diff)
+  dplyr::select(Indicator, Overall, `Control Group`, `Treatment Group`, Diff)
 
 # Calculate MDDScore, by gender and treatment
 MDDScore <- SvyDietQualityData %>% 
@@ -219,7 +234,7 @@ SvyMDDWomenRegion <- SvyDietQualityData %>%
   summarise(MDDWomen = survey_prop() * 100,
             MDDTot = survey_total()) %>% 
   filter(MDDCategory == 1) %>%
-  select(-c("MDDWomen_se", "MDDTot_se", "MDDTot", "MDDCategory"))
+  dplyr::select(-c("MDDWomen_se", "MDDTot_se", "MDDTot", "MDDCategory"))
 
 # ## Consumption of all five food groups by womwn of reproductive age - 5 food groups
 # MDDWomen5GroupsProvince <- SvyDietQualityData %>% 
@@ -266,12 +281,12 @@ SvyStaples <- SvyDietQualityData %>%
   group_by(Treatment, MDDStaples) %>%
   summarise(MDDStaplesCat = survey_mean() * 100) %>%
   filter(MDDStaples == 1) %>%
-  select(-c(MDDStaplesCat_se, MDDStaples)) %>% 
+  dplyr::select(-c(MDDStaplesCat_se, MDDStaples)) %>% 
   rename(Disaggregation = Treatment) %>% 
   pivot_wider(names_from = Disaggregation, values_from = MDDStaplesCat) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "Staple Foods") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 #b. Staples by Region
 SvyStaplesRegion <- SvyDietQualityData %>% 
@@ -280,11 +295,11 @@ SvyStaplesRegion <- SvyDietQualityData %>%
   group_by(regiontype, MDDStaples) %>%
   summarise(MDDStaplesCat = survey_mean() * 100) %>%
   filter(MDDStaples == 1) %>%
-  select(-c(MDDStaplesCat_se, MDDStaples)) %>%
+  dplyr::select(-c(MDDStaplesCat_se, MDDStaples)) %>%
   pivot_wider(names_from = regiontype, values_from = MDDStaplesCat) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Staple Foods") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # Join the two dataframes
 StaplesData <- SvyStaples %>% 
@@ -313,12 +328,12 @@ SvyPulses <- SvyDietQualityData %>%
   group_by(Treatment, MDDPulses) %>%
   summarise(MDDPulsesCat = survey_mean() * 100) %>%
   filter(MDDPulses == 1) %>%
-  select(-c(MDDPulsesCat_se, MDDPulses)) %>%
+  dplyr::select(-c(MDDPulsesCat_se, MDDPulses)) %>%
   rename(Disaggregation = Treatment) %>%
   pivot_wider(names_from = Disaggregation, values_from = MDDPulsesCat) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "Pulses") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 #b. Pulses by Region
 SvyPulsesRegion <- SvyDietQualityData %>% 
@@ -327,11 +342,11 @@ SvyPulsesRegion <- SvyDietQualityData %>%
   group_by(regiontype, MDDPulses) %>%
   summarise(MDDPulsesCat = survey_mean() * 100) %>%
   filter(MDDPulses == 1) %>%
-  select(-c(MDDPulsesCat_se, MDDPulses)) %>%
+  dplyr::select(-c(MDDPulsesCat_se, MDDPulses)) %>%
   pivot_wider(names_from = regiontype, values_from = MDDPulsesCat) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Pulses") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # Join the two dataframes
 
@@ -357,12 +372,12 @@ SvyNutsSeeds <- SvyDietQualityData %>%
   group_by(Treatment, MDDNutsSeeds) %>%
   summarise(MDDNutsSeedsCat = survey_mean() * 100) %>%
   filter(MDDNutsSeeds == 1) %>%
-  select(-c(MDDNutsSeedsCat_se, MDDNutsSeeds)) %>%
+  dplyr::select(-c(MDDNutsSeedsCat_se, MDDNutsSeeds)) %>%
   rename(Disaggregation = Treatment) %>%
   pivot_wider(names_from = Disaggregation, values_from = MDDNutsSeedsCat) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "Nuts and Seeds") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
   
 #b. NutsSeeds by Region
 
@@ -372,11 +387,11 @@ SvyNutsSeedsRegion <- SvyDietQualityData %>%
   group_by(regiontype, MDDNutsSeeds) %>%
   summarise(MDDNutsSeedsCat = survey_mean() * 100) %>%
   filter(MDDNutsSeeds == 1) %>%
-  select(-c(MDDNutsSeedsCat_se, MDDNutsSeeds)) %>%
+  dplyr::select(-c(MDDNutsSeedsCat_se, MDDNutsSeeds)) %>%
   pivot_wider(names_from = regiontype, values_from = MDDNutsSeedsCat) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Nuts and Seeds") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # Join the two dataframes
 NutsSeedsData <- SvyNutsSeeds %>% 
@@ -400,12 +415,12 @@ SvyDairy <- SvyDietQualityData %>%
   group_by(Treatment, MDDDiary) %>%
   summarise(MDDDairyCat = survey_mean() * 100) %>%
   filter(MDDDiary == 1) %>%
-  select(-c(MDDDairyCat_se, MDDDiary)) %>%
+  dplyr::select(-c(MDDDairyCat_se, MDDDiary)) %>%
   rename(Disaggregation = Treatment) %>%
   pivot_wider(names_from = Disaggregation, values_from = MDDDairyCat) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "Dairy") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 #b. Dairy by Region
 SvyDairyRegion <- SvyDietQualityData %>% 
@@ -414,11 +429,11 @@ SvyDairyRegion <- SvyDietQualityData %>%
   group_by(regiontype, MDDDiary) %>%
   summarise(MDDDairyCat = survey_mean() * 100) %>%
   filter(MDDDiary == 1) %>%
-  select(-c(MDDDairyCat_se, MDDDiary)) %>%
+  dplyr::select(-c(MDDDairyCat_se, MDDDiary)) %>%
   pivot_wider(names_from = regiontype, values_from = MDDDairyCat) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Dairy") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # Join the two dataframes
 DairyData <- SvyDairy %>% 
@@ -443,12 +458,12 @@ SvyProtein <- SvyDietQualityData %>%
   group_by(Treatment, MDDProtein) %>%
   summarise(MDDProteinCat = survey_mean() * 100) %>%
   filter(MDDProtein == 1) %>%
-  select(-c(MDDProteinCat_se, MDDProtein)) %>%
+  dplyr::select(-c(MDDProteinCat_se, MDDProtein)) %>%
   rename(Disaggregation = Treatment) %>%
   pivot_wider(names_from = Disaggregation, values_from = MDDProteinCat) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "Protein") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 #b. Protein by Region
 SvyProteinRegion <- SvyDietQualityData %>% 
@@ -457,11 +472,11 @@ SvyProteinRegion <- SvyDietQualityData %>%
   group_by(regiontype, MDDProtein) %>%
   summarise(MDDProteinCat = survey_mean() * 100) %>%
   filter(MDDProtein == 1) %>%
-  select(-c(MDDProteinCat_se, MDDProtein)) %>%
+  dplyr::select(-c(MDDProteinCat_se, MDDProtein)) %>%
   pivot_wider(names_from = regiontype, values_from = MDDProteinCat) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Protein") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # Join the two dataframes
 ProteinData <- SvyProtein %>% 
@@ -489,12 +504,12 @@ SvyEggs <- SvyDietQualityData %>%
   group_by(Treatment, MDDEggs) %>%
   summarise(MDDEggsCat = survey_mean() * 100) %>%
   filter(MDDEggs == 1) %>%
-  select(-c(MDDEggsCat_se, MDDEggs)) %>%
+  dplyr::select(-c(MDDEggsCat_se, MDDEggs)) %>%
   rename(Disaggregation = Treatment) %>%
   pivot_wider(names_from = Disaggregation, values_from = MDDEggsCat) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "Eggs") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 #b. Eggs by Region
 
@@ -504,11 +519,11 @@ SvyEggsRegion <- SvyDietQualityData %>%
   group_by(regiontype, MDDEggs) %>%
   summarise(MDDEggsCat = survey_mean() * 100) %>%
   filter(MDDEggs == 1) %>%
-  select(-c(MDDEggsCat_se, MDDEggs)) %>%
+  dplyr::select(-c(MDDEggsCat_se, MDDEggs)) %>%
   pivot_wider(names_from = regiontype, values_from = MDDEggsCat) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Eggs") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # Join the two dataframes
 EggsData <- SvyEggs %>% 
@@ -535,12 +550,12 @@ SvyDarkGreenVeg <- SvyDietQualityData %>%
   group_by(Treatment, MDDDarkGreenVeg) %>%
   summarise(MDDDarkGreenVegCat = survey_mean() * 100) %>%
   filter(MDDDarkGreenVeg == 1) %>%
-  select(-c(MDDDarkGreenVegCat_se, MDDDarkGreenVeg)) %>%
+  dplyr::select(-c(MDDDarkGreenVegCat_se, MDDDarkGreenVeg)) %>%
   rename(Disaggregation = Treatment) %>%
   pivot_wider(names_from = Disaggregation, values_from = MDDDarkGreenVegCat) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "Dark Green Vegetables") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 #b. Dark Green Vegetables by Region
 
@@ -550,11 +565,11 @@ SvyDarkGreenVegRegion <- SvyDietQualityData %>%
   group_by(regiontype, MDDDarkGreenVeg) %>%
   summarise(MDDDarkGreenVegCat = survey_mean() * 100) %>%
   filter(MDDDarkGreenVeg == 1) %>%
-  select(-c(MDDDarkGreenVegCat_se, MDDDarkGreenVeg)) %>%
+  dplyr::select(-c(MDDDarkGreenVegCat_se, MDDDarkGreenVeg)) %>%
   pivot_wider(names_from = regiontype, values_from = MDDDarkGreenVegCat) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Dark Green Vegetables") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # Join the two dataframes
 DarkGreenVegData <- SvyDarkGreenVeg %>% 
@@ -581,12 +596,12 @@ SvyOtherVeg <- SvyDietQualityData %>%
   group_by(Treatment, MDDOtherVeg) %>%
   summarise(MDDOtherVegCat = survey_mean() * 100) %>%
   filter(MDDOtherVeg == 1) %>%
-  select(-c(MDDOtherVegCat_se, MDDOtherVeg)) %>%
+  dplyr::select(-c(MDDOtherVegCat_se, MDDOtherVeg)) %>%
   rename(Disaggregation = Treatment) %>%
   pivot_wider(names_from = Disaggregation, values_from = MDDOtherVegCat) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "Other Vegetables") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 #b. Other Vegetables by Region
 
@@ -596,11 +611,11 @@ SvyOtherVegRegion <- SvyDietQualityData %>%
   group_by(regiontype, MDDOtherVeg) %>%
   summarise(MDDOtherVegCat = survey_mean() * 100) %>%
   filter(MDDOtherVeg == 1) %>%
-  select(-c(MDDOtherVegCat_se, MDDOtherVeg)) %>%
+  dplyr::select(-c(MDDOtherVegCat_se, MDDOtherVeg)) %>%
   pivot_wider(names_from = regiontype, values_from = MDDOtherVegCat) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Other Vegetables") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # Join the two dataframes
 OtherVegData <- SvyOtherVeg %>% 
@@ -626,12 +641,12 @@ SvyOtherVitA <- SvyDietQualityData %>%
   group_by(Treatment, MDDOtherVitA) %>%
   summarise(MDDVitAFruitVegCat = survey_mean() * 100) %>%
   filter(MDDOtherVitA == 1) %>%
-  select(-c(MDDVitAFruitVegCat_se, MDDOtherVitA)) %>%
+  dplyr::select(-c(MDDVitAFruitVegCat_se, MDDOtherVitA)) %>%
   rename(Disaggregation = Treatment) %>%
   pivot_wider(names_from = Disaggregation, values_from = MDDVitAFruitVegCat) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "Other Vitamin A Foods") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 #b. Vitamin A Rich Fruits and Vegetables by Region
 
@@ -641,11 +656,11 @@ SvyOtherVitARegion <- SvyDietQualityData %>%
   group_by(regiontype, MDDOtherVitA) %>%
   summarise(MDDVitAFruitVegCat = survey_mean() * 100) %>%
   filter(MDDOtherVitA == 1) %>%
-  select(-c(MDDVitAFruitVegCat_se, MDDOtherVitA)) %>%
+  dplyr::select(-c(MDDVitAFruitVegCat_se, MDDOtherVitA)) %>%
   pivot_wider(names_from = regiontype, values_from = MDDVitAFruitVegCat) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Other Vitamin A Foods") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # Join the two dataframes
 
@@ -674,12 +689,12 @@ SvyOtherFruits <- SvyDietQualityData %>%
   group_by(Treatment, MDDOtherFruits) %>%
   summarise(MDDOtherFruitsCat = survey_mean() * 100) %>%
   filter(MDDOtherFruits == 1) %>%
-  select(-c(MDDOtherFruitsCat_se, MDDOtherFruits)) %>%
+  dplyr::select(-c(MDDOtherFruitsCat_se, MDDOtherFruits)) %>%
   rename(Disaggregation = Treatment) %>%
   pivot_wider(names_from = Disaggregation, values_from = MDDOtherFruitsCat) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "Other Fruits") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 #b. Other Fruits by Region
 
@@ -689,11 +704,11 @@ SvyOtherFruitsRegion <- SvyDietQualityData %>%
   group_by(regiontype, MDDOtherFruits) %>%
   summarise(MDDOtherFruitsCat = survey_mean() * 100) %>%
   filter(MDDOtherFruits == 1) %>%
-  select(-c(MDDOtherFruitsCat_se, MDDOtherFruits)) %>%
+  dplyr::select(-c(MDDOtherFruitsCat_se, MDDOtherFruits)) %>%
   pivot_wider(names_from = regiontype, values_from = MDDOtherFruitsCat) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Other Fruits") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # Join the two dataframes
 OtherFruitsData <- SvyOtherFruits %>% 
@@ -733,40 +748,40 @@ SvyNCDProtectiveFoods <- SvyDietQualityData %>%
   filter(MDDAge >= 15) %>%
   group_by(Treatment) %>%
   summarise(NCDProtScore = survey_mean(NCDProtScore)) %>% 
-  select(-c(NCDProtScore_se)) %>%
+  dplyr::select(-c(NCDProtScore_se)) %>%
   rename(Disaggregation = Treatment) %>%
   pivot_wider(names_from = Disaggregation, values_from = NCDProtScore) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "NCD Protective Foods") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # b. NCD Protective Foods by Region
 SvyNCDProtectiveFoodsRegion <- SvyDietQualityData %>% 
   filter(MDDAge >= 15) %>%
   group_by(regiontype) %>%
   summarise(NCDProtScore = survey_mean(NCDProtScore)) %>% 
-  select(-c(NCDProtScore_se)) %>%
+  dplyr::select(-c(NCDProtScore_se)) %>%
   pivot_wider(names_from = regiontype, values_from = NCDProtScore) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "NCD Protective Foods") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 #c. NCD Protective Foods by Gender
 SvyNCDProtectiveFoodsGender <- SvyDietQualityData %>% 
   filter(MDDAge >= 15) %>%
   group_by(MDDGender) %>%
   summarise(NCDProtScore = survey_mean(NCDProtScore)) %>% 
-  select(-c(NCDProtScore_se)) %>%
+  dplyr::select(-c(NCDProtScore_se)) %>%
   pivot_wider(names_from = MDDGender, values_from = NCDProtScore) %>%
   mutate(DiffGender = Male - Female,
          Indicator = "NCD Protective Foods") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # NCD Protective Foods overall
 NCDProtectiveFoodsOveral <- SvyDietQualityData %>% 
   filter(MDDAge >= 15) %>%
   summarise(NCDProtScore = survey_mean(NCDProtScore)) %>% 
-  select(-c(NCDProtScore_se)) %>%
+  dplyr::select(-c(NCDProtScore_se)) %>%
   mutate(Indicator = "NCD Protective Foods")
 
 # Join the three dataframes - using the left join function
@@ -793,12 +808,12 @@ SvyNCDRiskScore <- SvyDietQualityData %>%
   filter(MDDAge >= 15) %>%
   group_by(Treatment) %>%
   summarise(NCDRiskScore = survey_mean(NCDRiskScore)) %>% 
-  select(-c(NCDRiskScore_se)) %>%
+  dplyr::select(-c(NCDRiskScore_se)) %>%
   rename(Disaggregation = Treatment) %>%
   pivot_wider(names_from = Disaggregation, values_from = NCDRiskScore) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "NCD Risk Score") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # b. NCD Risk Score by Region
 
@@ -806,28 +821,28 @@ SvyNCDRiskScoreRegion <- SvyDietQualityData %>%
   filter(MDDAge >= 15) %>%
   group_by(regiontype) %>%
   summarise(NCDRiskScore = survey_mean(NCDRiskScore)) %>% 
-  select(-c(NCDRiskScore_se)) %>%
+  dplyr::select(-c(NCDRiskScore_se)) %>%
   pivot_wider(names_from = regiontype, values_from = NCDRiskScore) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "NCD Risk Score") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 #c. NCD Risk by gender
 SvyNCDRiskScoreGender <- SvyDietQualityData %>% 
   filter(MDDAge >= 15) %>%
   group_by(MDDGender) %>%
   summarise(NCDRiskScore = survey_mean(NCDRiskScore)) %>% 
-  select(-c(NCDRiskScore_se)) %>%
+  dplyr::select(-c(NCDRiskScore_se)) %>%
   pivot_wider(names_from = MDDGender, values_from = NCDRiskScore) %>%
   mutate(DiffGender = Male - Female,
          Indicator = "NCD Risk Score") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # NCD Risk score overall
 NCDRiskScoreOveral <- SvyDietQualityData %>% 
   filter(MDDAge >= 15) %>%
   summarise(NCDRiskScore = survey_mean(NCDRiskScore)) %>% 
-  select(-c(NCDRiskScore_se)) %>%
+  dplyr::select(-c(NCDRiskScore_se)) %>%
   mutate(Indicator = "NCD Risk Score")
 
 # Join the three dataframes - using the left join function
@@ -841,7 +856,7 @@ NCDRiskScoreTable <- SvyNCDRiskScore %>%
 
 # Perform ttests for NCD Risk Score
 NCDRiskScoreTreatTest <- svyttest(NCDRiskScore ~ Treatment, design = SvyDietQualityData) # Not significant
-NCDRiskScoreRegionTest <- svyttest(NCDRiskScore ~ regiontype, design = SvyDietQualityData) # Significant at 10%
+NCDRiskScoreRegionTest <- svyttest(NCDRiskScore ~ regiontype, design = SvyDietQualityData) #No longer Significant
 NCDRiskScoreGenderTest <- svyttest(NCDRiskScore ~ MDDGender, design = SvyDietQualityData) # Not significant
 
 ###############################################################################################################
@@ -855,12 +870,12 @@ SvyGDS <- SvyDietQualityData %>%
   filter(MDDAge >= 15) %>%
   group_by(Treatment) %>%
   summarise(GDRScore = survey_mean(GDRScore)) %>% 
-  select(-c(GDRScore_se)) %>%
+  dplyr::select(-c(GDRScore_se)) %>%
   rename(Disaggregation = Treatment) %>%
   pivot_wider(names_from = Disaggregation, values_from = GDRScore) %>%
   mutate(DiffIE = `Treatment Group` - `Control Group`,
          Indicator = "GDS Score") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # b. GDS Score by Region
 
@@ -868,11 +883,11 @@ SvyGDSRegion <- SvyDietQualityData %>%
   filter(MDDAge >= 15) %>%
   group_by(regiontype) %>%
   summarise(GDRScore = survey_mean(GDRScore)) %>% 
-  select(-c(GDRScore_se)) %>%
+  dplyr::select(-c(GDRScore_se)) %>%
   pivot_wider(names_from = regiontype, values_from = GDRScore) %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "GDS Score") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 #c. GDS Score by gender
 
@@ -880,17 +895,17 @@ SvyGDSGender <- SvyDietQualityData %>%
   filter(MDDAge >= 15) %>%
   group_by(MDDGender) %>%
   summarise(GDRScore = survey_mean(GDRScore)) %>% 
-  select(-c(GDRScore_se)) %>%
+  dplyr::select(-c(GDRScore_se)) %>%
   pivot_wider(names_from = MDDGender, values_from = GDRScore) %>%
   mutate(DiffGender = Male - Female,
          Indicator = "GDS Score") %>%
-  select(Indicator, everything())
+  dplyr::select(Indicator, everything())
 
 # Overall DGS Score
 GDSScoreOveral <- SvyDietQualityData %>% 
   filter(MDDAge >= 15) %>%
   summarise(GDRScore = survey_mean(GDRScore)) %>% 
-  select(-c(GDRScore_se)) %>%
+  dplyr::select(-c(GDRScore_se)) %>%
   mutate(Indicator = "GDS Score")
 
 
@@ -905,6 +920,7 @@ GDSScoreTable <- SvyGDS %>%
 ##############################################################################################################
 
 # Perform ttests for GDS Score
+
 
 GDSScoreTreatTest <- svyttest(GDRScore ~ Treatment, design = SvyDietQualityData) # Not significant
 GDSScoreRegionTest <- svyttest(GDRScore ~ regiontype, design = SvyDietQualityData) # Not significant
