@@ -11,15 +11,15 @@ source("code/FoodSecurityDataCleaning.R")
 source("code/MADChildrenDataCleaning.R")
 
 # Read cover data
-SurveyDesignData<- read_dta("data/cover.dta")
+SurveyDesignData<- read_dta("new data/cover.dta")
 
 
 SurveyDesignData <- SurveyDesignData %>%
-  select(hhid, clusterid, strataid, GPS__Latitude, GPS__Longitude, GPS__Accuracy, GPS__Altitude, GPS__Timestamp, regiontype, poorscore) %>% 
-  rename(interview__key = hhid)
+  select(hhid, clusterid, strataid, GPS__Latitude, GPS__Longitude, GPS__Accuracy, GPS__Altitude, GPS__Timestamp, regiontype, poorscore) 
+
 
 SvyLCSENData <- LCSEN %>% 
-  left_join(SurveyDesignData, by = "interview__key") %>% 
+  left_join(SurveyDesignData, by = "hhid") %>% 
   #Set the data to survey designed data
   as_survey(ids = clusterid, 
             strata = strataid, 

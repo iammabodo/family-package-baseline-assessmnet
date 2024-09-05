@@ -6,14 +6,9 @@ library(RM.weights)
 library(eRm)
 
 
-FoodSecurity <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>% 
-  select(interview__key, interview__id, Province, District, Commune, Village, HHID,
-         IDPOOR, equitycardno, householduuid, Sex, starts_with("S8_"), Count_HH_Disability) %>% 
-  rename(DisabNmbr = Count_HH_Disability) %>% 
-  mutate(DisabCategory = case_when(
-    DisabNmbr == 0 ~ "No Disability",
-    DisabNmbr > 0 ~ "With Disability",
-    TRUE ~ "Missing"))
+FoodSecurity <- read_dta("new data/sec8.dta") %>% 
+  select(hhid, Province, District, Commune, Village, HHID, IDPOOR, sec8_3a:sec8_9b) %>% 
+  select(-sec8_4k_OTHER)
 
 # Load the data with disabilities
 
@@ -21,39 +16,38 @@ FoodSecurity <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>%
 # Livelihoods Copying Strategies Data
 
 LCSEN <- FoodSecurity %>% 
-  select(interview__key, interview__id, Province, District, Commune, Village, HHID,
-         IDPOOR, equitycardno, householduuid, Sex, DisabCategory,
+  select(hhid, Province, District, Commune, Village, HHID,
+         IDPOOR,
          # Livelihoods Copying Strategies Variables
-         S8_4a:S8_4k_OTHER) %>% 
+         sec8_4a:sec8_4k_OTHER_EN) %>% 
   # Rename the variables
   rename(
-    LcsENStressDomAsset = S8_4a,
-    LcsENStressSaving = S8_4d,
-    LcsENStressBorrowCash = S8_4e,
-    LcsENStressHHSeparation = S8_4i,
-    LcsENCrisisProdAssets = S8_4b,
-    LcsENCrisisHealth = S8_4c,
-    LcsENCrisisOutSchool = S8_4g,
-    LcsENEmResAssets = S8_4f,
-    LcsENEmBegged = S8_4j,
-    LcsENEmIllegalAct = S8_4h,
-    LCSENEngaged = S8_4k__0,
-    LCSENEngagedFood = S8_4k__1,
-    LCSENEngagedShelter = S8_4k__2,
-    LCSENEngagedEducation = S8_4k__3,
-    LCSENEngagedHealth = S8_4k__4,
-    LCSENEngagedNonFood = S8_4k__5,
-    LCSENEngagedHygiene = S8_4k__6,
-    LCSENEngagedEssentialSvcs = S8_4k__7,
-    LCSENEngagedDebtRepay = S8_4k__8,
-    LCSENEngagedOther = S8_4k_OTHER_EN) %>% 
+    LcsENStressDomAsset = sec8_4a,
+    LcsENStressSaving = sec8_4d,
+    LcsENStressBorrowCash = sec8_4e,
+    LcsENStressHHSeparation = sec8_4i,
+    LcsENCrisisProdAssets = sec8_4b,
+    LcsENCrisisHealth = sec8_4c,
+    LcsENCrisisOutSchool = sec8_4g,
+    LcsENEmResAssets = sec8_4f,
+    LcsENEmBegged = sec8_4j,
+    LcsENEmIllegalAct = sec8_4h,
+    LCSENEngaged = sec8_4k__0,
+    LCSENEngagedFood = sec8_4k__1,
+    LCSENEngagedShelter = sec8_4k__2,
+    LCSENEngagedEducation = sec8_4k__3,
+    LCSENEngagedHealth = sec8_4k__4,
+    LCSENEngagedNonFood = sec8_4k__5,
+    LCSENEngagedHygiene = sec8_4k__6,
+    LCSENEngagedEssentialSvcs = sec8_4k__7,
+    LCSENEngagedDebtRepay = sec8_4k__8,
+    LCSENEngagedOther = sec8_4k_OTHER_EN) %>% 
   # Change labelled variables to factor variables
   mutate(
     Province = as_factor(Province),
     District = as_factor(District),
     Commune = as_factor(Commune),
     Village = as_factor(Village),
-    Sex = as_factor(Sex),
     IDPOOR = as_factor(IDPOOR),
     LcsENStressDomAsset = as_factor(LcsENStressDomAsset),
     LcsENStressSaving = as_factor(LcsENStressSaving),
