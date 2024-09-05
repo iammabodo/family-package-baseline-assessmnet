@@ -10,76 +10,76 @@ library(haven)
 ## Data Import
 DietQuality <- read_dta("new data/sec7.dta") %>% 
   # Selecting relevant columns
-  select(hhid, Province, District, Commune, Village, HHID, IDPOOR, PID7_Resp,  sec7_1:sec7_32) %>%
+ dplyr::select(-"interview__id") %>%
   # Rename variables
   rename(
     MDDId = PID7_Resp,
-    MDDStapCereal = sec7_1,
-    MDDStapOther = sec7_2,
-    MDDStapRoots = sec7_3,
-    MDDStapPulse = sec7_4,
-    MDDVegVitamin = sec7_5,
-    MDDVegGreens = sec7_6,
-    MDDVegPumpkin = sec7_7,
-    MDDVegEggplant = sec7_8,
-    MDDVegWaxGourd = sec7_9,
-    MDDVegLettuce = sec7_10,
-    MDDFruitRipe = sec7_11,
-    MDDFruitOrange = sec7_12,
-    MDDFruitBanana = sec7_13,
-    MDDFruitMangosteen = sec7_14,
-    MDDSweetsCake = sec7_15,
-    MDDSweetsCandy = sec7_16,
-    MDDProteinEgg = sec7_17,
-    MDDProteinYogurt = sec7_18,
-    MDDProteinProcessed = sec7_19,
-    MDDProteinBeef = sec7_20,
-    MDDProteinPork = sec7_21,
-    MDDProteinChicken = sec7_22,
-    MDDProteinFish = sec7_23,
-    MDDOtherPeanuts = sec7_24,
-    MDDOtherChips = sec7_25,
-    MDDOtherNoodles = sec7_26,
-    MDDOtherFriedFoods = sec7_27,
-    MDDDrinkMilk = sec7_28,
-    MDDDrinkTea = sec7_29,
-    MDDDrinksFruitJuice = sec7_30,
-    MDDDrinksSoftDrinks = sec7_31,
-    MDDEatOut = sec7_32) %>% 
+    MDDStapCereal = sec7_1, # DQQ1
+    MDDStapOther = sec7_2, # DQQ2
+    MDDStapRoots = sec7_3, # DQQ3
+    MDDStapPulse = sec7_4, # DQQ4
+    MDDVegVitamin = sec7_5, # DQQ5
+    MDDVegGreens = sec7_6, # DQQ6.1
+    MDDVegPumpkin = sec7_7, # DQQ6.2
+    MDDVegEggplant = sec7_8, # DQQ7.1
+    MDDVegWaxGourd = sec7_9, # DQQ7.2
+    MDDVegLettuce = sec7_10, # DQQ7.3
+    MDDFruitRipe = sec7_11, # DQQ8
+    MDDFruitOrange = sec7_12, # DQQ9
+    MDDFruitBanana = sec7_13, # DQQ10.1
+    MDDFruitMangosteen = sec7_14, # DQQ10.2
+    MDDSweetsCake = sec7_15, # DQQ11
+    MDDSweetsCandy = sec7_16, # DQQ12
+    MDDProteinEgg = sec7_17, # DQQ13
+    MDDProteinYogurt = sec7_18, # DQQ15
+    MDDProteinProcessed = sec7_19, # DQQ16
+    MDDProteinBeef = sec7_20, # DQQ17
+    MDDProteinPork = sec7_21, # DQQ18
+    MDDProteinChicken = sec7_22, # DQQ19
+    MDDProteinFish = sec7_23, # DQQ20
+    MDDOtherPeanuts = sec7_24, # DQQ21
+    MDDOtherChips = sec7_25, # DQQ22
+    MDDOtherNoodles = sec7_26, # DQQ23
+    MDDOtherFriedFoods = sec7_27, # DQQ24
+    MDDDrinkMilk = sec7_28, # DQQ25
+    MDDDrinkTea = sec7_29, # DQQ26
+    MDDDrinksFruitJuice = sec7_30, # DQQ27
+    MDDDrinksSoftDrinks = sec7_31, # DQQ28
+    MDDEatOut = sec7_32) %>% # DQQ29
   # Change variables to factor variables
   #mutate_at(vars(MDDStapCereal:MDDEatOut), as_factor) %>%
   mutate_at(vars(Province:Village, IDPOOR), as_factor) %>%
-  #Mutate the food groups variables
+  #Mutate the food groups variables for the calculation of MDD
   mutate(MDDStaples = case_when(
     MDDStapCereal == 1 | MDDStapOther == 1 | MDDStapRoots == 1  ~ 1,
-    TRUE ~ 0),
+    TRUE ~ 0), # Checked - correct
     MDDPulses = case_when(
       MDDStapPulse == 1 ~ 1,
-      TRUE ~ 0),
+      TRUE ~ 0), # Checked - correct
     MDDNutsSeeds = case_when(
       MDDOtherPeanuts == 1 ~ 1,
-      TRUE ~ 0),
+      TRUE ~ 0), # Checked - correct
     MDDDiary = case_when(
       MDDProteinYogurt == 1 | MDDDrinkMilk == 1 ~ 1,
-      TRUE ~ 0),
+      TRUE ~ 0), # Checked - correct
     MDDProtein = case_when(
       MDDProteinProcessed  == 1 | MDDProteinBeef == 1 | MDDProteinPork == 1 | MDDProteinChicken == 1 | MDDProteinFish == 1 ~ 1,
-      TRUE ~ 0),
+      TRUE ~ 0), # Checked - correct
     MDDEggs = case_when(
       MDDProteinEgg == 1 ~ 1,
-      TRUE ~ 0),
+      TRUE ~ 0), # Checked - correct
     MDDDarkGreenVeg = case_when(
       MDDVegGreens == 1 | MDDVegPumpkin == 1  ~ 1,
-      TRUE ~ 0),
+      TRUE ~ 0), # Checked - correct
     MDDOtherVitA = case_when(
       MDDVegVitamin == 1 | MDDFruitRipe == 1  ~ 1,
-      TRUE ~ 0),
+      TRUE ~ 0), # Checked - correct
     MDDOtherVeg = case_when(
       MDDVegEggplant == 1 | MDDVegWaxGourd == 1 | MDDVegLettuce == 1  ~ 1,
-      TRUE ~ 0),
+      TRUE ~ 0), # Checked - correct
     MDDOtherFruits = case_when(
       MDDFruitOrange == 1 | MDDFruitBanana == 1 | MDDFruitMangosteen == 1  ~ 1,
-      TRUE ~ 0),
+      TRUE ~ 0), # Checked - correct
     NCDFruits = case_when(
       MDDFruitBanana == 1 | MDDFruitMangosteen == 1  ~ 1,
       TRUE ~ 0),
@@ -111,10 +111,11 @@ DietQuality <- read_dta("new data/sec7.dta") %>%
          # Non communicable diseases (NCD) protective score
          NCDProtScore = sum(across(c(MDDStapOther, MDDStapPulse, MDDOtherPeanuts,
                                      MDDVegVitamin, MDDDarkGreenVeg, MDDOtherVeg, 
-                                     MDDFruitRipe, MDDFruitOrange, NCDFruits))),
+                                     MDDFruitRipe, MDDFruitOrange, NCDFruits))), # Checked - correct
          # Non communicable diseases (NCD) risk score
          NCDRiskScore = (MDDDrinksSoftDrinks + MDDSweetsCake + MDDSweetsCandy + 
-                                     (MDDProteinProcessed * 2) + MDDOtherFriedFoods + NCDRiskOtherFastFds),
+                                     (MDDProteinProcessed * 2) + MDDOtherFriedFoods + 
+                           NCDRiskOtherFastFds + MDDOtherChips + NCDRiskUnprocemeat),
          # Global Dietary Recommendations (GDR) Score
          GDRScore = NCDProtScore - NCDRiskScore + 9) %>% 
   ungroup() %>%
@@ -197,7 +198,7 @@ DietQuality <- read_dta("new data/sec7.dta") %>%
 
 # Laod the Roster Data to look at the person responding to section 7
 MDDHHRoster <- read_dta("new data/sec1A.dta") %>%
-  select(hhid, pid, sex, sec1_4, sec1_5a, sec1_6) %>%
+  dplyr::select(hhid, pid, sex, sec1_4, sec1_5a, sec1_6) %>%
   rename(
     MDDId = pid,
     MDDGender = sex,
