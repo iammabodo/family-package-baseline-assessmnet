@@ -52,7 +52,7 @@ SvyMADData <- MADChildren %>%
 
 # Merge the DietQuality data with the Survey Design Data
 SvyDietQualityData <- DietQuality %>% 
-  left_join(SurveyDesignData, by = "interview__key") %>% 
+  left_join(SurveyDesignData, by = "hhid") %>% 
   #Set the data to survey designed data
   as_survey_design(ids = clusterid, 
                    strata = strataid, 

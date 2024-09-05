@@ -196,20 +196,20 @@ DietQuality <- read_dta("new data/sec7.dta") %>%
     GDRScore = "Global Dietary Recommendations (GDR) Score")
 
 # Laod the Roster Data to look at the person responding to section 7
-MDDHHRoster <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dta") %>%
-  select(interview__key, interview__id, HHRoster__id, S1A_3, S1A_4, S1A_5a, S1A_6) %>%
+MDDHHRoster <- read_dta("new data/sec1A.dta") %>%
+  select(hhid, pid, sex, sec1_4, sec1_5a, sec1_6) %>%
   rename(
-    MDDId = HHRoster__id,
-    MDDGender = S1A_3,
-    MDDRespRel = S1A_4,
-    MDDAge = S1A_5a,
-    MDDMarital = S1A_6) %>% 
+    MDDId = pid,
+    MDDGender = sex,
+    MDDRespRel = sec1_4,
+    MDDAge = sec1_5a,
+    MDDMarital = sec1_6) %>% 
   mutate(MDDGender = as_factor(MDDGender),
          MDDRespRel = as_factor(MDDRespRel),
          MDDMarital = as_factor(MDDMarital))
 
 # Merge the two datasets
-DietQuality <- left_join(DietQuality, MDDHHRoster, by = c("MDDId", "interview__id", "interview__key"))
+DietQuality <- left_join(DietQuality, MDDHHRoster, by = c("MDDId", "hhid"))
 
 
 
