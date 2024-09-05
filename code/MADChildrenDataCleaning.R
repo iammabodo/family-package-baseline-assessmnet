@@ -4,90 +4,99 @@ library(labelled)
 
 
 ## Read in the data
-MADChildren <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dta") %>% 
+MADChildren <- read_dta("new data/sec6.dta") %>% 
   # Select relevant variables
-  select(interview__key, interview__id, HHRoster__id, S1A_3, S1A_4, S1A_5a,
-         DOB, DOB_Day, DOB_Month, DOB_Year, DOB_Age, Age_Month, S1A_5b,
-         AGE_Mother,AGE_Father, starts_with("S6_")) %>% 
+  select(-interview__id) 
+
+# Import the MAD Roster data to get the child's age
+
+MADRoster <- read_dta("new data/sec1A.dta") %>% 
+  # Select relevant variables
+  select(hhid, pid, sec1_4, DOB, DOB_Day, DOB_Month, DOB_Year, Age_Month, sec1_5b)
+
+# Merge the two data sets
+
+MADChildren <- MADChildren %>% 
+  left_join(MADRoster, by = c("hhid", "pid")) 
+
+# Clean and tidy the new 
+
+MADChildren <- MADChildren %>% 
   # Convert Age_Month to numeric
   mutate(Age_Month = as.numeric(Age_Month)) %>%
   filter(Age_Month >= 0 & Age_Month <= 23) %>%
-  filter(S6_1 != -5555) %>% 
   # Rename Variables
   rename(
-    ChildId = HHRoster__id,
+    ChildId = pid,
     BirthDate = DOB,
     BirthDateDay = DOB_Day,
     BirthDateMonth = DOB_Month,
     BirthDateYear = DOB_Year,
     ChildAgeMonths = Age_Month,
-    ChildGender = S1A_3,
-    ChildHHRelationship = S1A_4,
-    ChildAgeYears = S1A_5a,
-    MonthsSinceLastBD = S1A_5b,
-    MotherAge = AGE_Mother,
-    FatherAge = AGE_Father,
-    PCMADBreastfeeding = S6_1,
-    PCMADBottleLiquid = S6_2,
-    PCMADPlainWAter = S6_3a,
-    PCMADInfFormula = S6_3b,
-    PCMADInfFormulaNum = S6_3c,
-    PCMADMilk = S6_3d,
-    PCMADMilkNum = S6_3e,
-    PCMADMilkSwt = S6_3f,
-    PCMADYogurtDrink = S6_3g,
-    PCMADYogurtDrinkNum = S6_3h,
-    PCMADYogurtDrinkSwt = S6_3i,
-    PCMADOtherMilk = S6_3j,
-    PCMADOtherMilkSwtFlavoured = S6_3l,
-    PCMADChocolateFrappe = S6_3m,
-    PCMADCondensedMilk = S6_3n,
-    PCMADFruiteJuice = S6_3o,
-    PCMADSoftDrink = S6_3p,
-    PCMADTea = S6_3q,
-    PCMADTeaSwt = S6_3r,
-    PCMADBroth = S6_3s,
-    PCMADAnyOtherLiquids = S6_3t,
-    PCMADAnyOtherLiquidsSwt = S6_3u,
-    PCMADYogurt = S6_4a,
-    PCMADYogurtNum = S6_4a2,
-    PCMADStapCereal = S6_4b,
-    PCMADOtherCereal = S6_4c,
-    PCMADStapTubers = S6_4d,
-    PCMADStapLegumes = S6_4e,
-    PCMADVegCarrots = S6_4f,
-    PCMADVegIvyGourd = S6_4g,
-    PCMADVegPumpkin = S6_4h,
-    PCMADVegEggplant = S6_4i,
-    PCMADVegWaxGourd = S6_4j,
-    PCMADVegLettuce = S6_5,
-    PCMADFruitRipe = S6_6,
-    PCMADFruitOrange = S6_7,
-    PCMADFruitBanana = S6_8,
-    PCMADFruitMangosteen = S6_9,
-    PCMADSweetsCakes = S6_10,
-    PCMADSweetsCandy = S6_11,
-    PCMADProteinEggs = S6_12,
-    PCMADProteinKidney = S6_13,
-    PCMADProteinSausages = S6_14,
-    PCMADProteinBeef = S6_15,
-    PCMADProteinPork = S6_16,
-    PCMADProteinChicken = S6_17,
-    PCMADProteinFish = S6_18,
-    PCMADProteinCrikets = S6_19,
-    PCMADOtherPeanuts = S6_20,
-    PCMADOtherChips = S6_21,
-    PCMADOtherNoodles = S6_22,
-    PCMADOtherFriedChicken = S6_23,
-    PCMADOtherSemiSolid = S6_24,
-    PCMADOtherSemiSolidNm = S6_24b,
-    PCMADOtherEatOut = S6_25,
-    PCMADCheck = S6_26,
-    PCMADNumber = S6_27) %>% 
+    ChildGender = sex,
+    ChildHHRelationship = sec1_4,
+    MonthsSinceLastBD = sec1_5b,
+    PCMADBreastfeeding = sec6_1,
+    PCMADBottleLiquid = sec6_2,
+    PCMADPlainWAter = sec6_3a,
+    PCMADInfFormula = sec6_3b,
+    PCMADInfFormulaNum = sec6_3c,
+    PCMADMilk = sec6_3d,
+    PCMADMilkNum = sec6_3e,
+    PCMADMilkSwt = sec6_3f,
+    PCMADYogurtDrink = sec6_3g,
+    PCMADYogurtDrinkNum = sec6_3h,
+    PCMADYogurtDrinkSwt = sec6_3i,
+    PCMADOtherMilk = sec6_3j,
+    PCMADOtherMilkSwtFlavoured = sec6_3l,
+    PCMADChocolateFrappe = sec6_3m,
+    PCMADCondensedMilk = sec6_3n,
+    PCMADFruiteJuice = sec6_3o,
+    PCMADSoftDrink = sec6_3p,
+    PCMADTea = sec6_3q,
+    PCMADTeaSwt = sec6_3r,
+    PCMADBroth = sec6_3s,
+    PCMADAnyOtherLiquids = sec6_3t,
+    PCMADAnyOtherLiquidsSwt = sec6_3u,
+    PCMADYogurt = sec6_4a,
+    PCMADYogurtNum = sec6_4a2,
+    PCMADStapCereal = sec6_4b,
+    PCMADOtherCereal = sec6_4c,
+    PCMADStapTubers = sec6_4d,
+    PCMADStapLegumes = sec6_4e,
+    PCMADVegCarrots = sec6_4f,
+    PCMADVegIvyGourd = sec6_4g,
+    PCMADVegPumpkin = sec6_4h,
+    PCMADVegEggplant = sec6_4i,
+    PCMADVegWaxGourd = sec6_4j,
+    PCMADVegLettuce = sec6_5,
+    PCMADFruitRipe = sec6_6,
+    PCMADFruitOrange = sec6_7,
+    PCMADFruitBanana = sec6_8,
+    PCMADFruitMangosteen = sec6_9,
+    PCMADSweetsCakes = sec6_10,
+    PCMADSweetsCandy = sec6_11,
+    PCMADProteinEggs = sec6_12,
+    PCMADProteinKidney = sec6_13,
+    PCMADProteinSausages = sec6_14,
+    PCMADProteinBeef = sec6_15,
+    PCMADProteinPork = sec6_16,
+    PCMADProteinChicken = sec6_17,
+    PCMADProteinFish = sec6_18,
+    PCMADProteinCrikets = sec6_19,
+    PCMADOtherPeanuts = sec6_20,
+    PCMADOtherChips = sec6_21,
+    PCMADOtherNoodles = sec6_22,
+    PCMADOtherFriedChicken = sec6_23,
+    PCMADOtherSemiSolid = sec6_24,
+    PCMADOtherSemiSolidNm = sec6_24b,
+    PCMADOtherEatOut = sec6_25,
+    PCMADCheck = sec6_26,
+    PCMADNumber = sec6_27) %>% 
   # Change some variables values to missing if the value == -5555
   mutate(
     across(
-      c(MotherAge, FatherAge, PCMADInfFormulaNum, PCMADMilkNum, PCMADYogurtDrinkNum, 
+      c(PCMADInfFormulaNum, PCMADMilkNum, PCMADYogurtDrinkNum, 
         PCMADYogurtNum, PCMADNumber, PCMADMilkSwt, PCMADYogurtDrinkSwt, 
         PCMADOtherMilkSwtFlavoured, PCMADTeaSwt, PCMADAnyOtherLiquidsSwt, PCMADCheck),
       ~ ifelse(.x == -5555, NA, .x)))%>%
@@ -175,10 +184,7 @@ MADChildren <- read_dta("data/7. UNICEF_FPBaseline_Household Roster_V11_FINAL.dt
     ChildAgeMonths = "Child Age (Months)",
     ChildGender = "Gender of the child",
     ChildHHRelationship = "Relationship of the child to the head of the household",
-    ChildAgeYears = "Child Age (Years)",
     MonthsSinceLastBD = "Months since last birthday",
-    MotherAge = "Age of the child's mother",
-    FatherAge = "Age of the child's father",
     PCMADBreastfeeding = "Was the child breastfed yesterday during the day or night?",
     PCMADBottleLiquid = "Did the child drink from a bottle with a nipple yesterday during the day or night?",
     PCMADPlainWAter = "Did the child drink plain water yesterday during the day or night?",
