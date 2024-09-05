@@ -8,49 +8,47 @@ library(haven)
 
 
 ## Data Import
-DietQuality <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>% 
+DietQuality <- read_dta("new data/sec7.dta") %>% 
   # Selecting relevant columns
-  select(interview__key, interview__id, Province, District, Commune, Village, HHID, IDPOOR, equitycardno, householduuid, OTHER_Sample, Sex,
-         Count_HH_Disability, PID7_Resp,  S7_1:S7_32) %>%
+  select(hhid, Province, District, Commune, Village, HHID, IDPOOR, PID7_Resp,  sec7_1:sec7_32) %>%
   # Rename variables
   rename(
-    HHDisabNm = Count_HH_Disability,
     MDDId = PID7_Resp,
-    MDDStapCereal = S7_1,
-    MDDStapOther = S7_2,
-    MDDStapRoots = S7_3,
-    MDDStapPulse = S7_4,
-    MDDVegVitamin = S7_5,
-    MDDVegGreens = S7_6,
-    MDDVegPumpkin = S7_7,
-    MDDVegEggplant = S7_8,
-    MDDVegWaxGourd = S7_9,
-    MDDVegLettuce = S7_10,
-    MDDFruitRipe = S7_11,
-    MDDFruitOrange = S7_12,
-    MDDFruitBanana = S7_13,
-    MDDFruitMangosteen = S7_14,
-    MDDSweetsCake = S7_15,
-    MDDSweetsCandy = S7_16,
-    MDDProteinEgg = S7_17,
-    MDDProteinYogurt = S7_18,
-    MDDProteinProcessed = S7_19,
-    MDDProteinBeef = S7_20,
-    MDDProteinPork = S7_21,
-    MDDProteinChicken = S7_22,
-    MDDProteinFish = S7_23,
-    MDDOtherPeanuts = S7_24,
-    MDDOtherChips = S7_25,
-    MDDOtherNoodles = S7_26,
-    MDDOtherFriedFoods = S7_27,
-    MDDDrinkMilk = S7_28,
-    MDDDrinkTea = S7_29,
-    MDDDrinksFruitJuice = S7_30,
-    MDDDrinksSoftDrinks = S7_31,
-    MDDEatOut = S7_32) %>% 
+    MDDStapCereal = sec7_1,
+    MDDStapOther = sec7_2,
+    MDDStapRoots = sec7_3,
+    MDDStapPulse = sec7_4,
+    MDDVegVitamin = sec7_5,
+    MDDVegGreens = sec7_6,
+    MDDVegPumpkin = sec7_7,
+    MDDVegEggplant = sec7_8,
+    MDDVegWaxGourd = sec7_9,
+    MDDVegLettuce = sec7_10,
+    MDDFruitRipe = sec7_11,
+    MDDFruitOrange = sec7_12,
+    MDDFruitBanana = sec7_13,
+    MDDFruitMangosteen = sec7_14,
+    MDDSweetsCake = sec7_15,
+    MDDSweetsCandy = sec7_16,
+    MDDProteinEgg = sec7_17,
+    MDDProteinYogurt = sec7_18,
+    MDDProteinProcessed = sec7_19,
+    MDDProteinBeef = sec7_20,
+    MDDProteinPork = sec7_21,
+    MDDProteinChicken = sec7_22,
+    MDDProteinFish = sec7_23,
+    MDDOtherPeanuts = sec7_24,
+    MDDOtherChips = sec7_25,
+    MDDOtherNoodles = sec7_26,
+    MDDOtherFriedFoods = sec7_27,
+    MDDDrinkMilk = sec7_28,
+    MDDDrinkTea = sec7_29,
+    MDDDrinksFruitJuice = sec7_30,
+    MDDDrinksSoftDrinks = sec7_31,
+    MDDEatOut = sec7_32) %>% 
   # Change variables to factor variables
   #mutate_at(vars(MDDStapCereal:MDDEatOut), as_factor) %>%
-  mutate_at(vars(Province:Village, IDPOOR, Sex ), as_factor) %>%
+  mutate_at(vars(Province:Village, IDPOOR), as_factor) %>%
   #Mutate the food groups variables
   mutate(MDDStaples = case_when(
     MDDStapCereal == 1 | MDDStapOther == 1 | MDDStapRoots == 1  ~ 1,
@@ -136,7 +134,6 @@ DietQuality <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>%
          MDDCategory = as_factor(MDDCategory)) %>%
   # Set Variable Labels
   set_variable_labels(
-    HHDisabNm = "Number of Household Members with Disability",
     MDDId = "Diet Quality Respondent ID",
     MDDStapCereal = "Yesterday, did you eat Rice, Khmer rice pancake, Khmer noodles, glass noodles, bread, or porridge?",
     MDDStapOther = "Yesterday, did you eat Brown rice, corn, or popcorn?",
