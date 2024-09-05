@@ -254,27 +254,18 @@ MADChildren <- MADChildren %>%
 
 # Read in the Household Characteristics data
 
-HHCharacteristics <- read_dta("data/1. UNICEF_FPBaseline_Main_V26_FINAL.dta") %>% 
+HHCharacteristics <- read_dta("new data/cover.dta") %>% 
   # Select relevant variables
-  select(interview__key, interview__id, Province, District, Commune, Village, HHID, IDPOOR, equitycardno, householduuid) %>% 
+  select(hhid, HHID, IDPOOR) %>% 
   # Create treatment variable
   mutate(Treatment = case_when(
     IDPOOR == 1 | IDPOOR == 2 ~ "Treatment Group",
-    TRUE ~ "Control Group")) %>%
-  # Change variables to factor variables
-  mutate(
-    Province = as_factor(Province),
-    District = as_factor(District),
-    Commune = as_factor(Commune),
-    Village = as_factor(Village),
-    IDPOOR = as_factor(IDPOOR),
-    Treatment = as_factor(Treatment))
-
+    TRUE ~ "Control Group"))
  
 # Merge the data with household data
 
 MADChildren <- MADChildren %>% 
-  left_join(HHCharacteristics, by = c("interview__key", "interview__id")) %>% 
+  left_join(HHCharacteristics, by = c("hhid", "HHID")) %>% 
   # Mutate child age groups
   mutate(
     ChildAgeGroup = case_when(
