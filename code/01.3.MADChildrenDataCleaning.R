@@ -6,13 +6,13 @@ library(labelled)
 ## Read in the data
 MADChildren <- read_dta("new data/sec6.dta") %>% 
   # Select relevant variables
-  select(-interview__id) 
+  dplyr::select(-interview__id) 
 
 # Import the MAD Roster data to get the child's age
 
 MADRoster <- read_dta("new data/sec1A.dta") %>% 
   # Select relevant variables
-  select(hhid, pid, sec1_4, DOB, DOB_Day, DOB_Month, DOB_Year, Age_Month, sec1_5b)
+  dplyr::select(hhid, pid, sec1_4, DOB, DOB_Day, DOB_Month, DOB_Year, Age_Month, sec1_5b)
 
 # Merge the two data sets
 
@@ -36,63 +36,63 @@ MADChildren <- MADChildren %>%
     ChildGender = sex,
     ChildHHRelationship = sec1_4,
     MonthsSinceLastBD = sec1_5b,
-    PCMADBreastfeeding = sec6_1,
-    PCMADBottleLiquid = sec6_2,
-    PCMADPlainWAter = sec6_3a,
-    PCMADInfFormula = sec6_3b,
-    PCMADInfFormulaNum = sec6_3c,
-    PCMADMilk = sec6_3d,
-    PCMADMilkNum = sec6_3e,
-    PCMADMilkSwt = sec6_3f,
-    PCMADYogurtDrink = sec6_3g,
-    PCMADYogurtDrinkNum = sec6_3h,
-    PCMADYogurtDrinkSwt = sec6_3i,
-    PCMADOtherMilk = sec6_3j,
-    PCMADOtherMilkSwtFlavoured = sec6_3l,
-    PCMADChocolateFrappe = sec6_3m,
-    PCMADCondensedMilk = sec6_3n,
-    PCMADFruiteJuice = sec6_3o,
-    PCMADSoftDrink = sec6_3p,
-    PCMADTea = sec6_3q,
-    PCMADTeaSwt = sec6_3r,
-    PCMADBroth = sec6_3s,
-    PCMADAnyOtherLiquids = sec6_3t,
-    PCMADAnyOtherLiquidsSwt = sec6_3u,
-    PCMADYogurt = sec6_4a,
-    PCMADYogurtNum = sec6_4a2,
-    PCMADStapCereal = sec6_4b,
-    PCMADOtherCereal = sec6_4c,
-    PCMADStapTubers = sec6_4d,
-    PCMADStapLegumes = sec6_4e,
-    PCMADVegCarrots = sec6_4f,
-    PCMADVegIvyGourd = sec6_4g,
-    PCMADVegPumpkin = sec6_4h,
-    PCMADVegEggplant = sec6_4i,
-    PCMADVegWaxGourd = sec6_4j,
-    PCMADVegLettuce = sec6_5,
-    PCMADFruitRipe = sec6_6,
-    PCMADFruitOrange = sec6_7,
-    PCMADFruitBanana = sec6_8,
-    PCMADFruitMangosteen = sec6_9,
-    PCMADSweetsCakes = sec6_10,
-    PCMADSweetsCandy = sec6_11,
-    PCMADProteinEggs = sec6_12,
-    PCMADProteinKidney = sec6_13,
-    PCMADProteinSausages = sec6_14,
-    PCMADProteinBeef = sec6_15,
-    PCMADProteinPork = sec6_16,
-    PCMADProteinChicken = sec6_17,
-    PCMADProteinFish = sec6_18,
-    PCMADProteinCrikets = sec6_19,
-    PCMADOtherPeanuts = sec6_20,
-    PCMADOtherChips = sec6_21,
-    PCMADOtherNoodles = sec6_22,
-    PCMADOtherFriedChicken = sec6_23,
-    PCMADOtherSemiSolid = sec6_24,
-    PCMADOtherSemiSolidNm = sec6_24b,
-    PCMADOtherEatOut = sec6_25,
-    PCMADCheck = sec6_26,
-    PCMADNumber = sec6_27) %>% 
+    PCMADBreastfeeding = sec6_1, #IYCF 4 
+    PCMADBottleLiquid = sec6_2, #IYCF 5
+    PCMADPlainWAter = sec6_3a, #IYCF 6A
+    PCMADInfFormula = sec6_3b, #IYCF 6B
+    PCMADInfFormulaNum = sec6_3c, #IYCF 6Bnum
+    PCMADMilk = sec6_3d, #IYCF 6C.25
+    PCMADMilkNum = sec6_3e, #IYCF 6Cnum
+    PCMADMilkSwt = sec6_3f, #IYCF 6Cswt.26
+    PCMADYogurtDrink = sec6_3g, #IYCF 6D
+    PCMADYogurtDrinkNum = sec6_3h, #IYCF 6Dnum
+    PCMADYogurtDrinkSwt = sec6_3i, #IYCF 6Dswt
+    PCMADOtherMilk = sec6_3j, #IYCF 6K
+    PCMADOtherMilkSwtFlavoured = sec6_3l, #IYCF 6Kswt
+    PCMADChocolateFrappe = sec6_3m, #IYCF 6E
+    PCMADCondensedMilk = sec6_3n, 
+    PCMADFruiteJuice = sec6_3o, #IYCF 6F.27
+    PCMADSoftDrink = sec6_3p, #IYCF 6G.28
+    PCMADTea = sec6_3q, #IYCF 6H
+    PCMADTeaSwt = sec6_3r, #IYCF 6Hswt.26
+    PCMADBroth = sec6_3s, #IYCF 6I
+    PCMADAnyOtherLiquids = sec6_3t, #IYCF 6J
+    PCMADAnyOtherLiquidsSwt = sec6_3u, #IYCF 6Jswt
+    PCMADYogurt = sec6_4a, #IYCF 7.15
+    PCMADYogurtNum = sec6_4a2, #IYCF 7.15num
+    PCMADStapCereal = sec6_4b, #IYCF 7.1
+    PCMADOtherCereal = sec6_4c, #IYCF 7.2
+    PCMADStapTubers = sec6_4d, #IYCF 7.3
+    PCMADStapLegumes = sec6_4e, #IYCF 7.4
+    PCMADVegCarrots = sec6_4f, #IYCF 7.5
+    PCMADVegIvyGourd = sec6_4g, #IYCF 7.6.1
+    PCMADVegPumpkin = sec6_4h, #IYCF 7.6.2
+    PCMADVegEggplant = sec6_4i, #IYCF 7.7.1
+    PCMADVegWaxGourd = sec6_4j, #IYCF 7.7.2
+    PCMADVegLettuce = sec6_5, #IYCF 7.7.3
+    PCMADFruitRipe = sec6_6, #IYCF 7.8
+    PCMADFruitOrange = sec6_7, #IYCF 7.9
+    PCMADFruitBanana = sec6_8, #IYCF 7.10.1
+    PCMADFruitMangosteen = sec6_9, #IYCF 7.10.2
+    PCMADSweetsCakes = sec6_10, #IYCF 7.11
+    PCMADSweetsCandy = sec6_11, #IYCF 7.12
+    PCMADProteinEggs = sec6_12, #IYCF 7.13
+    PCMADProteinKidney = sec6_13, #IYCF 7org
+    PCMADProteinSausages = sec6_14, #IYCF 7.16
+    PCMADProteinBeef = sec6_15, #IYCF 7.17
+    PCMADProteinPork = sec6_16, #IYCF 7.18
+    PCMADProteinChicken = sec6_17, #IYCF 7.19
+    PCMADProteinFish = sec6_18, #IYCF 7.20
+    PCMADProteinCrikets = sec6_19, #IYCF 7insect
+    PCMADOtherPeanuts = sec6_20, #IYCF 7.21
+    PCMADOtherChips = sec6_21, #IYCF 7.22
+    PCMADOtherNoodles = sec6_22, #IYCF 7.23
+    PCMADOtherFriedChicken = sec6_23, #IYCF 7.24
+    PCMADOtherSemiSolid = sec6_24, #IYCF 7R
+    PCMADOtherSemiSolidNm = sec6_24b, #IYCF 7Rnm
+    PCMADOtherEatOut = sec6_25, #IYCF 7.25
+    PCMADCheck = sec6_26, #IYCF 7S
+    PCMADNumber = sec6_27) %>% #IYCF 8
   # Change some variables values to missing if the value == -5555
   mutate(
     across(
@@ -102,6 +102,13 @@ MADChildren <- MADChildren %>%
       ~ ifelse(.x == -5555, NA, .x)))%>%
   # Create variables for the calculation of relevant variables
   mutate(
+    #Exclusive Breastfeeding under 6 months (EBF)
+    MADEBF = case_when(
+        PCMADBreastfeeding == 1 & (PCMADPlainWAter == 0 & PCMADInfFormula == 0 & PCMADMilk == 0 & 
+        PCMADYogurtDrink == 0 & PCMADOtherMilk == 0  & PCMADChocolateFrappe == 0 & PCMADFruiteJuice == 0 &
+        PCMADSoftDrink == 0 & PCMADTea == 0 & PCMADBroth == 0 & PCMADAnyOtherLiquids == 0) & PCMADYogurtDrink > 0  &
+        PCMADStapCereal:PCMADCheck == 0~ 1,
+      TRUE ~ 0),
     # Staples  - Grains, white/pale starchy roots, tubers, and plantains
     PCMADStaples = case_when(
       PCMADStapCereal == 1 | PCMADOtherCereal == 1 | PCMADStapTubers == 1 ~ 1,
