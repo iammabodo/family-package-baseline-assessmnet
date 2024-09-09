@@ -8,8 +8,8 @@ library(cowplot)
 library(stringr)
 
 
-source("code/SurveyDesign.R") # This file converts the data into survey designed data
-source("code/Functions.R") # Functions for significance tests and creating Word documents
+source("code/02.SurveyDesign.R") # This file converts the data into survey designed data
+source("code/02.00.Functions.R") # Functions for significance tests and creating Word documents
 
 #calculate_proportions_and_ttest(SvyMADData, "MAD", "Treatment")
 
