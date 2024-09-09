@@ -104,12 +104,21 @@ MADChildren <- MADChildren %>%
   mutate(
     #Exclusive Breastfeeding under 6 months (EBF)
     MADEBF = case_when(
-        PCMADBreastfeeding == 1 & (PCMADPlainWAter == 0 & PCMADInfFormula == 0 & PCMADMilk == 0 & 
+        PCMADBreastfeeding == 1 & (PCMADPlainWAter == 0 & PCMADInfFormula == 0 & PCMADMilk == 0 &
         PCMADYogurtDrink == 0 & PCMADOtherMilk == 0  & PCMADChocolateFrappe == 0 & PCMADFruiteJuice == 0 &
         PCMADSoftDrink == 0 & PCMADTea == 0 & PCMADBroth == 0 & PCMADAnyOtherLiquids == 0) & PCMADYogurtDrink > 0  &
-        PCMADStapCereal:PCMADCheck == 0~ 1,
+        (PCMADStapCereal == 0 & PCMADOtherCereal == 0 & PCMADStapTubers == 0 & PCMADStapLegumes == 0 &PCMADVegCarrots == 0 &
+        PCMADVegIvyGourd == 0 & PCMADVegPumpkin == 0 & PCMADVegEggplant == 0 & PCMADVegWaxGourd == 0 & PCMADVegLettuce == 0 & 
+        PCMADFruitRipe == 0 & PCMADFruitOrange == 0 & PCMADFruitBanana == 0 & PCMADFruitMangosteen == 0 & PCMADSweetsCakes == 0 &
+        PCMADSweetsCandy==0 & PCMADProteinEggs == 0 & PCMADProteinKidney == 0 & PCMADProteinSausages == 0 & PCMADProteinBeef == 0 &
+        PCMADProteinPork == 0 & PCMADProteinChicken == 0 & PCMADProteinFish == 0 & PCMADProteinCrikets == 0 & PCMADOtherPeanuts == 0 &
+        PCMADOtherChips == 0 & PCMADOtherNoodles == 0 & PCMADOtherFriedChicken == 0 & PCMADOtherSemiSolid == 0 & PCMADOtherEatOut ==0 & PCMADCheck == 0) ~ 1,
       TRUE ~ 0),
-    # Staples  - Grains, white/pale starchy roots, tubers, and plantains
+    #Mixed Milk feeding under 6 months (MixMF)
+    MADMixMF = case_when(
+      PCMADBreastfeeding == 1 & (PCMADInfFormula == 1 | PCMADMilk == 1) ~1,
+      TRUE ~ 0),
+    #Staples  - Grains, white/pale starchy roots, tubers, and plantains
     PCMADStaples = case_when(
       PCMADStapCereal == 1 | PCMADOtherCereal == 1 | PCMADStapTubers == 1 ~ 1,
       TRUE ~ 0),
@@ -119,13 +128,13 @@ MADChildren <- MADChildren %>%
       TRUE ~ 0),
     # Dairy products - milk, infant formula, yourgut and cheese
     PCMADDairy = case_when(
-      PCMADInfFormula == 1 | PCMADMilk == 1 | PCMADYogurtDrink == 1 ~ 1,
+      PCMADInfFormula == 1 | PCMADMilk == 1 | PCMADYogurt == 1 ~ 1, # Should we include Yourgurt or Yourgut Drink or both??
       TRUE ~ 0),
     # Flesh foods - meat, fish, poultry, organ meats
     PCMADFleshFoods = case_when(
       # Ask Jyoti about the inclusion of organ meats
       PCMADProteinSausages == 1 | PCMADProteinBeef == 1 | PCMADProteinPork == 1 | PCMADProteinChicken == 1 | 
-        PCMADProteinFish == 1 | PCMADProteinKidney == 1 ~ 1,
+        PCMADProteinFish == 1 | PCMADProteinKidney == 1 ~ 1, # To check if organ meats should be included??
       TRUE ~ 0),
     # Vitamin A rich fruits and vegetables
     PCMADVitA = case_when(
@@ -145,6 +154,7 @@ MADChildren <- MADChildren %>%
       PCMADProteinEggs + PCMADLegumes + 
       PCMADDairy + PCMADFleshFoods + 
       PCMADVitA + PCMADOtherFruitsVeg,
+    MDDScore = na_if(MDDScore, -95),
     MDDCat = case_when(
       MDDScore >= 5 ~ 1,
       TRUE ~ 0)) %>%
