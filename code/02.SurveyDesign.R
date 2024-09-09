@@ -6,9 +6,9 @@ library(srvyr)
 
 ## SOURCE Some files
 # Source MDD.R, FoodSecurity.R and MADChildren.R, files Relevant files for the Baseline indicators calculation 
-source("code/MDDDataCleaning.R")
-source("code/FoodSecurityDataCleaning.R")
-source("code/MADChildrenDataCleaning.R")
+source("code/01.2.MDDDataCleaning.R")
+source("code/01.1.FoodSecurityDataCleaning.R")
+source("code/01.3.MADChildrenDataCleaning.R")
 
 # Read cover data
 SurveyDesignData <- read_dta("new data/cover.dta")
@@ -61,7 +61,7 @@ SvyDietQualityData <- DietQuality %>%
 
 # Merge the Livelihoods Coping Strategies FoodSecurity data with the Survey Design Data
 SvyLCSFS <- LCSFS %>% 
-  left_join(SurveyDesignData, by = "interview__key") %>% 
+  left_join(SurveyDesignData, by = "hhid") %>% 
   #Set the data to survey designed data
   as_survey_design(ids = clusterid, 
                    strata = strataid, 
