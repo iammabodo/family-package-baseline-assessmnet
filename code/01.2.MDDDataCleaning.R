@@ -215,7 +215,7 @@ DietQuality <- left_join(DietQuality, MDDHHRoster, by = c("MDDId", "hhid"))
 
 
 ## Data Export in sav, stata, and csv formats
-write_sav(DietQuality, "data/DietQuality.sav")
+#write_sav(DietQuality, "data/DietQuality.sav")
 write_dta(DietQuality, "data/DietQuality.dta")  
 write_csv(DietQuality, "data/DietQuality.csv")  
 
