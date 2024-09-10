@@ -9,7 +9,6 @@ library(eRm)
 FoodSecurity <- read_dta("new data/sec8.dta") %>% 
   select(hhid, Province, District, Commune, Village, HHID, IDPOOR, sec8_3a:sec8_9b) %>% 
   select(-sec8_4k_OTHER)
-
 # Load the data with disabilities
 
 
@@ -278,6 +277,29 @@ FIESData <- FoodSecurity %>%
     # Calculate row scores for the FIES variables
     FIESRowScore = rowSums(select(., FIESWorried:FIESWholeDay), na.rm = TRUE)) %>% 
   select(Province, District, Commune, Village, IDPOOR, Treatment, FIESRowScore, everything())
+
+
+ # Small FIES Data
+
+SmallFIESData <- FIESData %>% 
+  select(hhid, Treatment, FIESWorried:FIESWholeDay) %>% 
+  # Join with the survey design data
+  left_join(SurveyDesignData, by = "hhid") %>% 
+  select(FIESWorried:FIESWholeDay, Treatment, regiontype) %>%
+  # Change FIES variables to numeric variables
+  mutate(across(c(FIESWorried:FIESWholeDay), as.numeric), 
+         hhsampleweights = NA, 
+         IndividualWeights = NA,
+         hhsampleweights = as.numeric(hhsampleweights),
+         IndividualWeights = as.numeric(IndividualWeights)) %>%
+  select(FIESWorried:FIESWholeDay, hhsampleweights, IndividualWeights, Treatment, regiontype) %>%
+  #Change treatment and regiontype to factor variables
+  mutate(
+    Treatment = as_factor(Treatment),
+    regiontype = as_factor(regiontype))
+
+# Write a csv file for the Small FIES Data
+write.csv(SmallFIESData, "SmallFIESData.csv")
 
 
 # Livelihoods Coping Strategies - Food Security Indicator

@@ -9,6 +9,8 @@ library(gridExtra)
 library(gt)
 library(grid)
 library(png)
+library(marquee)
+library(colorspace)
 
 
 
@@ -331,10 +333,23 @@ MDDProvincePlotData %>%
 ProvinceFIES <- read_xlsx("report tables/FIES.xlsx")
 
 
+md_text <- "Rural households are more food insecure than urban households (61% vs 52%)"
 
 FIESGraph <- ggplot(ProvinceFIES, aes(x = FIES, y = reorder(Province, FIES))) +  
   geom_bar(stat = "identity", fill = "#8d1f17", width = 0.7) +  # Set a blue fill color similar to the image and adjust bar width
-  geom_vline(xintercept = 64.2, color = "black", size = 1) +  # Add a vertical line at x = 50
+  #geom_vline(xintercept = 64.2, color = "black", size = 1) +  # Add a vertical line at x = 50
+  annotate(
+    'marquee',
+    x = 55, 
+    y = 10,
+    label = md_text,
+    width = 0.5,
+    hjust = 0.5,
+    vjust = 0.5,
+    fill = colorspace::lighten("dodgerblue1", 0.7),
+    style = text_box_style
+  ) +
+  labs(title = md_text) +  # Add a title)
   scale_x_continuous(expand = c(0, 0),
                      limits = c(0,75),
                      breaks = seq(0, 75, 10),
@@ -538,3 +553,22 @@ NutDataTable %>%
     title = "Nutrition Indicators (MDD-W and MAD), by age group",
     subtitle
 
+    
+#########################################################################################################################################################
+# Lets visualise coping strategies by region
+rCSIRegionGraph <- rCSICopingStrategiesRegion %>% 
+  ggplot(aes(x = regiontype, y = `Yes (%)`)) +
+  geom_bar(stat = "identity", fill = "#254769", width = 0.6) +
+  coord_flip() +
+  facet_wrap(~Indicator, nrow = 1)
+
+
+
+
+
+SvyLCSFSMaxRegion %>% 
+  mutate(MaxcopingBehaviourFS = )
+  ggplot(aes(x = Disagregation, y = Proportion)) +
+  geom_bar(stat = "identity", position = "stack", width = 0.7)+ 
+  coord_flip() + 
+  facet_wrap(~MaxcopingBehaviourFS, nrow = 1)

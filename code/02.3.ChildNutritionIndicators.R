@@ -33,6 +33,17 @@ SvyMADBreasfed <- SvyMADData %>%
   rename(Category = PCMADBreastfeeding) %>% 
   mutate(Category = as_factor(Category))
 
+# Write the table to an excel file
+write.xlsx(SvyMADBreasfed, "report tables/SvyMADBreasfed.xlsx")
+
+###############################################################################################
+# Test the difference in the proportions of children who were breastfed in the last 24 hours
+MADBrestfedProptestIE <-  SvyMADData %>% 
+  filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 23) %>%
+  svychisq(~PCMADBreastfeeding + Treatment, design = .) # Not statistically significant at all levels
+
+##############################################################################################
+
 ## Proportion of breasfed children in the last day, by regiontype
 SvyMADBreastFeedindRegionTab <- SvyMADData %>% 
   filter(ChildAgeMonths >= 0 & ChildAgeMonths <= 23) %>%
@@ -104,6 +115,15 @@ SvyMDDChildren <- SvyMADData %>%
   dplyr::select(Indicator, MDDCat, Overall, `Control Group`, `Treatment Group`, Diff) %>%
   rename(Category = MDDCat) %>% 
   mutate(Category = as_factor(Category))
+
+#############################################################################################################################
+# Test the difference in the proportions of children who met the minimum dietary diversity
+MDDChisqtestIE <-  SvyMADData %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+  svychisq(~MDDCat + Treatment, design = .) # Not Statistically significant at all levels
+
+############################################################################################################################
+
 
 SvyMDDChildrenTreatTab <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
@@ -192,6 +212,13 @@ SvyMMFChildren <- SvyMADData %>%
   rename(Category = MMF) %>% 
   mutate(Category = as_factor(Category))
 
+##############################################################################################
+# Test the difference in the proportions of children who met the minimum meal frequency
+MMFChisqtestIE <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>% 
+  svychisq(~MMF + Treatment, design = .) ## Not statistically significant at all levels
+###############################################################################################
+
 SvyMMFChildrenTreatTab <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
   group_by(Treatment, MMF) %>%
@@ -279,6 +306,17 @@ SvyMMFFChildren <- SvyMADData %>%
   rename(Category = MMFF) %>% 
   mutate(Category = as_factor(Category))
 
+# Write the tables to an excel file
+write.xlsx(SvyMMFFChildren, "report tables/SvyMMFFChildren.xlsx")
+##################################################################################################
+# Test the difference in the proportions of children who met the minimum meal frequency
+MMFFChisqtestIE <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
+  filter(!is.na(MMFF)) %>% 
+  svychisq(~MMFF + Treatment, design = .) ## Not statistically significant at all levels
+
+##################################################################################################
+
 ## Calculate the percentage of children who met MMFF, by child gender
 SvyMMFFChildrenGender <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%
@@ -356,7 +394,17 @@ SvyMADChildren <- SvyMADData %>%
   mutate(Indicator = "MAD") %>%
   dplyr::select(Indicator, MAD, Overall, `Control Group`, `Treatment Group`, Diff) %>%
   rename(Category = MAD) %>% 
-  mutate(Category = as_factor(Category))
+  mutate(Category = as_factor(Category)) 
+
+# Write excel file
+write.xlsx(SvyMADChildren, "report tables/SvyMADChildren.xlsx")
+
+##########################################################################################################
+# Test the difference in the proportions of children who met the minimum acceptable diet
+MADChisqtestIE <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>% 
+  svychisq(~MAD + Treatment, design = .) ## The difference is not statistically significant
+##########################################################################################################
 
 # Calculate the proportion of children who met MAD, by regiontype
 SvyMADChildrenRegionTab <- SvyMADData %>% 
@@ -429,7 +477,9 @@ SvyMADChildrenAgeTab <- SvyMADData %>%
 ##################################################################################################################################
 
 # Perfom the chisq test to test the difference in the proportions of children who met the minimum acceptable diet
-MADChisqtestIE <- svychisq(~MAD + Treatment, design = SvyMADData) ## The difference is weeakily statistically significant at 10% level
+MADChisqtestIE <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>% 
+  svychisq(~MAD + Treatment, design = .) ## The difference is weeakily statistically significant at 10% level
 MADChisqtestRegion <- svychisq(~MAD + regiontype, design = SvyMADData) ## The difference is not statistically significant at all levels
 MADChisqtestGender <- svychisq(~MAD + ChildGender, design = SvyMADData) ## The difference is not statistically significant at all levels
 MADChisqtestAge <- svychisq(~MAD + ChildAgeGroup, design = SvyMADData) ## The difference is highly statistically significant at all levels
@@ -529,7 +579,14 @@ SvyMADUnhealthyFoods <- SvyMADData %>%
   rename(Category = PCMADUnhealthyFds) %>% 
   mutate(Category = as_factor(Category))
 
-
+# Wtite an excel file
+write.xlsx(SvyMADUnhealthyFoods, "report tables/SvyMADUnhealthyFoods.xlsx")
+############################################################################################################################
+# Test the difference in the proportions of children who consumed unhealthy foods
+UnhealthyFoodsChisqtestIE <- SvyMADData %>% 
+  filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>% 
+  svychisq(~PCMADUnhealthyFds + Treatment, design = .) ## The difference is not statistically significant
+#############################################################################################################################
 # Calculate the proportion of children who consumed unhealthy foods, by regiontype
 SvyMADUnhealthyFoodsRegionTab <- SvyMADData %>% 
   filter(ChildAgeMonths >= 6 & ChildAgeMonths <= 23) %>%

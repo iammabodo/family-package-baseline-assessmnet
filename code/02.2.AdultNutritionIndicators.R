@@ -33,7 +33,17 @@ MDDWomen <- SvyDietQualityData %>%
   mutate(Indicator = "MDD-W") %>%
   dplyr::select(Indicator, MDDCategory, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
   rename(Category = MDDCategory)
+# Write this into an excel file
+write.xlsx(MDDWomen, "report tables/MDDWomen.xlsx")
 
+#################################################################################################################
+# Test if the difference in MDD-W is significant
+MDDWomenChisq <- SvyDietQualityData %>% 
+  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15 & MDDAge <= 49) %>%
+  svychisq(~MDDCategory + Treatment, design = .) # Not significant
+
+############################################################################################################
 # Calculate MDD-W disagreggated by regiontype
 MDDWomenRegion <- SvyDietQualityData %>% 
   filter(MDDGender == "Female") %>%
@@ -132,6 +142,16 @@ NCDDRiskTot <- SvyDietQualityData %>%
   mutate(Indicator = "NCD Risk") %>% 
   dplyr::select(Indicator, Overall, `Control Group`, `Treatment Group`, Diff) 
 
+# Write this into an excel file
+write.xlsx(NCDDRiskTot, "report tables/NCDRiskScore.xlsx")
+
+###################################################################################################
+# Test if the difference in NCD Risk is significant
+NCDRiskChisq <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  svychisq(~NCDRiskScore + Treatment, design = .) # Not significant
+###################################################################################################
+
 # Calculate the Non Communicable Diseases Protective Foods Score
 NCDProtectiveFoods <- SvyDietQualityData %>% 
   filter(MDDAge >= 15) %>%
@@ -159,6 +179,15 @@ NCDProtectiveTot <- SvyDietQualityData %>%
   mutate(Indicator = "NCD Protective Foods") %>%
   dplyr::select(Indicator, Overall, `Control Group`, `Treatment Group`, Diff)
 
+# Write into an excel file
+write.xlsx(NCDProtectiveTot, "report tables/NCDProtectiveFoods.xlsx")
+
+###################################################################################################
+# Test if the difference in NCD Protective Foods is significant
+NCDProtectiveFoodsChisq <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  svychisq(~NCDProtScore + Treatment, design = .) # Not significant
+###################################################################################################
 
 # Calculate the GDRS Score
 GDRSScore <- SvyDietQualityData %>% 

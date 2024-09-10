@@ -35,6 +35,12 @@ SvyLCSENMax <- SvyLCSENData %>%
 
 write.xlsx(SvyLCSENMax, "report tables/SvyLCSENMax.xlsx")
 
+# Test if the difference in the indicators by treatment is significant
+LCSENTest <- svychisq(~MaxcopingBehaviourEN + Treatment, design = SvyLCSENData) # Not Significant
+#################################################################################################
+
+
+
 # Calculate the proportion of households using coping strategies to meet essential needs disgragated by regiontype
 SvyLCSENMaxRegion <- SvyLCSENData %>% 
   group_by(regiontype, MaxcopingBehaviourEN) %>% 
@@ -83,6 +89,32 @@ SvyLCSFSMax <- SvyLCSFS %>%
   select(Indicator, MaxcopingBehaviourFS, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
   rename(Category = MaxcopingBehaviourFS)
 
+#######################################################################################################
+# Test if the difference in the indicators by treatment is significant
+LCSFSTest <- svychisq(~MaxcopingBehaviourFS + Treatment, design = SvyLCSFS) # Not Significant
+
+####################################################################################################
+# LCSFS by region
+
+SvyLCSFSMaxRegion <- SvyLCSFS %>% 
+  group_by(regiontype, MaxcopingBehaviourFS) %>% 
+  summarise(Pct_LCSFSMax = survey_prop() * 100) %>% 
+  select(regiontype, MaxcopingBehaviourFS, Pct_LCSFSMax) %>% 
+  rename(Proportion = Pct_LCSFSMax,
+         Disagregation = regiontype)
+
+########################################################################################################
+# test if the difference in the indicators by region is significant
+LCSFSChisqtest <- svychisq(~MaxcopingBehaviourFS + regiontype, design = SvyLCSFS) # Significant
+#######################################################################################################
+
+SvyLCSFSMax <- SvyLCSFS %>% 
+  group_by( MaxcopingBehaviourFS) %>% 
+  summarise(Pct_LCSFSMax = survey_prop() * 100) %>% 
+  select( MaxcopingBehaviourFS, Pct_LCSFSMax) %>% 
+  rename(Proportion = Pct_LCSFSMax,
+         Disagregation = MaxcopingBehaviourFS)
+
 # Merge the data
 FoodSecurityCS <- bind_rows(SvyLCSENMax, SvyLCSFSMax) %>% 
   # Round all the numeric variables to 2 decimal places
@@ -107,6 +139,13 @@ meanRCSI <- SvyrCSIData %>%
 
 # Write an excel file
 write.xlsx(meanRCSI, "report tables/meanRCSI.xlsx")
+
+#################################################################################################
+
+# Perform a t-test to test if the difference in the mean RCSI score is significant
+rCSITest <- svyttest(rCSI ~ Treatment, design = SvyrCSIData) # Not significant
+
+##################################################################################################
 
 meanRCSIOveral <- SvyrCSIData %>% 
   summarise(MeanRCSI = survey_mean(rCSI)) %>% 
@@ -295,6 +334,93 @@ RCSIProvince <- full_join(rCSILessQltyCatProvince, rCSIBorrowCatProvince, by = "
   full_join(rCSIMealSizeCatProvince, by = "Province") %>%
   full_join(rCSIMealNbCatProvince, by = "Province") %>%
   full_join(rCSIMealAdultCatProvince, by = "Province")
+
+
+
+rCSIMealSizeCatTreatment <- SvyrCSIData %>% 
+  group_by(Treatment, rCSIMealSizeCat) %>%
+  summarise(Pct = survey_prop() * 100) %>% 
+  filter(rCSIMealSizeCat == "Yes") %>%
+  select(Treatment, Pct) %>%
+  pivot_wider(names_from = Treatment, values_from = Pct) %>%
+  mutate(Diff = `Treatment Group` - `Control Group`) %>%
+  mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
+  mutate(Indicator = "Reduced meal size or portions") %>%
+  select(Indicator, Overall, `Treatment Group`,  `Control Group`, Diff) %>%
+  #round every numeric variable to 2 decimal places
+  mutate_if(is.numeric, ~round(., 2))
+
+rCSIAdultMealSizeCatTreatment <- SvyrCSIData %>% 
+  group_by(Treatment, rCSIMealAdultCat) %>%
+  summarise(Pct = survey_prop() * 100) %>% 
+  filter(rCSIMealAdultCat == "Yes") %>%
+  select(Treatment, Pct) %>%
+  pivot_wider(names_from = Treatment, values_from = Pct) %>%
+  mutate(Diff = `Treatment Group` - `Control Group`) %>%
+  mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
+  mutate(Indicator = "Reduced meal size or portions for adults") %>%
+  select(Indicator, Overall, `Treatment Group`,  `Control Group`, Diff) %>%
+  #round every numeric variable to 2 decimal places
+  mutate_if(is.numeric, ~round(., 2))
+
+rCSIBorrowCatTreatment <- SvyrCSIData %>% 
+  group_by(Treatment, rCSIBorrowCat) %>%
+  summarise(Pct = survey_prop() * 100) %>% 
+  filter(rCSIBorrowCat == "Yes") %>%
+  select(Treatment, Pct) %>%
+  pivot_wider(names_from = Treatment, values_from = Pct) %>%
+  mutate(Diff = `Treatment Group` - `Control Group`) %>%
+  mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
+  mutate(Indicator = "Borrowed food from relative or friend") %>%
+  select(Indicator, Overall, `Treatment Group`,  `Control Group`, Diff) %>%
+  #round every numeric variable to 2 decimal places
+  mutate_if(is.numeric, ~round(., 2))
+
+rCSIQualityCatTreatment <- SvyrCSIData %>% 
+  group_by(Treatment, rCSILessQltyCat) %>%
+  summarise(Pct = survey_prop() * 100) %>% 
+  filter(rCSILessQltyCat == "Yes") %>%
+  select(Treatment, Pct) %>%
+  pivot_wider(names_from = Treatment, values_from = Pct) %>%
+  mutate(Diff = `Treatment Group` - `Control Group`) %>%
+  mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
+  mutate(Indicator = "Relied on less prefered and less expensive food") %>%
+  select(Indicator, Overall, `Treatment Group`,  `Control Group`, Diff) %>%
+  #round every numeric variable to 2 decimal places
+  mutate_if(is.numeric, ~round(., 2))
+
+rCSINbMealCatTreatment <- SvyrCSIData %>% 
+  group_by(Treatment, rCSIMealNbCat) %>%
+  summarise(Pct = survey_prop() * 100) %>% 
+  filter(rCSIMealNbCat == "Yes") %>%
+  select(Treatment, Pct) %>%
+  pivot_wider(names_from = Treatment, values_from = Pct) %>%
+  mutate(Diff = `Treatment Group` - `Control Group`) %>%
+  mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
+  mutate(Indicator = "Reduced number of meals") %>%
+  select(Indicator, Overall, `Treatment Group`,  `Control Group`, Diff) %>%
+  #round every numeric variable to 2 decimal places
+  mutate_if(is.numeric, ~round(., 2))
+
+# Bind the data together
+rCSICopingStrategiesTreatment <- bind_rows(rCSILessQltyCatTreatment, rCSIBorrowCatTreatment, rCSIMealSizeCatTreatment, rCSINbMealCatTreatment, rCSIAdultMealSizeCatTreatment) %>% 
+  # Round all the numeric variables to 2 decimal places
+  mutate_if(is.numeric, ~round(., 2)) %>% 
+  arrange(Diff) %>% 
+  mutate(Indicator = str_wrap(Indicator, 20)) %>% 
+  # Change every numeric variable to 2 decimal places
+  mutate_if(is.numeric, ~round(., 2))
+  
+# Write the data to an excel file
+write.xlsx(rCSICopingStrategiesTreatment, "report tables/rCSICopingStrategiesTreatment.xlsx")
+##########################################################################################################################################
+# Test if the difference in the indicators by treatment is significant
+rCSILessQualCatTest <- svychisq(~rCSILessQltyCat + Treatment, design = SvyrCSIData) # Significant at 10%
+rCSIBorrowCatTest <- svychisq(~rCSIBorrowCat + Treatment, design = SvyrCSIData) # Not significant
+rCSIMealSizeCatTest <- svychisq(~rCSIMealSizeCat + Treatment, design = SvyrCSIData) # Significant at 10%
+rCSIMealNbCatTest <- svychisq(~rCSIMealNbCat + Treatment, design = SvyrCSIData) # Not significant
+rCSIMealAdultCatTest <- svychisq(~rCSIMealAdultCat + Treatment, design = SvyrCSIData) # Not significant
+###########################################################################################################################################
 
 
 # rCSI without disagregating by province
