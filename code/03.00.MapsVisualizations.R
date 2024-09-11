@@ -11,6 +11,7 @@ library(grid)
 library(png)
 library(marquee)
 library(colorspace)
+library(camcorder)
 
 
 
@@ -24,6 +25,7 @@ source("code/ChildNutritionIndicators.R")
 #Text for the graphs
 font_add_google("Open Sans","opensans")
 showtext_auto()
+showtext_opts(dpi = 200)
 
 
 ## This data can be used to create the map of the country - visualisation of indicators by provinces
@@ -524,6 +526,7 @@ SvyNutTable %>%
     # Theme the y-axis
     axis.text.y = element_text(family = "opensans", size = 8, color = "black", face = "bold"),
     axis.title.y = element_blank(),
+    axis.line.y = element_blank(),
     # Theme the titles
     plot.title = element_text(family = "opensans", size = 12, color = "black", face = "bold",
                               margin = margin(l = 40, b = 10)),
@@ -536,39 +539,98 @@ SvyNutTable %>%
   )
 
 
-############################################################################################################################################################
-
-# Visualising the big nutrition indicators (MDD-W and MAD
-NutDataTable <- bind_rows(MDDTable, SvyMADChildrenTab)
-
-NutDataTable %>%
-  ggplot(aes(x = Indicator, y = Percentage)) +
-  geom_bar(stat = "identity", fill = "#254769", width = 0.6) + 
-  geom_text(aes(label = paste0(Percentage, "%"), y = Percentage / 2), 
-            size = 3.5, family = "opensans", color = "#ffffff") +
-  coord_flip() +
-  facet_wrap(~Category) +
-  theme_minimal() +
-  labs(
-    title = "Nutrition Indicators (MDD-W and MAD), by age group",
-    subtitle
-
-    
 #########################################################################################################################################################
-# Lets visualise coping strategies by region
-rCSIRegionGraph <- rCSICopingStrategiesRegion %>% 
-  ggplot(aes(x = regiontype, y = `Yes (%)`)) +
-  geom_bar(stat = "identity", fill = "#254769", width = 0.6) +
+
+
+ChildNutritionGraph <- SvyChildNutritionAgeGrp %>% 
+  ggplot(aes(x = Disaggregation, y = Percentage)) +
+  geom_bar(stat = "identity", fill = "#354f52", width = 0.6) +
+  geom_text(aes(label = paste0(Percentage, "%"), y = Percentage / 2), 
+            size = 3, family = "opensans", color = "#ffffff") +
   coord_flip() +
-  facet_wrap(~Indicator, nrow = 1)
+  facet_wrap(~Indicator, nrow = 1) +
+  theme_clean() +
+  labs(
+    title = "Selected Child Nutrition Indicators, by age group",
+    subtitle = "Children aged 6-11 months have poor diet quality compared to other age groups",
+    x = "Age Group",
+    y = "Percentage",
+    caption = "Data Source: Family Package Baseline"
+  ) + 
+  theme(
+    # Theme the panel
+    panel.background = element_rect(fill = "white", color = NA, size = 0.5),
+    # Theme the x-axis
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank(),
+    axis.ticks.x  = element_blank(),
+    axis.line.x = element_blank(),
+    # Theme the y-axis
+    axis.text.y = element_text(family = "opensans", size = 9, color = "black", face = "bold"),
+    axis.title.y = element_blank(),
+    # Theme the titles
+    plot.title = element_text(family = "opensans", size = 12, color = "black", face = "bold",
+                              margin = margin(l = 0, b = 5)),
+    plot.subtitle = element_text(family = "opensans", size = 10, color = "black", face = "italic",
+                                 margin = margin(l = 0, b = 10)),
+    plot.caption = element_text(family = "opensans", size = 10, color = "black", hjust = 0, margin = margin(t = 0, l = 0, b = 10)),
+    # Underline strip text by adding a bottom border to the strip
+    strip.background = element_blank(), # Removes the background and border
+    #strip.placement = "inside",  # Places the strip text outside the plot
+    strip.text = element_text(margin = margin(b = 0, l = -40), family = "opensans", face = "bold"), # Adds margin at the bottom
+    panel.border = element_blank())
+
+ggsave("figures/ChildNutritionGraph.png", 
+       plot = ChildNutritionGraph, 
+       width = 6.27, height = 3.09, 
+       units = "in", bg = "white")
 
 
 
+#########################################################################################################################################################
 
+# Visualising the SvyChildrenFoodGroupsAgeGrp table
 
-SvyLCSFSMaxRegion %>% 
-  mutate(MaxcopingBehaviourFS = )
-  ggplot(aes(x = Disagregation, y = Proportion)) +
-  geom_bar(stat = "identity", position = "stack", width = 0.7)+ 
-  coord_flip() + 
-  facet_wrap(~MaxcopingBehaviourFS, nrow = 1)
+ChildFoodGroupsGraph <- SvyChildrenFoodGroupsAgeGrp %>% 
+  filter(Indicator != "Legumes") %>% 
+  ggplot(aes(x = fct_reorder(Indicator, Percentage), y = Percentage)) +
+  geom_bar(stat = "identity", fill = "#254769", width = 0.6) +
+  geom_text(aes(label = paste0(Percentage, "%"), y = Percentage / 2), 
+            size = 3, family = "opensans", color = "#ffffff") +
+  coord_flip() +
+  facet_wrap(~Disaggregation) + 
+  theme_clean() + 
+  labs(
+    title = "Food Groups consumed, by child age group",
+    subtitle = "Children aged 6-11 months are consuming less of each food group compared to other age groups",
+    x = "Food Group",
+    y = "Percentage",
+    caption = "Data Source: Family Package Baseline"
+  ) + 
+  theme(
+    # Theme the panel
+    panel.background = element_rect(fill = "white", color = "white", size = 0.5),
+    panel.border = element_blank(),
+    # Theme the x-axis
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank(),
+    axis.ticks.x  = element_blank(),
+    axis.line.x = element_blank(),
+    # Theme the y-axis
+    axis.text.y = element_text(family = "opensans", size = 9, color = "black", face = "bold"),
+    axis.title.y = element_blank(),
+    # Theme the titles
+    plot.title = element_text(family = "opensans", size = 12, color = "black", face = "bold",
+                              margin = margin(l = 0, b = 5)),
+    plot.subtitle = element_text(family = "opensans", size = 10, color = "black", face = "italic",
+                                 margin = margin(l = 0, b = 8)),
+    plot.caption = element_text(family = "opensans", size = 10, color = "black", hjust = 0, margin = margin(t = 5, l = 0, b = 10)),
+    # Underline strip text by adding a bottom border to the strip
+    strip.background = element_blank(), # Removes the background and border
+    strip.placement = "bottom",  # Places the strip text outside the plot
+    strip.text = element_text(margin = margin(b = 0, unit = "cm"), family = "opensans", face = "bold"))
+
+ggsave("figures/ChildFoodGroupsGraph.png", 
+       plot = ChildFoodGroupsGraph, 
+       width = 6.27, height = 3.09, 
+       units = "in", bg = "white")
