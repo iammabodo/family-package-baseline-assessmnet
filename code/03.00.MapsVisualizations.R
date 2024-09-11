@@ -412,7 +412,9 @@ ReducedCopingStrategiesGraph <- ggplot(rCSICopingStrategies, aes(x = reorder(str
     plot.margin = margin(10, 10, 10, 10))
 
 
-ggsave("figures/rCSI.png", plot = ReducedCopingStrategiesGraph, width = 3.41, height = 2.57, units = "in")
+ggsave("figures/rCSI.png", 
+       plot = ReducedCopingStrategiesGraph, 
+       width = 3.41, height = 2.57, units = "in")
 
 library(gt)
 library(dplyr)
