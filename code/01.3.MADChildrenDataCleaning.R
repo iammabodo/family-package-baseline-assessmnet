@@ -114,6 +114,16 @@ MADChildren <- MADChildren %>%
         PCMADProteinPork == 0 & PCMADProteinChicken == 0 & PCMADProteinFish == 0 & PCMADProteinCrikets == 0 & PCMADOtherPeanuts == 0 &
         PCMADOtherChips == 0 & PCMADOtherNoodles == 0 & PCMADOtherFriedChicken == 0 & PCMADOtherSemiSolid == 0 & PCMADOtherEatOut ==0 & PCMADCheck == 0) ~ 1,
       TRUE ~ 0),
+    ISSSF = case_when(
+      PCMADStapCereal == 1 | PCMADOtherCereal == 1 | PCMADStapTubers == 1 | PCMADStapLegumes == 1 | 
+        PCMADVegCarrots == 1 | PCMADVegIvyGourd == 1 | PCMADVegPumpkin == 1 | PCMADVegEggplant == 1 | 
+        PCMADVegWaxGourd == 1 | PCMADVegLettuce == 1 | PCMADFruitRipe == 1 | PCMADFruitOrange == 1 | PCMADFruitBanana == 1 | 
+        PCMADFruitMangosteen == 1 | PCMADSweetsCakes == 1 | PCMADSweetsCandy == 1 | PCMADProteinEggs == 1 | 
+        PCMADProteinKidney == 1 | PCMADProteinSausages == 1 | PCMADProteinBeef == 1 | PCMADProteinPork == 1 | 
+        PCMADProteinChicken == 1 | PCMADProteinFish == 1 | PCMADProteinCrikets == 1 | PCMADOtherPeanuts == 1 | 
+        PCMADOtherChips == 1 | PCMADOtherNoodles == 1 | PCMADOtherFriedChicken == 1 | PCMADOtherSemiSolid == 1 | 
+        PCMADOtherEatOut == 1 | PCMADCheck == 1 ~ 1,
+      TRUE ~ 0),
     #Mixed Milk feeding under 6 months (MixMF)
     MADMixMF = case_when(
       PCMADBreastfeeding == 1 & (PCMADInfFormula == 1 | PCMADMilk == 1) ~1,
