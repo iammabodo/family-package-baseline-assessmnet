@@ -1,4 +1,4 @@
-### Loading relevant library
+### Loading relevant library for data visualisation
 
 library(tidyverse)
 library(sf)
@@ -11,18 +11,18 @@ library(grid)
 library(png)
 library(marquee)
 library(colorspace)
-library(camcorder)
+
 
 
 
 ## Selected Provinces: Banteay Meanchey Kampong Cham Kampong Speu Kampot  Kratie Phnom Penh Preah Sihanouk  Siemreap Tboung Khmum  
 ## Source the Indicator Calculation File
 
-source("code/FoodSecurityIndicators.R")
-source("code/AdultNutritionIndicators.R")
-source("code/ChildNutritionIndicators.R")
+source("code/02.1.FoodSecurityIndicators.R")
+source("code/02.2.AdultNutritionIndicators.R")
+source("code/02.3.ChildNutritionIndicators.R")
 
-#Text for the graphs
+#Text for the graphs - setting the defalts
 font_add_google("Open Sans","opensans")
 showtext_auto()
 showtext_opts(dpi = 200)
@@ -139,7 +139,7 @@ COData <- st_read("data/shape/khm_bnd_admin1_gov_wfp_ed2022.shp") %>%
 #        axis.text.y =  element_blank())
 
 
-
+###########################################################################################################
 ## Let us graph the indicators
 ##Stacked Bar Chart - Livelihood Coping Strategies Food Security Indicator by Province
 
@@ -147,7 +147,8 @@ LCSFSGraph <- ggplot(SvyLCSENFoodProvinceTab, aes(x = Province, y = Pct_LCSENFoo
   geom_bar(stat = "identity", position = "stack", width = 0.9) +
   geom_text(aes(
     label = sprintf("%.1f%%", Pct_LCSENFood),
-    color = ifelse(MaxcopingBehaviourFS %in% c("Household not adopting coping strategies", "Stress coping strategies"), "#4B2E2A", "white")
+    color = ifelse(MaxcopingBehaviourFS %in% c("Household not adopting coping strategies", "Stress coping strategies"), "#4B2E2A", "white"),
+    family = "opensans"
   ), 
   position = position_stack(vjust = 0.5), 
   size = 3.5) +
@@ -160,7 +161,8 @@ LCSFSGraph <- ggplot(SvyLCSENFoodProvinceTab, aes(x = Province, y = Pct_LCSENFoo
   scale_color_identity() +  # This ensures the color mapping is applied directly
   labs(
     title = "Livelihoods Coping Strategies - Food Security (%)",
-    subtitle = "Percentage og households adopting coping strategies for food security",
+    subtitle = "Percentage of households adopting coping strategies for food security",
+    caption = "Data Source: Family Package Baseline",
     x = "Province",
     y = "Percentage of Households",
     fill = "Coping Strategy"
@@ -168,27 +170,33 @@ LCSFSGraph <- ggplot(SvyLCSENFoodProvinceTab, aes(x = Province, y = Pct_LCSENFoo
   theme_void() +
   theme(
     axis.text.x = element_text(family = "opensans", colour =  "#4B2E2A", size = 8, face = "bold",
-                               margin = margin(t = -20, b = 20)),
+                               margin = margin(t = 0, b = 10)),
     axis.text.y = element_blank(),
     axis.title = element_text(family = "opensans", size = 10, face = "bold"),
     axis.title.x = element_blank(),
     axis.title.y = element_text(margin = margin(r = 10, l = 10), angle = 90),
-    plot.title = element_text(family = "opensans", size = 12, face = "bold", hjust = 0.5, colour = "#C55D2B"),
-    plot.subtitle = element_text(family = "opensans", size = 10, face = "italic", hjust = 0.5, colour = "#C55D2B", lineheight = 1.5),
+    plot.title = element_text(family = "opensans", size = 12, face = "bold", hjust = 0, colour = "#C55D2B",
+                              margin = margin(t = 10, b = 5)),
+    plot.subtitle = element_text(family = "opensans", size = 10, face = "italic", colour = "#C55D2B", lineheight = 1.5,
+                                 margin = margin(t = 0, l = 0, b = 5)),
+    plot.caption = element_text(family = "opensans", size = 10, hjust = 0, color = "black",
+                                margin = margin(t = 0, l = 0, b = 5)),
     # Legend styling
     legend.position = "bottom",  # Position the legend at the bottom
     legend.title = element_blank(),  # Legend title style
-    legend.text = element_text(size = 7, family = "opensans", color = "#4B2E2A"),  # Legend text style
+    legend.text = element_text(size = 8, family = "opensans", color = "#4B2E2A"),  # Legend text style
     #legend.background = element_rect(fill = "lightgrey", color = NA),  # Background color of the legend
     #legend.key = element_rect(fill = "white", color = "black"),  # Background of the legend keys
-    legend.key.size = unit(0.5, "cm"),  # Size of the legend keys
+    legend.key.size = unit(0.2, "cm"),  # Size of the legend keys
     legend.spacing.x = unit(0.2, "cm"),  # Horizontal spacing between legend items
     #legend.box.background = element_rect(color = "black", size = 0.5),  # Border around the legend box
-    legend.box.margin = margin(t = -10, b = 10)  # Margin around the legend box
+    legend.box.margin = margin(t = -5, b = 10)  # Margin around the legend box
   )
 
 # Save the graph
-ggsave("figures/Livelihoods_Coping_Strategies_by_Province_High_Quality.png", plot = LCSFSGraph, width = 3.41, height = 2.57, units = "in")
+ggsave("figures/Livelihoods_Coping_Strategies_by_Province_High_Quality.png", 
+       plot = LCSFSGraph, width = 6.28, height = 3.98, units = "in",
+       bg = "white", dpi = 300)
 
 
 
@@ -199,7 +207,8 @@ LCSENGraph <- ggplot(SvyLCSENMaxProvince, aes(x = Province, y = Pct_LCSENMax, fi
   geom_bar(stat = "identity", position = "stack", width = 0.9) +
   geom_text(aes(
     label = sprintf("%.1f%%", Pct_LCSENMax),
-    color = ifelse(MaxcopingBehaviourEN %in% c("Household not adopting coping strategies", "Stress coping strategies"), "#4B2E2A", "white")
+    color = ifelse(MaxcopingBehaviourEN %in% c("Household not adopting coping strategies", "Stress coping strategies"), "#4B2E2A", "white"),
+    family = "opensans"
   ), 
   position = position_stack(vjust = 0.5), 
   size = 3.5) +
@@ -211,8 +220,9 @@ LCSENGraph <- ggplot(SvyLCSENMaxProvince, aes(x = Province, y = Pct_LCSENMax, fi
   )) +
   scale_color_identity() +  # This ensures the color mapping is applied directly
   labs(
-    title = "Majority of Households are adopting coping strategies in order to meet essential needs",
-    subtitle = "Although the situation in Kampong Cham and Tboung Khmum is different",
+    title = "Livelihoods Coping Strategies - Essential Needs (%)",
+    subtitle = "Percentage of households adopting coping strategies for essential needs",
+    caption = "Data Source: Family Package Baseline",
     x = "Province",
     y = "Percentage of Households",
     fill = "Coping Strategy"
@@ -220,118 +230,38 @@ LCSENGraph <- ggplot(SvyLCSENMaxProvince, aes(x = Province, y = Pct_LCSENMax, fi
   theme_void() +
   theme(
     axis.text.x = element_text(family = "opensans", colour =  "#4B2E2A", size = 8, face = "bold",
-                               margin = margin(t = -5, b = 20)),
+                               margin = margin(t = 0, b = 10)),
     axis.text.y = element_blank(),
     axis.title = element_text(family = "opensans", size = 10, face = "bold"),
     axis.title.x = element_blank(),
     axis.title.y = element_text(margin = margin(r = 10, l = 10), angle = 90),
-    plot.title = element_text(family = "opensans", size = 12, face = "bold", hjust = 0.5),
-    plot.subtitle = element_text(family = "opensans", size = 10, face = "italic", hjust = 0.5),
-    # Legend styling
+    plot.title = element_text(family = "opensans", size = 12, face = "bold", hjust = 0, colour = "#C55D2B",
+                              margin = margin(t = 10, b = 5)),
+    plot.subtitle = element_text(family = "opensans", size = 10, face = "italic", colour = "#C55D2B", lineheight = 1.5,
+                                 margin = margin(t = 0, l = 0, b = 5)),
+    plot.caption = element_text(family = "opensans", size = 10, hjust = 0, color = "black",
+                                margin = margin(t = 0, l = 0, b = 5)),
     # Legend styling
     legend.position = "bottom",  # Position the legend at the bottom
     legend.title = element_blank(),  # Legend title style
-    legend.text = element_text(size = 7, family = "opensans", color = "#4B2E2A"),  # Legend text style
+    legend.text = element_text(size = 8, family = "opensans", color = "#4B2E2A"),  # Legend text style
     #legend.background = element_rect(fill = "lightgrey", color = NA),  # Background color of the legend
     #legend.key = element_rect(fill = "white", color = "black"),  # Background of the legend keys
-    legend.key.size = unit(0.5, "cm"),  # Size of the legend keys
+    legend.key.size = unit(0.2, "cm"),  # Size of the legend keys
     legend.spacing.x = unit(0.2, "cm"),  # Horizontal spacing between legend items
     #legend.box.background = element_rect(color = "black", size = 0.5),  # Border around the legend box
-    legend.box.margin = margin(t = -20, b = 10))    # Margin around the legend box
+    legend.box.margin = margin(t = -5, b = 10))   # Margin around the legend box
 
 
-####################################################################################################################################################
-# Stack Graph - Livelihoods Coping Strategies Essential Needs Indicator by HighLvlLCSEN
-
-HighLvlLCSENGraph <- ggplot(HighLvlLCSEN, aes(x = Disagregation, y = Proportion, fill = MaxcopingBehaviourEN)) +
-  geom_bar(stat = "identity", position = "stack", width = 0.7) +
-  coord_flip() +
-  geom_text(aes(
-    label = sprintf("%.1f%%", Proportion),
-    color = ifelse(MaxcopingBehaviourEN %in% c("Household not adopting coping strategies", "Stress coping strategies"), "#4B2E2A", "white")
-  ), 
-  position = position_stack(vjust = 0.5), 
-  size = 3.5) +
-  facet_wrap(~MaxcopingBehaviourEN,
-             nrow = 1,
-             strip.position = "bottom") +
-  scale_fill_manual(values = c(
-    'Household not adopting coping strategies' = '#F1ECE8',
-    'Stress coping strategies' = '#D5B868',
-    'Crisis coping strategies' = '#F37847',
-    'Emergency coping strategies' = '#C00000'
-  )) +
-  scale_color_identity() +  # This ensures the color mapping is applied directly
-  labs(
-    title = "Coping Mechanisms Adopted by Households to Meet Essential Needs",
-    subtitle = "With a higher percentage of urban households adopting these mechanisms compared to other groups",
-    caption = "Data Source: Family Package Baseline",
-    x = "Province",
-    y = "Percentage of Households",
-    fill = "Coping Strategy"
-  ) +
-  scale_x_discrete(labels = function(x) str_wrap(x, width = 10)) +
-  theme_minimal() +  # Use theme_minimal() instead of theme_void()
-  theme(
-    axis.text.x = element_blank(),
-    axis.text.y = element_text(family = "opensans", colour =  "#4B2E2A", size = 8, 
-                               face = "bold", lineheight = 1.5, hjust = 0, margin = margin(r = 10, l = 15)),
-    axis.title = element_text(family = "opensans", size = 10, face = "bold"),
-    axis.title.x = element_blank(),
-    #axis.title.y = element_text(margin = margin(r = 10, l = 10), angle = 90),
-    axis.title.y = element_blank(),
-    plot.title = element_text(family = "opensans", size = 12, face = "bold", hjust = 0, 
-                              margin = margin(l = 13, b = 10)),
-    plot.subtitle = element_text(family = "opensans", size = 10, face = "italic", hjust = 0,
-                                 margin = margin(l = 13)),
-    plot.caption = element_text(family = "opensans", size = 10, hjust = 0, color = "black"),
-    panel.grid = element_blank(),
-    legend.position = "none",
-    #strip.background = element_rect(fill = "#4B2E2A", color = NA),  # Customize facet strip background color
-    strip.text.x = element_text(family = "opensans", size = 10, face = "bold", colour = "#4B2E2A", hjust = 0, 
-                                margin = margin(l = 13, b = 10)),  # Left-align facet labels
-    #strip.placement = "outside",  # Place the strips outside the plotting area
-    #panel.spacing = unit(1, "lines")  # Increase spacing between facets
-  )
-
-ggsave(
-  filename = "HighLvlLCSENGraph_A4.png",
-  plot = HighLvlLCSENGraph,
-  width = 7.5,       # Width that fits well within A4 width with margins
-  height = 4.5,      # Adjusted height for proportionate scaling
-  dpi = 300,         # Resolution suitable for print
-  bg = "white"       # Ensure the background is white
-)
+ggsave("figures/Livelihoods_Coping_Strategies_EN_by_Province.png", 
+       plot = LCSENGraph, width = 6.28, height = 3.98, units = "in",
+       bg = "white", dpi = 300)
     
     # Legend
 
+#################################################################################################################################
 
-#Minimum Dietary Diversity for Women of Reproductive Age Nutrition Indicators Visualisation
-MDDProvincePlotData <- SvyMDDWomenProvince  %>% 
-  left_join(COData, by = "Province")
-
-
-MDDProvincePlotData %>%
-  ggplot() +
-  geom_sf(aes(geometry = geometry, fill = MDDWomen), color = "black", size = 0.2) +  # Adjust size and color of borders
-  #geom_sf_text(aes(label = Province), size = 4, family = "Open Sans", fontface = "bold", color = "black") +  # Add province labels
-  scale_fill_viridis_c(option = "A", name = "MDD Women (%)") +  # Choose a color scale
-  theme_minimal() +  # Clean theme
-  labs(
-    title = "Minimum Dietary Diversity for Women (MDDWomen) by Province",
-    subtitle = "Data visualization using sf package in R",
-    caption = "Source: Family Package Baseline"
-  ) +
-  theme(
-    plot.title = element_text(size = 16, face = "bold"),
-    plot.subtitle = element_text(size = 12),
-    axis.title = element_blank(),
-    axis.text = element_blank(),
-    axis.ticks = element_blank(),
-    panel.grid = element_blank(),
-    legend.position = "bottom"
-  )
-
+# # Food Insecurity Experience Scale by Province
 ProvinceFIES <- read_xlsx("report tables/FIES.xlsx")
 
 
@@ -340,59 +270,65 @@ md_text <- "Rural households are more food insecure than urban households (61% v
 FIESGraph <- ggplot(ProvinceFIES, aes(x = FIES, y = reorder(Province, FIES))) +  
   geom_bar(stat = "identity", fill = "#8d1f17", width = 0.7) +  # Set a blue fill color similar to the image and adjust bar width
   #geom_vline(xintercept = 64.2, color = "black", size = 1) +  # Add a vertical line at x = 50
-  annotate(
-    'marquee',
-    x = 55, 
-    y = 10,
-    label = md_text,
-    width = 0.5,
-    hjust = 0.5,
-    vjust = 0.5,
-    fill = colorspace::lighten("dodgerblue1", 0.7),
-    style = text_box_style
-  ) +
-  labs(title = md_text) +  # Add a title)
-  scale_x_continuous(expand = c(0, 0),
-                     limits = c(0,75),
-                     breaks = seq(0, 75, 10),
-                     position = "top") +  # Set x-axis limits and breaks
-  scale_y_discrete(expand = c(0, 0.5)) +  # Set y-axis limits
+  # annotate(
+  #   'marquee',
+  #   x = 55, 
+  #   y = 10,
+  #   label = md_text,
+  #   width = 0.5,
+  #   hjust = 0.5,
+  #   vjust = 0.5,
+  #   fill = colorspace::lighten("dodgerblue1", 0.7),
+  #   style = text_box_style
+  # ) +
+  # labs(title = md_text) +  # Add a title)
+  # scale_x_continuous(expand = c(0, 0),
+  #                    limits = c(0,75),
+  #                    breaks = seq(0, 75, 10),
+  #                    position = "top") +  # Set x-axis limits and breaks
+  # scale_y_discrete(expand = c(0, 0.5)) +  # Set y-axis limits
   theme(
     panel.background = element_rect(fill = "white"),  # Set panel background color
-    panel.grid.major.x = element_line(colour = 'grey', size = 0.1),  # Remove horizontal grid lines
+    #panel.grid.major.x = element_line(colour = 'grey', size = 0.1),  # Remove horizontal grid lines
     axis.ticks.length = unit(0, "cm"),  # Remove axis ticks
     axis.title = element_blank(),  # Remove axis title
     axis.line.y.left = element_line(color = "black"),  # Set y-axis line color and size
     axis.text.y = element_blank(),  # Set y-axis text size, font, and color
     axis.text.x = element_blank()  # Set x-axis text size, font, and color
   ) +
-  geom_text(aes(0,label = Province), 
-            hjust = 0, size = 3.5, 
+  geom_text(aes(0,label = Province),
+            hjust = 0, size = 2,
             family = "opensans", color = "#ffffff",
             nudge_x = 0.3) + # Add data labels
   geom_text(aes(x= 32, label = paste0(FIES, "%")), # Setting the x-axis position
-            hjust = 0, size = 3, 
+            hjust = 0, size = 2,
             family = "opensans", color = "#ffffff") +  # Add data labels
   labs(
     title = "Food Insecurity Experience Scale (FIES) by Province (%)",
     subtitle = "Majority of households are food insecure in almost all provinces, except in Banteay Meanchey, where less than 50% of households are food insecure",
     caption = "Data Source: Family Package Baseline"
   ) + 
-  theme(plot.title = element_text(size = 12, family = "opensans", face = "bold"),
-        plot.subtitle = element_text(size = 10, family = "opensans", face = "italic", lineheight = 1.5,
-                                     margin = margin(t = 10, b = 10)),
+  theme(plot.title = element_text(size = 18, family = "opensans", hjust = 0, face = "bold"),
+        plot.subtitle = element_text(size = 8, family = "opensans", hjust = 0, face = "italic", lineheight = 1.5,
+                                     margin = margin(t = 0, b = 10)),
         plot.caption = element_text(size = 10, hjust = 0, family = "opensans", color = "black"))
 
+# Save the graph
+ggsave("figures/FIES_by_Province.png", 
+       plot = FIESGraph, width = 6.28, height = 3.98, units = "in",
+       bg = "white", dpi = 300)
 
+
+####################################################################################################################################################
 ## Reduced Coping Strategies Index
 
 ReducedCopingStrategiesGraph <- ggplot(rCSICopingStrategies, aes(x = reorder(strategy, Percentage), y = Percentage)) +
   geom_bar(stat = "identity", fill = "#254769", width = 0.6) +
   geom_hline(yintercept = 0, color = "black", size = 1) +
-  geom_text(aes(label = paste0(Percentage, "%")), vjust = 10, size = 3.5, family = "opensans", color = "#ffffff") +
+  geom_text(aes(label = paste0(Percentage, "%")), vjust = 5, size = 3.5, family = "opensans", color = "#ffffff") +
   #coord_flip() + # Flips the coordinates for better readability
   labs(title = "Consumption Based Coping Strategies Adopted (%)",
-       subtitle = "Percentage of households using coping strategies to afford food, as measured by the rCSI",
+       subtitle = "Percentage of households using each coping strategy to afford food in the last seven days",
        x = "Coping Strategies Adopted",
        y = "Percentage",
        caption = "Data Source: Family Package Baseline") +
@@ -402,26 +338,22 @@ ReducedCopingStrategiesGraph <- ggplot(rCSICopingStrategies, aes(x = reorder(str
     panel.background = element_rect(fill = "white", color = "white", size = 0.5),
     panel.grid.major.y = element_line(color = "grey", size = 0.5),
     # Theme the x- axis
-    axis.text.x = element_text(lineheight = 1.8, family = "opensans", size = 8, color = "black", face = "bold", margin = margin(t = -10)),
-    axis.title.x = element_text(family = "opensans", size = 10, color = "black", face = "bold", margin = margin(b = 10, t = 10)),
+    axis.text.x = element_text(lineheight = 1, family = "opensans", size = 8, color = "black", face = "bold", margin = margin(t = 0)),
+    axis.title.x = element_blank(),
     axis.ticks.x  = element_blank(),
     # Theme the titles
-    plot.title = element_text(family = "opensans", size = 14, color = "black", face = "bold", margin = margin(l = 40, b = 20)),
-    plot.subtitle = element_text(family = "opensans", size = 10, color = "black", face = "italic", margin = margin(l = 20)),
+    plot.title = element_text(family = "opensans", size = 14, color = "black", face = "bold", hjust = 0, margin = margin(b = 5)),
+    plot.subtitle = element_text(family = "opensans", size = 10, color = "black", face = "italic", hjust = 0, margin = margin(t = 0, b = 20)),
     plot.caption = element_text(family = "opensans", size = 10, color = "black", margin = margin(t = 10, l = 20, b = 10), hjust = 0),
     plot.margin = margin(10, 10, 10, 10))
 
 
-ggsave("figures/rCSI.png", plot = ReducedCopingStrategiesGraph, width = 3.41, height = 2.57, units = "in")
+ggsave("figures/rCSI.png", plot = ReducedCopingStrategiesGraph, 
+       width = 6.27, height = 3.5, units = "in",
+       bg = "white", dpi = 300)
 
-library(gt)
-library(dplyr)
-
-# Assuming rCSIMealSizeWhoTable is already created
-library(gt)
-library(dplyr)
-
-# Assuming rCSIMealSizeWhoTable is already created
+####################################################################################################################################################
+# Table to show which household members are using most severe coping strategies
 
 StrategiesTable <- rCSIMealSizeWhoTable %>%
   gt() %>%
@@ -474,73 +406,9 @@ StrategiesTable <- rCSIMealSizeWhoTable %>%
     #column_labels.align = "centre"  # Center the column headings
   )
 
-# Display the table
-StrategiesTable
-
-
-
-gtsave(StrategiesTable, "figures/StrategiesTable.png")
-# combine the table and the reduced coping strategies grapgh using patchwork
-
-table_img <- readPNG("figures/StrategiesTable.png")
-
-table_grob <- rasterGrob(table_img, interpolate = T)
-
-RCSIGraph <- ReducedCopingStrategiesGraph +
-  #coord_cartesian(ylim = c(0, 75)) +
-  inset_element(table_grob,
-                left = 0.15,
-                top = 0.80,
-                bottom = 0.6,
-                right = 0.6)
-
-
-LCSFSGraph / RCSIGraph
-
-
-##############################################################################################################
-
-SvyNutTable %>% 
-  ggplot(aes(x = Disaggregation, y = Percentage)) +
-  geom_bar(stat = "identity", fill = "#254769", width = 0.6) + 
-  geom_text(aes(label = paste0(Percentage, "%"), y = Percentage / 2), 
-            size = 3.5, family = "opensans", color = "#ffffff") +
-  coord_flip() +
-  facet_wrap(~Indicator) +
-  theme_minimal() +
-  labs(
-    title = "Child Nutrition Indicators (MDD, MMF and MAD), by age group",
-    subtitle = "Percentage of children under 2 years old who meet MDD, MMF and MAD",
-    x = "Age Group",
-    y = "Percentage",
-    caption = "Data Source: Family Package Baseline"
-  ) + 
-  theme(
-    # Theme the panel
-    panel.background = element_rect(fill = "white", color = "white", size = 0.5),
-    panel.grid.major.y = element_blank(),
-    # Theme the x-axis
-    axis.text.x = element_blank(),
-    axis.title.x = element_blank(),
-    axis.ticks.x  = element_blank(),
-    # Theme the y-axis
-    axis.text.y = element_text(family = "opensans", size = 8, color = "black", face = "bold"),
-    axis.title.y = element_blank(),
-    axis.line.y = element_blank(),
-    # Theme the titles
-    plot.title = element_text(family = "opensans", size = 12, color = "black", face = "bold",
-                              margin = margin(l = 40, b = 10)),
-    plot.subtitle = element_text(family = "opensans", size = 10, color = "black", face = "italic",
-                                 margin = margin(l = 40, b = 10)),
-    plot.caption = element_text(family = "opensans", size = 10, color = "black", hjust = 0, margin = margin(t = 10, l = 40, b = 10)),
-    # Underline strip text by adding a bottom border to the strip
-    strip.background = element_rect(fill = NA, color = "black", size = 0.5, linetype = "solid"),  # Adds a border around the strip
-    strip.text = element_text(family = "opensans", size = 10, color = "black", face = "bold")
-  )
-
-
 #########################################################################################################################################################
 
+#Visualiising child nutrition indicators
 
 ChildNutritionGraph <- SvyChildNutritionAgeGrp %>% 
   ggplot(aes(x = Disaggregation, y = Percentage)) +
@@ -634,3 +502,5 @@ ggsave("figures/ChildFoodGroupsGraph.png",
        plot = ChildFoodGroupsGraph, 
        width = 6.27, height = 3.09, 
        units = "in", bg = "white")
+
+#########################################################################################################################################################
