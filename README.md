@@ -1,0 +1,1 @@
+This file is for data analysis for the food security and nutrition indicators for the Family Package Baseline Assessemment. Code should be run in sequence, starting with the 01... files (e.g., we should start with 01.1.FoodSecurityDataCleaning.R) and so on. The 02... files source the preceding files and so on :). 
