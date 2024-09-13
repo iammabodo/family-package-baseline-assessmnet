@@ -555,9 +555,9 @@ rCSIMealSizeWhoTable <- bind_rows(rCSIMealSizeWho, rCSIMealAdultWho) %>%
 ####################################################################################################################################################
 # Statistical Tests - tests if the difference in all indicators by trestment is significant
 # 1. LCS - EN
-LCS_EN_Test <- svychisq(MaxcopingBehaviourEN ~ Treatment, design = SvyLCSENData)
+LCS_EN_Test <- svychisq(~MaxcopingBehaviourEN + Treatment, design = SvyLCSENData)
 
 # 2. LCS - FS
-LCS_FS_Test <- svyglm(MaxcopingBehaviourFS ~ Treatment, design = SvyLCSFS)
+LCS_FS_Test <- svychisq(~MaxcopingBehaviourFS + Treatment, design = SvyLCSFS)
 
 # 3. Coping Strategies
