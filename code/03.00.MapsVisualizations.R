@@ -34,7 +34,7 @@ COData <- st_read("data/shape/khm_bnd_admin1_gov_wfp_ed2022.shp") %>%
   # Selecting the necessary columns
   select(Adm1_Name, geometry) %>%
   # Renaming the columns
-  rename(Province = Adm1_Name) #%>% 
+  rename(Province = Adm1_Name) %>% 
   # Filtering the necessary provinces
   filter(
     Province == "Banteay Meanchey" | 
