@@ -504,3 +504,108 @@ ggsave("figures/ChildFoodGroupsGraph.png",
        units = "in", bg = "white")
 
 #########################################################################################################################################################
+
+# Visualise coping strategies by regiontype
+
+rCSICopingStrategiesAll %>% 
+  ggplot(aes(x = fct_rev(regiontype), y = `Yes (%)`)) +
+  geom_bar(stat = "identity", fill = if_else(rCSICopingStrategiesAll$regiontype == "Overall Total", "#e28743","#254769"),
+           width = 0.6) +
+  scale_fill_identity() +
+  geom_text(aes(label = paste0(`Yes (%)`, "%"), y = `Yes (%)` / 2), 
+            size = 2, family = "opensans", color = "#ffffff") +
+  coord_flip() + 
+  facet_wrap(~fct_reorder(Indicator, `Yes (%)`), 
+             nrow = 1) +
+  theme_clean() + 
+  labs(
+    title = "Consumption Based Coping Strategies Adopted (%), by Province",
+    subtitle = "Percentage of households using each coping strategy to afford food in the last seven days",
+    x = "Coping Strategies Adopted",
+    y = "Percentage",
+    caption = "Data Source: Family Package Baseline"
+  ) +
+  theme(
+    # Theme the panel
+    panel.background = element_rect(fill = "white", color = "white", size = 0.5),
+    panel.border = element_blank(),
+    # Theme the x-axis
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank(),
+    axis.ticks.x  = element_blank(),
+    axis.line.x = element_blank(),
+    # Theme the y-axis
+    axis.text.y = element_text(family = "opensans", size = 9, color = "black"),
+    axis.title.y = element_blank(),
+    # Theme the titles
+    plot.title = element_text(family = "opensans", size = 12, color = "black", face = "bold",
+                              margin = margin(l = 0, b = 5)),
+    plot.subtitle = element_text(family = "opensans", size = 10, color = "black", face = "italic",
+                                 margin = margin(l = 0, b = 8)),
+    plot.caption = element_text(family = "opensans", size = 10, color = "black", hjust = 0, margin = margin(t = 5, l = 0, b = 10)),
+    # Underline strip text by adding a bottom border to the strip
+    strip.background = element_blank(), # Removes the background and border
+    strip.placement = "bottom",  # Places the strip text outside the plot
+    strip.text = element_text(margin = margin(b = 5, t = 5), family = "opensans", lineheight = 2.3, size = 5))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

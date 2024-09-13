@@ -447,13 +447,19 @@ rCSIMealAdultCat <- rCSIData %>%
   select(strategy, Percentage)
 
 # Bind these coping strategies together
-rCSICopingStrategies <- bind_rows(rCSILessQltyCat, rCSIBorrowCat, rCSIMealSizeCat, rCSIMealNbCat, rCSIMealAdultCat) %>% 
+rCSICopingStrategies <- bind_rows(rCSILessQltyCat, 
+                                  rCSIBorrowCat, 
+                                  rCSIMealSizeCat, 
+                                  rCSIMealNbCat, 
+                                  rCSIMealAdultCat) %>% 
   # Round all the numeric variables to 2 decimal places
   mutate_if(is.numeric, ~round(., 2)) %>% 
   arrange(Percentage) %>% 
-  mutate(strategy = str_wrap(strategy, 20)) %>% 
   # Change every numeric variable to 2 decimal places
-  mutate_if(is.numeric, ~round(., 2))
+  mutate_if(is.numeric, ~round(., 2)) %>% 
+  rename(Indicator = strategy, `Yes (%)` = Percentage) %>% 
+  mutate(regiontype = "Overall Total") %>%
+  select(regiontype, Indicator, `Yes (%)`)
 
 
 #########################################################################################################################
@@ -511,11 +517,14 @@ rCSIMealAdultWhoRegion <- SvyrCSIData %>%
   rename(`Yes (%)` = `Yes`)
 
 # Merge the data for the visualisation
-rCSICopingStrategiesRegion <- bind_rows(rCSILessQltyWhoRegion, rCSIBorrowWhoRegion, rCSIMealSizeWhoRegion, rCSIMealNbWhoRegion, rCSIMealAdultWhoRegion) %>% 
+rCSICopingStrategiesRegion <- bind_rows(rCSILessQltyWhoRegion, 
+                                        rCSIBorrowWhoRegion, 
+                                        rCSIMealSizeWhoRegion, 
+                                        rCSIMealNbWhoRegion, 
+                                        rCSIMealAdultWhoRegion) %>% 
   # Round all the numeric variables to 2 decimal places
   mutate_if(is.numeric, ~round(., 2)) %>% 
   arrange(`Yes (%)`) %>% 
-  mutate(Indicator = str_wrap(Indicator, 20)) %>% 
   # Change every numeric variable to 2 decimal places
   mutate_if(is.numeric, ~round(., 2))
 
@@ -560,4 +569,127 @@ LCS_EN_Test <- svychisq(~MaxcopingBehaviourEN + Treatment, design = SvyLCSENData
 # 2. LCS - FS
 LCS_FS_Test <- svychisq(~MaxcopingBehaviourFS + Treatment, design = SvyLCSFS)
 
-# 3. Coping Strategies
+#################################################################################################################################################
+
+# Reduced coping strategies by provinces
+rCSILessQltyCatProvince <- SvyrCSIData %>% 
+  drop_na(rCSILessQltyCat) %>% 
+  group_by(Province, rCSILessQltyCat) %>%
+  summarise(Pct = survey_prop() * 100) %>%
+  select(Province, rCSILessQltyCat, Pct) %>%
+  pivot_wider(names_from = rCSILessQltyCat, values_from = Pct) %>%
+  mutate(Indicator = "Relied on less prefered and less expensive food") %>%
+  select(Indicator, `Yes`) %>%
+  rename(`Yes (%)` = `Yes`)
+
+rCSIBorrowCatProvince <- SvyrCSIData %>%
+  drop_na(rCSIBorrowCat) %>% 
+  group_by(Province, rCSIBorrowCat) %>%
+  summarise(Pct = survey_prop() * 100) %>%
+  select(Province, rCSIBorrowCat, Pct) %>%
+  pivot_wider(names_from = rCSIBorrowCat, values_from = Pct) %>%
+  mutate(Indicator = "Borrowed food from relative or friend") %>%
+  select(Indicator, `Yes`) %>%
+  rename(`Yes (%)` = `Yes`)
+
+
+rCSIMealSizeCatProvince <- SvyrCSIData %>%
+  drop_na(rCSIMealSizeCat) %>% 
+  group_by(Province, rCSIMealSizeCat) %>%
+  summarise(Pct = survey_prop() * 100) %>%
+  select(Province, rCSIMealSizeCat, Pct) %>%
+  pivot_wider(names_from = rCSIMealSizeCat, values_from = Pct) %>%
+  mutate(Indicator = "Reduced meal size or portions") %>%
+  select(Indicator, `Yes`) %>%
+  rename(`Yes (%)` = `Yes`)
+
+
+rCSIMealNbCatProvince <- SvyrCSIData %>%
+  drop_na(rCSIMealNbCat) %>% 
+  group_by(Province, rCSIMealNbCat) %>%
+  summarise(Pct = survey_prop() * 100) %>%
+  select(Province, rCSIMealNbCat, Pct) %>%
+  pivot_wider(names_from = rCSIMealNbCat, values_from = Pct) %>%
+  mutate(Indicator = "Reduced number of meals") %>%
+  select(Indicator, `Yes`) %>%
+  rename(`Yes (%)` = `Yes`)
+
+rCSIMealAdultCatProvince <- SvyrCSIData %>%
+  drop_na(rCSIMealAdultCat) %>% 
+  group_by(Province, rCSIMealAdultCat) %>%
+  summarise(Pct = survey_prop() * 100) %>%
+  select(Province, rCSIMealAdultCat, Pct) %>%
+  pivot_wider(names_from = rCSIMealAdultCat, values_from = Pct) %>%
+  mutate(Indicator = "Reduced meal size or portions for adults") %>%
+  select(Indicator, `Yes`) %>%
+  rename(`Yes (%)` = `Yes`)
+
+# Merge the data for the visualisation
+rCSICopingStrategiesProvince <- bind_rows(rCSILessQltyCatProvince, 
+                                          rCSIBorrowCatProvince, 
+                                          rCSIMealSizeCatProvince, 
+                                          rCSIMealNbCatProvince, 
+                                          rCSIMealAdultCatProvince) %>% 
+  # Round all the numeric variables to 2 decimal places
+  mutate_if(is.numeric, ~round(., 2)) %>% 
+  arrange(`Yes (%)`) %>%
+  # Change every numeric variable to 2 decimal places
+  mutate_if(is.numeric, ~round(., 2)) %>% 
+  rename(regiontype = Province)
+
+# Bind these two tables: rCSICopingStrategies, rCSICopingStrategiesProvince
+rCSICopingStrategiesAll <- bind_rows(rCSICopingStrategies, rCSICopingStrategiesProvince) %>% 
+  # Round all the numeric variables to 2 decimal places
+  mutate_if(is.numeric, ~round(., 0)) %>% 
+  mutate(regiontype = if_else(regiontype == "Banteay Meanchey", "B. Meanchey", regiontype),
+         regiontype = if_else(regiontype == "Kampong Cham", "K. Cham", regiontype),
+         regiontype = if_else(regiontype == "Kampong Speu", "K. Speu", regiontype),
+         regiontype = if_else(regiontype == "Tboung Khmum", "T. Khmum", regiontype),
+         regiontype = if_else(regiontype == "Preah Sihanouk", "P. Sihanouk", regiontype)) %>% 
+  mutate(Indicator = str_wrap(Indicator, 25)) %>% 
+  # Change regiontype to factor
+  mutate(regiontype = factor(regiontype, levels = c("Overall Total", 
+                                                    "B. Meanchey", 
+                                                    "K. Cham", 
+                                                    "P. Sihanouk", 
+                                                    "Siemreap", 
+                                                    "Kratie", 
+                                                    "Kampot", 
+                                                    "K. Speu", 
+                                                    "T. Khmum", 
+                                                    "Phnom Penh")),
+         Indicator = factor(Indicator))
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
