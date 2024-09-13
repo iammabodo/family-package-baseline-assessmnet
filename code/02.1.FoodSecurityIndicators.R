@@ -65,15 +65,6 @@ SvyLCSENMaxTreatment <- SvyLCSENData %>%
   rename(Proportion = Pct_LCSENMax,
          Disagregation = Treatment)
 
-# merge the data for hihger level disaggregation visualisations - Visualise this
-HighLvlLCSEN <- bind_rows(SvyLCSENMaxRegion, SvyLCSENMaxDisability, SvyLCSENMaxTreatment) %>% 
-  mutate(Disagregation = if_else(Disagregation == "RURAL", "Rural", Disagregation),
-         Disagregation = if_else(Disagregation == "URBAN", "Urban", Disagregation),
-         Disagregation = if_else(Disagregation == "No Disability", "HH No Disability Member", Disagregation),
-         Disagregation = if_else(Disagregation == "With Disability", "HH with Disability Member", Disagregation)) %>% 
-  mutate(Disagregation = factor(Disagregation, levels = c("Rural", "Urban", "HH No Disability Member", "HH with Disability Member", "Control Group", "Treatment Group")))
-
-
 
 # Calculate the proportion of the population using coping strategies to afford food
 # Livelihoods Coping Strategies Food Security Indicator
