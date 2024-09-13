@@ -712,7 +712,6 @@ SvyChildNutritionAgeGrp <- SvyCHildMADAgeGrp %>%
 
 # Food groups consumed by children
 
-PCMADBreastfeeding PCMADStaples PCMADProteinEggs  PCMADLegumes   PCMADDairy PCMADFleshFoods   PCMADVitA  PCMADOtherFruitsVeg
 
 #1 1 Calculate the percentage of children who consumed each food group
 SvyMADStaplesTab <- SvyMADData %>% 
