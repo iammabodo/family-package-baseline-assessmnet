@@ -521,7 +521,7 @@ rCSICopingStrategiesRegion <- bind_rows(rCSILessQltyWhoRegion, rCSIBorrowWhoRegi
 
 rCSIMealSizeWho <- rCSIData %>% 
   drop_na(rCSIMealSizeWho) %>% 
-  count(province, rCSIMealSizeWho) %>% 
+  count(Province, rCSIMealSizeWho) %>% 
   mutate(Pct = n / sum(n) * 100) %>% 
   select(rCSIMealSizeWho, Pct) %>%
   pivot_wider(names_from = rCSIMealSizeWho, values_from = Pct) %>% 
