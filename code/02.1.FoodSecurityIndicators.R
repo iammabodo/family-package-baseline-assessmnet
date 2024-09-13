@@ -184,12 +184,6 @@ meanRCSIProvince <- SvyrCSIData %>%
   select(regiontype, MeanRCSI) 
 ###################################################################################################################################################################
 
-# Test whether rCSI is difference between provinces
-rCSITest <- svyglm(rCSI ~ Province, design = SvyrCSIData)
-pairwies_comparison <- glht(rCSITest, linfct = mcp(Province = "Tukey"))
-
-##################################################################################################################################################################
-
 # Individual components of food security sub-indicators
 # 1. FIES
 FIESWorriedProvince <- FIESData %>%
