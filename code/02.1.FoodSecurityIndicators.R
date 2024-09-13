@@ -143,16 +143,6 @@ meanRCSIOveral <- SvyrCSIData %>%
   mutate(Indicator = "rCSI") %>% 
   select(Indicator, MeanRCSI)
 
-meanRCSIRegion <- SvyrCSIData %>% 
-  group_by(DisabCategory) %>% 
-  summarise(MeanRCSI = survey_mean(rCSI)) %>% 
-  select(regiontype, MeanRCSI) %>% 
-  pivot_wider(names_from = regiontype, values_from = MeanRCSI) %>%
-  mutate(Diff = URBAN - RURAL) %>% 
-  mutate(Overall = (URBAN + RURAL)/2) %>%
-  mutate(Indicator = "rCSI") %>%
-  select(Indicator, Overall, RURAL, URBAN, Diff)
-
 # Calculate the same indicators disaggreagted by province - this is key for vicualisations
 ## Livelihoods Coping Strategies Essential Needs Indicator (LCS - EN)
 SvyLCSENMaxProvince <- SvyLCSENData %>% 
