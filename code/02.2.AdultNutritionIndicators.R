@@ -220,32 +220,47 @@ GDRSTot <- SvyDietQualityData %>%
   mutate(Indicator = "GDRS") %>%
   dplyr::select(Indicator, Overall, `Control Group`, `Treatment Group`, Diff)
 
-# Calculate MDDScore, by gender and treatment
-MDDScore <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15) %>%
-  group_by(Treatment, MDDGender) %>%
-  summarise(MDDScore = survey_mean(MDDScore),
-            Total = survey_total()) %>% 
-  select(-c("MDDScore_se", "Total_se", "Total")) %>%
-  pivot_wider(names_from = Treatment, values_from = MDDScore) %>%
-  mutate(Diff = `Treatment Group` - `Control Group`) %>%
-  mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
-  mutate(Indicator = "MDD Score") %>%
-  select(Indicator, MDDGender, Overall, `Control Group`, `Treatment Group`, Diff) %>% 
-  rename(Category = MDDGender)
-
 # Calculate MDDScore, by treatment
-MDDScoreTot <- SvyDietQualityData %>% 
+MDDScoreTreat <- SvyDietQualityData %>% 
   filter(MDDAge >= 15) %>%
   group_by(Treatment) %>%
   summarise(MDDScore = survey_mean(MDDScore),
             Total = survey_total()) %>% 
-  select(-c("MDDScore_se", "Total_se", "Total")) %>%
-  pivot_wider(names_from = Treatment, values_from = MDDScore) %>%
-  mutate(Diff = `Treatment Group` - `Control Group`) %>%
-  mutate(Overall = (`Control Group` + `Treatment Group`)/2) %>%
-  mutate(Indicator = "MDD Score") %>%
-  select(Indicator, Overall, `Control Group`, `Treatment Group`, Diff)
+  select(-c("MDDScore_se", "Total_se")) 
+
+# Write into an excel file
+write.xlsx(MDDScore, "report tables/MDDScore.xlsx")
+
+# Calculate MDD Score by gender
+MDDScoreGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender) %>%
+  summarise(MDDScore = survey_mean(MDDScore),
+            Total = survey_total())
+
+# Write into an excel file
+write.xlsx(MDDScoreGender, "report tables/MDDScoreGender.xlsx")
+
+# Chalculate MDD Score by region
+MDDScoreRegion <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(regiontype) %>%
+  summarise(MDDScore = survey_mean(MDDScore),
+            Total = survey_total())
+
+# Write into an excel file
+
+write.xlsx(MDDScoreRegion, "report tables/MDDScoreRegion.xlsx")
+
+
+# Calculate MDD Score overall
+MDDScoreTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  summarise(MDDScore = survey_mean(MDDScore),
+            Total = survey_total())
+
+# Write into an excel file
+write.xlsx(MDDScoreTot, "report tables/MDDScoreTot.xlsx")
 
 ###Merge all the nutrition indicators####################################################
 DQQNutritionIndicators <- bind_rows(MDDWomen, NCDRiskScore, NCDProtectiveFoods, GDRSScore, MDDScore) %>% 
@@ -309,30 +324,47 @@ GDSCScoreGender <- SvyDietQualityData %>%
 #1. Staples
 #a. Staples by Treatment
 SvyStaples <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDStaples) %>%
   summarise(MDDStaplesCat = survey_mean() * 100) %>%
-  filter(MDDStaples == 1) %>%
-  dplyr::select(-c(MDDStaplesCat_se, MDDStaples)) %>% 
-  rename(Disaggregation = Treatment) %>% 
-  pivot_wider(names_from = Disaggregation, values_from = MDDStaplesCat) %>%
-  mutate(DiffIE = `Treatment Group` - `Control Group`,
-         Indicator = "Staple Foods") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDStaples == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyStaples, "report tables/SvyStaples.xlsx")
+
 
 #b. Staples by Region
 SvyStaplesRegion <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(regiontype, MDDStaples) %>%
   summarise(MDDStaplesCat = survey_mean() * 100) %>%
-  filter(MDDStaples == 1) %>%
-  dplyr::select(-c(MDDStaplesCat_se, MDDStaples)) %>%
-  pivot_wider(names_from = regiontype, values_from = MDDStaplesCat) %>%
-  mutate(DiffReg = URBAN - RURAL,
-         Indicator = "Staple Foods") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDStaples == 1)
+
+# Write this into an excel file
+write.xlsx(SvyStaplesRegion, "report tables/SvyStaplesRegion.xlsx")
+
+#c Calculate Staples by gender
+
+SvyStaplesGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDStaples) %>%
+  summarise(MDDStaplesCat = survey_mean() * 100) %>%
+  filter(MDDStaples == 1)
+
+# Write this into an excel file
+write.xlsx(SvyStaplesGender, "report tables/SvyStaplesGender.xlsx")
+
+
+#d Calculate overall Staples
+
+SvyStaplesTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDStaples) %>%
+  summarise(MDDStaplesCat = survey_mean() * 100) %>%
+  filter(MDDStaples == 1)
+
+# Write this into an excel file
+write.xlsx(SvyStaplesTot, "report tables/SvyStaplesTot.xlsx")
 
 # Join the two dataframes
 StaplesData <- SvyStaples %>% 
@@ -363,30 +395,44 @@ StaplesChisqRegion <- svychisq(~MDDStaples + regiontype, design = ChisqTab) # No
 #2. Pulses
 #a. Pulses by Treatment
 SvyPulses <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDPulses) %>%
   summarise(MDDPulsesCat = survey_mean() * 100) %>%
-  filter(MDDPulses == 1) %>%
-  dplyr::select(-c(MDDPulsesCat_se, MDDPulses)) %>%
-  rename(Disaggregation = Treatment) %>%
-  pivot_wider(names_from = Disaggregation, values_from = MDDPulsesCat) %>%
-  mutate(DiffIE = `Treatment Group` - `Control Group`,
-         Indicator = "Pulses") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDPulses == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyPulses, "report tables/SvyPulses.xlsx")
 
 #b. Pulses by Region
 SvyPulsesRegion <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(regiontype, MDDPulses) %>%
   summarise(MDDPulsesCat = survey_mean() * 100) %>%
-  filter(MDDPulses == 1) %>%
-  dplyr::select(-c(MDDPulsesCat_se, MDDPulses)) %>%
-  pivot_wider(names_from = regiontype, values_from = MDDPulsesCat) %>%
-  mutate(DiffReg = URBAN - RURAL,
-         Indicator = "Pulses") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDPulses == 1)
+
+# Write this into an excel file
+write.xlsx(SvyPulsesRegion, "report tables/SvyPulsesRegion.xlsx")
+
+#c Calculate Pulses by gender
+
+SvyPulsesGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDPulses) %>%
+  summarise(MDDPulsesCat = survey_mean() * 100) %>%
+  filter(MDDPulses == 1)
+
+# Write this into an excel file
+write.xlsx(SvyPulsesGender, "report tables/SvyPulsesGender.xlsx")
+
+# D Calculate overall Pulses
+
+SvyPulsesTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDPulses) %>%
+  summarise(MDDPulsesCat = survey_mean() * 100) %>%
+  filter(MDDPulses == 1)
+
+
 
 SvyPulsesOverall <- SvyDietQualityData %>% 
   filter(MDDAge >= 15 & MDDAge <=49) %>%
@@ -407,6 +453,7 @@ PulsesData <- SvyPulses %>%
 # Chisq test for pulses
 PulsesChisqIE <- svychisq(~MDDPulses + Treatment, design = ChisqTab) # Not significant
 PulsesChisqRegion <- svychisq(~MDDPulses + regiontype, design = ChisqTab) # Not significant
+PulsesChisqGender <- svychisq(~MDDPulses + MDDGender, design = SvyDietQualityData) 
 
 #################################################################################################################
 
@@ -414,31 +461,43 @@ PulsesChisqRegion <- svychisq(~MDDPulses + regiontype, design = ChisqTab) # Not 
 #a. NutsSeeds by Treatment
 
 SvyNutsSeeds <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDNutsSeeds) %>%
   summarise(MDDNutsSeedsCat = survey_mean() * 100) %>%
-  filter(MDDNutsSeeds == 1) %>%
-  dplyr::select(-c(MDDNutsSeedsCat_se, MDDNutsSeeds)) %>%
-  rename(Disaggregation = Treatment) %>%
-  pivot_wider(names_from = Disaggregation, values_from = MDDNutsSeedsCat) %>%
-  mutate(DiffIE = `Treatment Group` - `Control Group`,
-         Indicator = "Nuts and Seeds") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDNutsSeeds == 1)
+
+# Write this into an excel file
+write.xlsx(SvyNutsSeeds, "report tables/SvyNutsSeeds.xlsx")
   
 #b. NutsSeeds by Region
 
 SvyNutsSeedsRegion <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(regiontype, MDDNutsSeeds) %>%
   summarise(MDDNutsSeedsCat = survey_mean() * 100) %>%
-  filter(MDDNutsSeeds == 1) %>%
-  dplyr::select(-c(MDDNutsSeedsCat_se, MDDNutsSeeds)) %>%
-  pivot_wider(names_from = regiontype, values_from = MDDNutsSeedsCat) %>%
-  mutate(DiffReg = URBAN - RURAL,
-         Indicator = "Nuts and Seeds") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDNutsSeeds == 1)
+
+# Write this into an excel file
+write.xlsx(SvyNutsSeedsRegion, "report tables/SvyNutsSeedsRegion.xlsx")
+
+#c Calculate NutsSeeds by gender
+
+SvyNutsSeedsGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDNutsSeeds) %>%
+  summarise(MDDNutsSeedsCat = survey_mean() * 100) %>%
+  filter(MDDNutsSeeds == 1)
+
+# Write this into an excel file
+write.xlsx(SvyNutsSeedsGender, "report tables/SvyNutsSeedsGender.xlsx")
+
+# D Calculate overall NutsSeeds
+
+SvyNutsSeedsTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDNutsSeeds) %>%
+  summarise(MDDNutsSeedsCat = survey_mean() * 100) %>%
+  filter(MDDNutsSeeds == 1)
 
 SvyNutsSeedsOverall <- SvyDietQualityData %>% 
   filter(MDDAge >= 15 & MDDAge <=49) %>%
@@ -458,36 +517,48 @@ NutsSeedsData <- SvyNutsSeeds %>%
 # Chisq test for Nuts and Seeds
 NutsSeedsChisqIE <- svychisq(~MDDNutsSeeds + Treatment, design = ChisqTab) # Not significant
 NutsSeedsChisqRegion <- svychisq(~MDDNutsSeeds + regiontype, design = ChisqTab) # Not significant
-
+NutsSeedsChisqGender <- svychisq(~MDDNutsSeeds + MDDGender, design = SvyDietQualityData) 
 #################################################################################################################
 
 #4. Dairy
 #a. Dairy by Treatment
 SvyDairy <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDDiary) %>%
   summarise(MDDDairyCat = survey_mean() * 100) %>%
-  filter(MDDDiary == 1) %>%
-  dplyr::select(-c(MDDDairyCat_se, MDDDiary)) %>%
-  rename(Disaggregation = Treatment) %>%
-  pivot_wider(names_from = Disaggregation, values_from = MDDDairyCat) %>%
-  mutate(DiffIE = `Treatment Group` - `Control Group`,
-         Indicator = "Dairy") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDDiary == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyDairy, "report tables/SvyDairy.xlsx")
 
 #b. Dairy by Region
 SvyDairyRegion <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(regiontype, MDDDiary) %>%
   summarise(MDDDairyCat = survey_mean() * 100) %>%
-  filter(MDDDiary == 1) %>%
-  dplyr::select(-c(MDDDairyCat_se, MDDDiary)) %>%
-  pivot_wider(names_from = regiontype, values_from = MDDDairyCat) %>%
-  mutate(DiffReg = URBAN - RURAL,
-         Indicator = "Dairy") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDDiary == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyDairyRegion, "report tables/SvyDairyRegion.xlsx")
+
+#c Calculate Diary by gender
+
+SvyDairyGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDDiary) %>%
+  summarise(MDDDairyCat = survey_mean() * 100) %>%
+  filter(MDDDiary == 1)
+
+# Write this into an excel file
+write.xlsx(SvyDairyGender, "report tables/SvyDairyGender.xlsx")
+
+# D Calculate overall Dairy
+
+SvyDairyTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDDiary) %>%
+  summarise(MDDDairyCat = survey_mean() * 100) %>%
+  filter(MDDDiary == 1)
 
 SvyDairyOverall <- SvyDietQualityData %>% 
   filter(MDDAge >= 15 & MDDAge <=49) %>%
@@ -514,30 +585,42 @@ DairyChisqRegion <- svychisq(~MDDDiary + regiontype, design = ChisqTab) # Not si
 
 #a. Protein by Treatment
 SvyProtein <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDProtein) %>%
   summarise(MDDProteinCat = survey_mean() * 100) %>%
-  filter(MDDProtein == 1) %>%
-  dplyr::select(-c(MDDProteinCat_se, MDDProtein)) %>%
-  rename(Disaggregation = Treatment) %>%
-  pivot_wider(names_from = Disaggregation, values_from = MDDProteinCat) %>%
-  mutate(DiffIE = `Treatment Group` - `Control Group`,
-         Indicator = "Protein") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDProtein == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyProtein, "report tables/SvyProtein.xlsx")
 
 #b. Protein by Region
 SvyProteinRegion <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(regiontype, MDDProtein) %>%
   summarise(MDDProteinCat = survey_mean() * 100) %>%
-  filter(MDDProtein == 1) %>%
-  dplyr::select(-c(MDDProteinCat_se, MDDProtein)) %>%
-  pivot_wider(names_from = regiontype, values_from = MDDProteinCat) %>%
-  mutate(DiffReg = URBAN - RURAL,
-         Indicator = "Protein") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDProtein == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyProteinRegion, "report tables/SvyProteinRegion.xlsx")
+
+#c Calculate Protein by gender
+
+SvyProteinGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDProtein) %>%
+  summarise(MDDProteinCat = survey_mean() * 100) %>%
+  filter(MDDProtein == 1)
+
+# Write this into an excel file
+write.xlsx(SvyProteinGender, "report tables/SvyProteinGender.xlsx")
+
+# D Calculate overall Protein
+
+SvyProteinTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDProtein) %>%
+  summarise(MDDProteinCat = survey_mean() * 100) %>%
+  filter(MDDProtein == 1)
 
 SvyProteinOverall <- SvyDietQualityData %>% 
   filter(MDDAge >= 15 & MDDAge <=49) %>%
@@ -567,31 +650,43 @@ ProteinChisqRegion <- svychisq(~MDDProtein + regiontype, design = ChisqTab) # No
 #a. Eggs by Treatment
 
 SvyEggs <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDEggs) %>%
   summarise(MDDEggsCat = survey_mean() * 100) %>%
-  filter(MDDEggs == 1) %>%
-  dplyr::select(-c(MDDEggsCat_se, MDDEggs)) %>%
-  rename(Disaggregation = Treatment) %>%
-  pivot_wider(names_from = Disaggregation, values_from = MDDEggsCat) %>%
-  mutate(DiffIE = `Treatment Group` - `Control Group`,
-         Indicator = "Eggs") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDEggs == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyEggs, "report tables/SvyEggs.xlsx")
 
 #b. Eggs by Region
 
 SvyEggsRegion <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(regiontype, MDDEggs) %>%
   summarise(MDDEggsCat = survey_mean() * 100) %>%
-  filter(MDDEggs == 1) %>%
-  dplyr::select(-c(MDDEggsCat_se, MDDEggs)) %>%
-  pivot_wider(names_from = regiontype, values_from = MDDEggsCat) %>%
-  mutate(DiffReg = URBAN - RURAL,
-         Indicator = "Eggs") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDEggs == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyEggsRegion, "report tables/SvyEggsRegion.xlsx")
+
+#c. Calculate Eggs by gender
+
+SvyEggsGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDEggs) %>%
+  summarise(MDDEggsCat = survey_mean() * 100) %>%
+  filter(MDDEggs == 1)
+
+# Write this into an excel file
+write.xlsx(SvyEggsGender, "report tables/SvyEggsGender.xlsx")
+
+#d. Calculate overall Eggs
+
+SvyEggsTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDEggs) %>%
+  summarise(MDDEggsCat = survey_mean() * 100) %>%
+  filter(MDDEggs == 1)
 
 SvyEggsOverall <- SvyDietQualityData %>% 
   filter(MDDAge >= 15 & MDDAge <=49) %>%
@@ -620,31 +715,43 @@ EggsChisqRegion <- svychisq(~MDDEggs + regiontype, design = ChisqTab) # Not sign
 #a. Dark Green Vegetables by Treatment
 
 SvyDarkGreenVeg <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDDarkGreenVeg) %>%
   summarise(MDDDarkGreenVegCat = survey_mean() * 100) %>%
-  filter(MDDDarkGreenVeg == 1) %>%
-  dplyr::select(-c(MDDDarkGreenVegCat_se, MDDDarkGreenVeg)) %>%
-  rename(Disaggregation = Treatment) %>%
-  pivot_wider(names_from = Disaggregation, values_from = MDDDarkGreenVegCat) %>%
-  mutate(DiffIE = `Treatment Group` - `Control Group`,
-         Indicator = "Dark Green Vegetables") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDDarkGreenVeg == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyDarkGreenVeg, "report tables/SvyDarkGreenVeg.xlsx")
 
 #b. Dark Green Vegetables by Region
 
 SvyDarkGreenVegRegion <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(regiontype, MDDDarkGreenVeg) %>%
   summarise(MDDDarkGreenVegCat = survey_mean() * 100) %>%
-  filter(MDDDarkGreenVeg == 1) %>%
-  dplyr::select(-c(MDDDarkGreenVegCat_se, MDDDarkGreenVeg)) %>%
-  pivot_wider(names_from = regiontype, values_from = MDDDarkGreenVegCat) %>%
-  mutate(DiffReg = URBAN - RURAL,
-         Indicator = "Dark Green Vegetables") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDDarkGreenVeg == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyDarkGreenVegRegion, "report tables/SvyDarkGreenVegRegion.xlsx")
+
+#c. Calculate Dark Green Vegetables by gender
+
+SvyDarkGreenVegGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDDarkGreenVeg) %>%
+  summarise(MDDDarkGreenVegCat = survey_mean() * 100) %>%
+  filter(MDDDarkGreenVeg == 1)
+
+# Write this into an excel file
+write.xlsx(SvyDarkGreenVegGender, "report tables/SvyDarkGreenVegGender.xlsx")
+
+# d Calculate overall Dark Green Vegetables
+
+SvyDarkGreenVegTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDDarkGreenVeg) %>%
+  summarise(MDDDarkGreenVegCat = survey_mean() * 100) %>%
+  filter(MDDDarkGreenVeg == 1)
 
 SvyDarkGreenVegOverall <- SvyDietQualityData %>% 
   filter(MDDAge >= 15 & MDDAge <=49) %>%
@@ -673,31 +780,43 @@ DarkGreenVegChisqRegion <- svychisq(~MDDDarkGreenVeg + regiontype, design = Chis
 #a. Other Vegetables by Treatment
 
 SvyOtherVeg <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDOtherVeg) %>%
   summarise(MDDOtherVegCat = survey_mean() * 100) %>%
-  filter(MDDOtherVeg == 1) %>%
-  dplyr::select(-c(MDDOtherVegCat_se, MDDOtherVeg)) %>%
-  rename(Disaggregation = Treatment) %>%
-  pivot_wider(names_from = Disaggregation, values_from = MDDOtherVegCat) %>%
-  mutate(DiffIE = `Treatment Group` - `Control Group`,
-         Indicator = "Other Vegetables") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDOtherVeg == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyOtherVeg, "report tables/SvyOtherVeg.xlsx")
 
 #b. Other Vegetables by Region
 
 SvyOtherVegRegion <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(regiontype, MDDOtherVeg) %>%
   summarise(MDDOtherVegCat = survey_mean() * 100) %>%
-  filter(MDDOtherVeg == 1) %>%
-  dplyr::select(-c(MDDOtherVegCat_se, MDDOtherVeg)) %>%
-  pivot_wider(names_from = regiontype, values_from = MDDOtherVegCat) %>%
-  mutate(DiffReg = URBAN - RURAL,
-         Indicator = "Other Vegetables") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDOtherVeg == 1)
+
+# Write this into an excel file
+write.xlsx(SvyOtherVegRegion, "report tables/SvyOtherVegRegion.xlsx")
+
+#c. Calculate Other Vegetables by gender
+
+SvyOtherVegGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDOtherVeg) %>%
+  summarise(MDDOtherVegCat = survey_mean() * 100) %>%
+  filter(MDDOtherVeg == 1)
+
+# Write this into an excel file
+write.xlsx(SvyOtherVegGender, "report tables/SvyOtherVegGender.xlsx")
+
+# d Calculate overall Other Vegetables
+
+SvyOtherVegTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDOtherVeg) %>%
+  summarise(MDDOtherVegCat = survey_mean() * 100) %>%
+  filter(MDDOtherVeg == 1)
 
 SvyOtherVegOverall <- SvyDietQualityData %>% 
   filter(MDDAge >= 15 & MDDAge <=49) %>%
@@ -725,31 +844,45 @@ OtherVegChisqRegion <- svychisq(~MDDOtherVeg + regiontype, design = ChisqTab) # 
 #a. Vitamin A Rich Fruits and Vegetables by Treatment
 
 SvyOtherVitA <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDOtherVitA) %>%
   summarise(MDDVitAFruitVegCat = survey_mean() * 100) %>%
-  filter(MDDOtherVitA == 1) %>%
-  dplyr::select(-c(MDDVitAFruitVegCat_se, MDDOtherVitA)) %>%
-  rename(Disaggregation = Treatment) %>%
-  pivot_wider(names_from = Disaggregation, values_from = MDDVitAFruitVegCat) %>%
-  mutate(DiffIE = `Treatment Group` - `Control Group`,
-         Indicator = "Other Vitamin A Foods") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDOtherVitA == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyOtherVitA, "report tables/SvyOtherVitA.xlsx")
 
 #b. Vitamin A Rich Fruits and Vegetables by Region
 
 SvyOtherVitARegion <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(regiontype, MDDOtherVitA) %>%
   summarise(MDDVitAFruitVegCat = survey_mean() * 100) %>%
-  filter(MDDOtherVitA == 1) %>%
-  dplyr::select(-c(MDDVitAFruitVegCat_se, MDDOtherVitA)) %>%
-  pivot_wider(names_from = regiontype, values_from = MDDVitAFruitVegCat) %>%
-  mutate(DiffReg = URBAN - RURAL,
-         Indicator = "Other Vitamin A Foods") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDOtherVitA == 1) 
+
+
+# Write this into an excel file
+write.xlsx(SvyOtherVitARegion, "report tables/SvyOtherVitARegion.xlsx")
+
+#c. Calculate Vitamin A Rich Fruits and Veget by gender
+
+SvyOtherVitAGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDOtherVitA) %>%
+  summarise(MDDVitAFruitVegCat = survey_mean() * 100) %>%
+  filter(MDDOtherVitA == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyOtherVitAGender, "report tables/SvyOtherVitAGender.xlsx")
+
+# d Calculate overall Vitamin A Rich Fruits and Vegetables
+
+SvyOtherVitATot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDOtherVitA) %>%
+  summarise(MDDVitAFruitVegCat = survey_mean() * 100) %>%
+  filter(MDDOtherVitA == 1)
 
 SvyOtherVitAOverall <- SvyDietQualityData %>% 
   filter(MDDAge >= 15 & MDDAge <=49) %>%
@@ -779,31 +912,44 @@ OtherVitAChisqRegion <- svychisq(~MDDOtherVitA + regiontype, design = ChisqTab) 
 #a. Other Fruits by Treatment
 
 SvyOtherFruits <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(Treatment, MDDOtherFruits) %>%
   summarise(MDDOtherFruitsCat = survey_mean() * 100) %>%
-  filter(MDDOtherFruits == 1) %>%
-  dplyr::select(-c(MDDOtherFruitsCat_se, MDDOtherFruits)) %>%
-  rename(Disaggregation = Treatment) %>%
-  pivot_wider(names_from = Disaggregation, values_from = MDDOtherFruitsCat) %>%
-  mutate(DiffIE = `Treatment Group` - `Control Group`,
-         Indicator = "Other Fruits") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDOtherFruits == 1)
+
+# Write this into an excel file
+write.xlsx(SvyOtherFruits, "report tables/SvyOtherFruits.xlsx")
 
 #b. Other Fruits by Region
 
 SvyOtherFruitsRegion <- SvyDietQualityData %>% 
-  filter(MDDAge >= 15 & MDDAge <=49) %>%
-  filter(MDDGender == "Female") %>%
+  filter(MDDAge >= 15) %>%
   group_by(regiontype, MDDOtherFruits) %>%
   summarise(MDDOtherFruitsCat = survey_mean() * 100) %>%
-  filter(MDDOtherFruits == 1) %>%
-  dplyr::select(-c(MDDOtherFruitsCat_se, MDDOtherFruits)) %>%
-  pivot_wider(names_from = regiontype, values_from = MDDOtherFruitsCat) %>%
-  mutate(DiffReg = URBAN - RURAL,
-         Indicator = "Other Fruits") %>%
-  dplyr::select(Indicator, everything())
+  filter(MDDOtherFruits == 1) 
+
+# Write this into an excel file
+write.xlsx(SvyOtherFruitsRegion, "report tables/SvyOtherFruitsRegion.xlsx")
+
+# Calculate Other fruits by gender
+
+SvyOtherFruitsGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDOtherFruits) %>%
+  summarise(MDDOtherFruitsCat = survey_mean() * 100) %>%
+  filter(MDDOtherFruits == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyOtherFruitsGender, "report tables/SvyOtherFruitsGender.xlsx")
+
+# d Calculate overall Other Fruits
+
+SvyOtherFruitsTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDOtherFruits) %>%
+  summarise(MDDOtherFruitsCat = survey_mean() * 100) %>%
+  filter(MDDOtherFruits == 1)
 
 SvyOtherFruitsOverall <- SvyDietQualityData %>% 
   filter(MDDAge >= 15 & MDDAge <=49) %>%
@@ -1041,6 +1187,676 @@ NCDScoresTable <- bind_rows(NCDProtectiveFoodsTable, NCDRiskScoreTable, GDSScore
 write.xlsx(NCDScoresTable, "report tables/NCDScoresTable.xlsx")
 
 ###############################################################################################################
+
+# Consumption of Unheatlhy Foods by treatment
+
+#1. Sugar Sweetened Beverages
+
+#a. Sugar Sweetened Beverages by Treatment
+
+SvySSBTreat <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(Treatment, MDDSweetBeverages) %>%
+  summarise(MDDSSBCat = survey_mean() * 100) %>%
+  filter(MDDSweetBeverages == 1)
+
+# Write this into an excel file
+write.xlsx(SvySSBTreat, "report tables/SvySSBTreat.xlsx")
+
+#b. Sugar Sweetened Beverages by Region
+
+SvySSBRegion <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(regiontype, MDDSweetBeverages) %>%
+  summarise(MDDSSBCat = survey_mean() * 100) %>%
+  filter(MDDSweetBeverages == 1)
+
+# Write this into an excel file
+write.xlsx(SvySSBRegion, "report tables/SvySSBRegion.xlsx")
+
+#c. Calculate Sugar Sweetened Bever
+
+SvySSBGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDSweetBeverages) %>%
+  summarise(MDDSSBCat = survey_mean() * 100) %>%
+  filter(MDDSweetBeverages == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvySSBGender, "report tables/SvySSBGender.xlsx")
+
+# d Calculate overall Sugar Sweetened Beverages
+
+SvySSBTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDSweetBeverages) %>%
+  summarise(MDDSSBCat = survey_mean() * 100) %>%
+  filter(MDDSweetBeverages == 1)
+
+########################################################################
+# Tests for Sugar Sweetened Beverages
+SSBTreatChisq <- svychisq(~MDDSweetBeverages + Treatment, design = SvyDietQualityData) # Not significant
+SSBRegionChisq <- svychisq(~MDDSweetBeverages + regiontype, design = SvyDietQualityData) #1% significant
+SSBGenderChisq <- svychisq(~MDDSweetBeverages + MDDGender, design = SvyDietQualityData) # 5% significant
+########################################################################
+
+# Calculate the consumption of unhealthy foods
+
+
+#2. Fast Foods
+
+#a. Fast Foods by Treatment
+
+SvyFastFoods <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(Treatment, MDDUnhealthyFoods) %>%
+  summarise(MDDFastFoodsCat = survey_mean() * 100) %>%
+  filter(MDDUnhealthyFoods== 1)
+
+# Write this into an excel file
+write.xlsx(SvyFastFoods, "report tables/SvyFastFoods.xlsx")
+
+#b. Fast Foods by Region
+
+SvyFastFoodsRegion <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(regiontype, MDDUnhealthyFoods) %>%
+  summarise(MDDFastFoodsCat = survey_mean() * 100) %>%
+  filter(MDDUnhealthyFoods == 1)
+
+# Write this into an excel file
+write.xlsx(SvyFastFoodsRegion, "report tables/SvyFastFoodsRegion.xlsx")
+
+#c. Calculate Fast Foods by gender
+
+SvyFastFoodsGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDUnhealthyFoods) %>%
+  summarise(MDDFastFoodsCat = survey_mean() * 100) %>%
+  filter(MDDUnhealthyFoods == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyFastFoodsGender, "report tables/SvyFastFoodsGender.xlsx")
+
+# d Calculate overall Fast Foods
+
+SvyFastFoodsTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDUnhealthyFoods) %>%
+  summarise(MDDFastFoodsCat = survey_mean() * 100) %>%
+  filter(MDDUnhealthyFoods == 1)
+
+###########################################################
+
+# Tests for Fast Foods
+
+FastFoodsChisqIE <- svychisq(~MDDUnhealthyFoods + Treatment, design = SvyDietQualityData) # Not significant
+FastFoodsChisqRegion <- svychisq(~MDDUnhealthyFoods + regiontype, design = SvyDietQualityData) # 5% significant
+FastFoodsChisqGender <- svychisq(~MDDUnhealthyFoods + MDDGender, design = SvyDietQualityData) # Not significant
+
+##########################################################
+
+#3. Baked/grain based sweets
+
+#a. Baked/grain based sweets by Treatment
+
+SvyBakedGoods <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(Treatment, MDDSweetsCake) %>%
+  summarise(MDDBakedGoodsCat = survey_mean() * 100) %>%
+  filter(MDDSweetsCake == 1)
+
+# Write this into an excel file
+write.xlsx(SvyBakedGoods, "report tables/SvyBakedGoods.xlsx")
+
+#b. Baked/grain based sweets by Region
+
+SvyBakedGoodsRegion <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(regiontype, MDDSweetsCake) %>%
+  summarise(MDDBakedGoodsCat = survey_mean() * 100) %>%
+  filter(MDDSweetsCake == 1)
+
+# Write this into an excel file
+write.xlsx(SvyBakedGoodsRegion, "report tables/SvyBakedGoodsRegion.xlsx")
+
+#c. Calculate Baked/grain based sweets by gender
+
+SvyBakedGoodsGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDSweetsCake) %>%
+  summarise(MDDBakedGoodsCat = survey_mean() * 100) %>%
+  filter(MDDSweetsCake == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyBakedGoodsGender, "report tables/SvyBakedGoodsGender.xlsx")
+
+# d Calculate overall Baked/grain based sweets
+
+SvyBakedGoodsTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDSweetsCake) %>%
+  summarise(MDDBakedGoodsCat = survey_mean() * 100) %>%
+  filter(MDDSweetsCake == 1)
+
+###########################################################
+
+# Tests for Baked/grain based sweets
+
+BakedGoodsChisqIE <- svychisq(~MDDSweetsCake + Treatment, design = SvyDietQualityData) # Not significant
+BakedGoodsChisqRegion <- svychisq(~MDDSweetsCake + regiontype, design = SvyDietQualityData) # Not significant
+BakedGoodsChisqGender <- svychisq(~MDDSweetsCake + MDDGender, design = SvyDietQualityData) # Not significant
+
+##########################################################
+
+#4. Other sweets
+
+#a. Other sweets by Treatment
+
+SvyOtherSweets <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(Treatment, MDDSweetsCandy) %>%
+  summarise(MDDOtherSweetsCat = survey_mean() * 100) %>%
+  filter(MDDSweetsCandy == 1)
+
+# Write this into an excel file
+write.xlsx(SvyOtherSweets, "report tables/SvyOtherSweets.xlsx")
+
+#b. Other sweets by Region
+
+SvyOtherSweetsRegion <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(regiontype, MDDSweetsCandy) %>%
+  summarise(MDDOtherSweetsCat = survey_mean() * 100) %>%
+  filter(MDDSweetsCandy == 1)
+
+# Write this into an excel file
+write.xlsx(SvyOtherSweetsRegion, "report tables/SvyOtherSweetsRegion.xlsx")
+
+#c. Calculate Other sweets by gender
+
+SvyOtherSweetsGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDSweetsCandy) %>%
+  summarise(MDDOtherSweetsCat = survey_mean() * 100) %>%
+  filter(MDDSweetsCandy == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyOtherSweetsGender, "report tables/SvyOtherSweetsGender.xlsx")
+
+# d Calculate overall Other sweets
+
+SvyOtherSweetsTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDSweetsCandy) %>%
+  summarise(MDDOtherSweetsCat = survey_mean() * 100) %>%
+  filter(MDDSweetsCandy == 1)
+
+###########################################################
+# Other sweets tests
+
+OtherSweetsChisqIE <- svychisq(~MDDSweetsCandy + Treatment, design = SvyDietQualityData) # Not significant
+OtherSweetsChisqRegion <- svychisq(~MDDSweetsCandy + regiontype, design = SvyDietQualityData) # Not significant
+OtherSweetsChisqGender <- svychisq(~MDDSweetsCandy + MDDGender, design = SvyDietQualityData) # Not significant
+
+##########################################################
+
+
+# Packed snacks
+
+#a. Packed snacks by Treatment
+
+SvyPackedSnacks <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(Treatment, MDDOtherChips) %>%
+  summarise(MDDPackedSnacksCat = survey_mean() * 100) %>%
+  filter(MDDOtherChips == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyPackedSnacks, "report tables/SvyPackedSnacks.xlsx")
+
+
+#b. Packed snacks by Region
+
+SvyPackedSnacksRegion <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(regiontype, MDDOtherChips) %>%
+  summarise(MDDPackedSnacksCat = survey_mean() * 100) %>%
+  filter(MDDOtherChips == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyPackedSnacksRegion, "report tables/SvyPackedSnacksRegion.xlsx")
+
+#c. Calculate Packed snacks by gender
+
+SvyPackedSnacksGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDOtherChips) %>%
+  summarise(MDDPackedSnacksCat = survey_mean() * 100) %>%
+  filter(MDDOtherChips == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyPackedSnacksGender, "report tables/SvyPackedSnacksGender.xlsx")
+
+# d Calculate overall Packed snacks
+
+SvyPackedSnacksTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDOtherChips) %>%
+  summarise(MDDPackedSnacksCat = survey_mean() * 100) %>%
+  filter(MDDOtherChips == 1)
+
+###########################################################
+
+# Packed snacks tests
+
+PackedSnacksChisqIE <- svychisq(~MDDOtherChips + Treatment, design = SvyDietQualityData) # Not significant
+PackedSnacksChisqRegion <- svychisq(~MDDOtherChips + regiontype, design = SvyDietQualityData) # Not significant
+PackedSnacksChisqGender <- svychisq(~MDDOtherChips + MDDGender, design = SvyDietQualityData) # Not significant
+
+##########################################################
+
+# Instant noodles
+
+#a. Instant noodles by Treatment
+
+SvyInstantNoodles <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(Treatment, MDDOtherNoodles) %>%
+  summarise(MDDInstantNoodlesCat = survey_mean() * 100) %>%
+  filter(MDDOtherNoodles == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyInstantNoodles, "report tables/SvyInstantNoodles.xlsx")
+
+#b. Instant noodles by Region
+
+SvyInstantNoodlesRegion <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(regiontype, MDDOtherNoodles) %>%
+  summarise(MDDInstantNoodlesCat = survey_mean() * 100) %>%
+  filter(MDDOtherNoodles == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyInstantNoodlesRegion, "report tables/SvyInstantNoodlesRegion.xlsx")
+
+#c. Calculate Instant noodles by gender
+
+
+SvyInstantNoodlesGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDOtherNoodles) %>%
+  summarise(MDDInstantNoodlesCat = survey_mean() * 100) %>%
+  filter(MDDOtherNoodles == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyInstantNoodlesGender, "report tables/SvyInstantNoodlesGender.xlsx")
+
+# d Calculate overall Instant noodles
+
+SvyInstantNoodlesTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDOtherNoodles) %>%
+  summarise(MDDInstantNoodlesCat = survey_mean() * 100) %>%
+  filter(MDDOtherNoodles == 1)
+
+###########################################################
+
+# Instant noodles tests
+
+InstantNoodlesChisqIE <- svychisq(~MDDOtherNoodles + Treatment, design = SvyDietQualityData) # Not significant
+InstantNoodlesChisqRegion <- svychisq(~MDDOtherNoodles + regiontype, design = SvyDietQualityData) # Not significant
+InstantNoodlesChisqGender <- svychisq(~MDDOtherNoodles + MDDGender, design = SvyDietQualityData) # Not significant
+
+##########################################################
+
+# Deep fried snacks
+
+#a. Deep fried snacks by Treatment
+
+SvyDeepFriedSnacks <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(Treatment, MDDOtherFriedFoods) %>%
+  summarise(MDDDeepFriedSnacksCat = survey_mean() * 100) %>%
+  filter(MDDOtherFriedFoods == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyDeepFriedSnacks, "report tables/SvyDeepFriedSnacks.xlsx")
+
+#b. Deep fried snacks by Region
+
+SvyDeepFriedSnacksRegion <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(regiontype, MDDOtherFriedFoods) %>%
+  summarise(MDDDeepFriedSnacksCat = survey_mean() * 100) %>%
+  filter(MDDOtherFriedFoods == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyDeepFriedSnacksRegion, "report tables/SvyDeepFriedSnacksRegion.xlsx")
+
+
+#c. Calculate Deep fried by gender
+
+SvyDeepFriedSnacksGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDOtherFriedFoods) %>%
+  summarise(MDDDeepFriedSnacksCat = survey_mean() * 100) %>%
+  filter(MDDOtherFriedFoods == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyDeepFriedSnacksGender, "report tables/SvyDeepFriedSnacksGender.xlsx")
+
+# d Calculate overall Deep fried snacks
+
+SvyDeepFriedSnacksTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDOtherFriedFoods) %>%
+  summarise(MDDDeepFriedSnacksCat = survey_mean() * 100) %>%
+  filter(MDDOtherFriedFoods == 1)
+
+###########################################################
+
+
+# Deep fried snacks tests
+
+DeepFriedSnacksChisqIE <- svychisq(~MDDOtherFriedFoods + Treatment, design = SvyDietQualityData) # Not significant
+DeepFriedSnacksChisqRegion <- svychisq(~MDDOtherFriedFoods + regiontype, design = SvyDietQualityData) # Not significant
+DeepFriedSnacksChisqGender <- svychisq(~MDDOtherFriedFoods + MDDGender, design = SvyDietQualityData) # Not significant
+
+##########################################################
+
+# Soft energy drinks
+
+#a. Soft energy drinks by Treatment
+
+SvySoftEnergyDrinks <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(Treatment, MDDDrinksSoftDrinks) %>%
+  summarise(MDDSoftEnergyDrinksCat = survey_mean() * 100) %>%
+  filter(MDDDrinksSoftDrinks == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvySoftEnergyDrinks, "report tables/SvySoftEnergyDrinks.xlsx")
+
+#b. Soft energy drinks by Region
+
+SvySoftEnergyDrinksRegion <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(regiontype, MDDDrinksSoftDrinks) %>%
+  summarise(MDDSoftEnergyDrinksCat = survey_mean() * 100) %>%
+  filter(MDDDrinksSoftDrinks == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvySoftEnergyDrinksRegion, "report tables/SvySoftEnergyDrinksRegion.xlsx")
+
+#c. Calculate Soft energy drinks by
+
+SvySoftEnergyDrinksGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDDrinksSoftDrinks) %>%
+  summarise(MDDSoftEnergyDrinksCat = survey_mean() * 100) %>%
+  filter(MDDDrinksSoftDrinks == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvySoftEnergyDrinksGender, "report tables/SvySoftEnergyDrinksGender.xlsx")
+
+# d Calculate overall Soft energy drinks
+
+SvySoftEnergyDrinksTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDDrinksSoftDrinks) %>%
+  summarise(MDDSoftEnergyDrinksCat = survey_mean() * 100) %>%
+  filter(MDDDrinksSoftDrinks == 1)
+
+###########################################################
+
+# Soft energy drinks tests
+
+SoftEnergyDrinksChisqIE <- svychisq(~MDDDrinksSoftDrinks + Treatment, design = SvyDietQualityData) # Not significant
+SoftEnergyDrinksChisqRegion <- svychisq(~MDDDrinksSoftDrinks + regiontype, design = SvyDietQualityData) # Not significant
+SoftEnergyDrinksChisqGender <- svychisq(~MDDDrinksSoftDrinks + MDDGender, design = SvyDietQualityData) # Not significant
+
+
+##########################################################
+
+
+# Sweet Tea or coffee
+
+#a. Sweet Tea or coffee by Treatment
+
+SvySweetTea <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(Treatment, MDDDrinkTea) %>%
+  summarise(MDDSweetTeaCat = survey_mean() * 100) %>%
+  filter(MDDDrinkTea == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvySweetTea, "report tables/SvySweetTea.xlsx")
+
+#b. Sweet Tea or coffee by Region
+
+SvySweetTeaRegion <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(regiontype, MDDDrinkTea) %>%
+  summarise(MDDSweetTeaCat = survey_mean() * 100) %>%
+  filter(MDDDrinkTea == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvySweetTeaRegion, "report tables/SvySweetTeaRegion.xlsx")
+
+#c. Calculate Sweet Tea or coffee by gender
+
+SvySweetTeaGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDDrinkTea) %>%
+  summarise(MDDSweetTeaCat = survey_mean() * 100) %>%
+  filter(MDDDrinkTea == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvySweetTeaGender, "report tables/SvySweetTeaGender.xlsx")
+
+# d Calculate overall Sweet Tea or coffee
+
+
+SvySweetTeaTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDDrinkTea) %>%
+  summarise(MDDSweetTeaCat = survey_mean() * 100) %>%
+  filter(MDDDrinkTea == 1)
+
+
+###########################################################
+
+# Sweet Tea or coffee tests
+
+SweetTeaChisqIE <- svychisq(~MDDDrinkTea + Treatment, design = SvyDietQualityData) # Not significant
+SweetTeaChisqRegion <- svychisq(~MDDDrinkTea + regiontype, design = SvyDietQualityData) # Not significant
+SweetTeaChisqGender <- svychisq(~MDDDrinkTea + MDDGender, design = SvyDietQualityData) # Not significant
+
+##########################################################
+
+# Friut Juice
+
+#a. Fruit Juice by Treatment
+
+SvyFruitJuice <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(Treatment, MDDDrinksFruitJuice) %>%
+  summarise(MDDFruitJuiceCat = survey_mean() * 100) %>%
+  filter(MDDDrinksFruitJuice == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyFruitJuice, "report tables/SvyFruitJuice.xlsx")
+
+#b. Fruit Juice by Region
+
+SvyFruitJuiceRegion <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(regiontype, MDDDrinksFruitJuice) %>%
+  summarise(MDDFruitJuiceCat = survey_mean() * 100) %>%
+  filter(MDDDrinksFruitJuice == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyFruitJuiceRegion, "report tables/SvyFruitJuiceRegion.xlsx")
+
+
+#c. Calculate Fruit Juice by gender
+
+SvyFruitJuiceGender <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDGender, MDDDrinksFruitJuice) %>%
+  summarise(MDDFruitJuiceCat = survey_mean() * 100) %>%
+  filter(MDDDrinksFruitJuice == 1)
+
+# Write this into an excel file
+
+write.xlsx(SvyFruitJuiceGender, "report tables/SvyFruitJuiceGender.xlsx")
+
+# d Calculate overall Fruit Juice
+
+SvyFruitJuiceTot <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15) %>%
+  group_by(MDDDrinksFruitJuice) %>%
+  summarise(MDDFruitJuiceCat = survey_mean() * 100) %>%
+  filter(MDDDrinksFruitJuice == 1)
+
+###########################################################
+
+# Fruit Juice tests
+
+FruitJuiceChisqIE <- svychisq(~MDDDrinksFruitJuice + Treatment, design = SvyDietQualityData) # Not significant
+FruitJuiceChisqRegion <- svychisq(~MDDDrinksFruitJuice + regiontype, design = SvyDietQualityData) # Not significant
+FruitJuiceChisqGender <- svychisq(~MDDDrinksFruitJuice + MDDGender, design = SvyDietQualityData) # Not significant
+
+##########################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

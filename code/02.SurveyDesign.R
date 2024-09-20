@@ -15,11 +15,11 @@ SurveyDesignData <- read_dta("new data/cover.dta")
 
 
 SurveyDesignData <- SurveyDesignData %>%
-  select(hhid, clusterid, strataid, GPS__Latitude, GPS__Longitude, GPS__Accuracy, GPS__Altitude, GPS__Timestamp, regiontype, poorscore) 
+  select(interview__key, clusterid, strataid, GPS__Latitude, GPS__Longitude, GPS__Accuracy, GPS__Altitude, GPS__Timestamp, regiontype, poorscore) 
 
 
 SvyLCSENData <- LCSEN %>% 
-  left_join(SurveyDesignData, by = "hhid") %>% 
+  left_join(SurveyDesignData, by = "interview__key") %>% 
   #Set the data to survey designed data
   as_survey(ids = clusterid, 
             strata = strataid, 
@@ -27,7 +27,7 @@ SvyLCSENData <- LCSEN %>%
 
 # Merge the FIES Data with the Survey Design Data
 SvyFIESData <- FIESData %>% 
-  left_join(SurveyDesignData, by = "hhid") %>% 
+  left_join(SurveyDesignData, by = "interview__key") %>% 
   # Set the data to survey designed data
   as_survey_design(ids = clusterid, 
                    strata = strataid, 
@@ -35,7 +35,7 @@ SvyFIESData <- FIESData %>%
 
 # Merge the rCSI Data with the Survey Design Data
 SvyrCSIData <- rCSIData %>% 
-  left_join(SurveyDesignData, by = "hhid") %>% 
+  left_join(SurveyDesignData, by = "interview__key") %>% 
   #Set the data to survey designed data
   as_survey_design(ids = clusterid, 
                    strata = strataid, 
@@ -48,7 +48,7 @@ SvyrCSIData <- rCSIData %>%
 
 # Merge the MAD Data with the Survey Design Data
 SvyMADData <- MADChildren %>% 
-  left_join(SurveyDesignData, by = "hhid") %>% 
+  left_join(SurveyDesignData, by = "interview__key") %>% 
   #Set the data to survey designed data
   as_survey_design(ids = clusterid, 
                    strata = strataid, 
@@ -56,7 +56,7 @@ SvyMADData <- MADChildren %>%
 
 # Merge the DietQuality data with the Survey Design Data
 SvyDietQualityData <- DietQuality %>% 
-  left_join(SurveyDesignData, by = "hhid") %>% 
+  left_join(SurveyDesignData, by = "interview__key") %>% 
   #Set the data to survey designed data
   as_survey_design(ids = clusterid, 
                    strata = strataid, 
@@ -65,7 +65,7 @@ SvyDietQualityData <- DietQuality %>%
 
 # Merge the Livelihoods Coping Strategies FoodSecurity data with the Survey Design Data
 SvyLCSFS <- LCSFS %>% 
-  left_join(SurveyDesignData, by = "hhid") %>% 
+  left_join(SurveyDesignData, by = "interview__key") %>% 
   #Set the data to survey designed data
   as_survey_design(ids = clusterid, 
                    strata = strataid, 

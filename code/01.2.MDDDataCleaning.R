@@ -100,6 +100,12 @@ DietQuality <- read_dta("new data/sec7.dta") %>%
       TRUE ~ 0),
     MDDAllProteins = case_when(
       MDDProteinEgg == 1 | MDDProteinYogurt == 1 | MDDProteinProcessed == 1 | MDDProteinBeef == 1 | MDDProteinPork == 1 | MDDProteinChicken == 1 | MDDProteinFish == 1 | MDDDrinkMilk == 1 ~ 1,
+      TRUE ~ 0),
+    MDDSweetBeverages = case_when(
+      MDDDrinkTea == 1 | MDDDrinksFruitJuice == 1 | MDDDrinksSoftDrinks == 1  ~ 1,
+      TRUE ~ 0),
+    MDDUnhealthyFoods = case_when(
+      MDDSweetsCake == 1 | MDDSweetsCandy == 1 | MDDOtherChips == 1 | MDDOtherFriedFoods == 1 | MDDOtherNoodles == 1 ~ 1,
       TRUE ~ 0)) %>%
   # Convert food groups to numeric
   #mutate(across(MDDStapCereal:MDDAllProteins, as.double)) %>%
