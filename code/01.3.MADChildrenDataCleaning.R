@@ -103,16 +103,19 @@ MADChildren <- MADChildren %>%
   # Create variables for the calculation of relevant variables
   mutate(
     #Exclusive Breastfeeding under 6 months (EBF)
+    allno = case_when(
+      (PCMADPlainWAter == 0 & PCMADInfFormula == 0 & PCMADMilk == 0 &
+         PCMADYogurtDrink == 0 & PCMADOtherMilk == 0  & PCMADChocolateFrappe == 0 & PCMADFruiteJuice == 0 &
+         PCMADSoftDrink == 0 & PCMADTea == 0 & PCMADBroth == 0 & PCMADAnyOtherLiquids == 0) & PCMADYogurtDrink == 0  &
+        (PCMADStapCereal == 0 & PCMADOtherCereal == 0 & PCMADStapTubers == 0 & PCMADStapLegumes == 0 & PCMADVegCarrots == 0 &
+          PCMADVegIvyGourd == 0 & PCMADVegPumpkin == 0 & PCMADVegEggplant == 0 & PCMADVegWaxGourd == 0 & PCMADVegLettuce == 0 & 
+           PCMADFruitRipe == 0 & PCMADFruitOrange == 0 & PCMADFruitBanana == 0 & PCMADFruitMangosteen == 0 & PCMADSweetsCakes == 0 &
+           PCMADSweetsCandy ==0 & PCMADProteinEggs == 0 & PCMADProteinKidney == 0 & PCMADProteinSausages == 0 & PCMADProteinBeef == 0 &
+           PCMADProteinPork == 0 & PCMADProteinChicken == 0 & PCMADProteinFish == 0 & PCMADProteinCrikets == 0 & PCMADOtherPeanuts == 0 &
+           PCMADOtherChips == 0 & PCMADOtherNoodles == 0 & PCMADOtherFriedChicken == 0 & PCMADOtherSemiSolid == 0 & PCMADOtherEatOut == 0) ~ 1,
+      TRUE ~ 0),
     MADEBF = case_when(
-        PCMADBreastfeeding == 1 & (PCMADPlainWAter == 0 & PCMADInfFormula == 0 & PCMADMilk == 0 &
-        PCMADYogurtDrink == 0 & PCMADOtherMilk == 0  & PCMADChocolateFrappe == 0 & PCMADFruiteJuice == 0 &
-        PCMADSoftDrink == 0 & PCMADTea == 0 & PCMADBroth == 0 & PCMADAnyOtherLiquids == 0) & PCMADYogurtDrink > 0  &
-        (PCMADStapCereal == 0 & PCMADOtherCereal == 0 & PCMADStapTubers == 0 & PCMADStapLegumes == 0 &PCMADVegCarrots == 0 &
-        PCMADVegIvyGourd == 0 & PCMADVegPumpkin == 0 & PCMADVegEggplant == 0 & PCMADVegWaxGourd == 0 & PCMADVegLettuce == 0 & 
-        PCMADFruitRipe == 0 & PCMADFruitOrange == 0 & PCMADFruitBanana == 0 & PCMADFruitMangosteen == 0 & PCMADSweetsCakes == 0 &
-        PCMADSweetsCandy==0 & PCMADProteinEggs == 0 & PCMADProteinKidney == 0 & PCMADProteinSausages == 0 & PCMADProteinBeef == 0 &
-        PCMADProteinPork == 0 & PCMADProteinChicken == 0 & PCMADProteinFish == 0 & PCMADProteinCrikets == 0 & PCMADOtherPeanuts == 0 &
-        PCMADOtherChips == 0 & PCMADOtherNoodles == 0 & PCMADOtherFriedChicken == 0 & PCMADOtherSemiSolid == 0 & PCMADOtherEatOut ==0 & PCMADCheck == 0) ~ 1,
+        PCMADBreastfeeding == 1 & allno == 1 ~ 1,
       TRUE ~ 0),
     ISSSF = case_when(
       PCMADStapCereal == 1 | PCMADOtherCereal == 1 | PCMADStapTubers == 1 | PCMADStapLegumes == 1 | 
@@ -157,6 +160,13 @@ MADChildren <- MADChildren %>%
       TRUE ~ 0),
     PCMADUnhealthyFds = case_when(
       PCMADSweetsCakes == 1 | PCMADSweetsCandy == 1 |  PCMADOtherChips == 1 | PCMADOtherNoodles == 1 | PCMADOtherFriedChicken == 1| PCMADOtherEatOut == 1 ~ 1,
+      TRUE ~ 0),
+    PMADEggFlesh = case_when(
+      PCMADProteinEggs == 1 | PCMADFleshFoods == 1 ~ 1,
+      TRUE ~ 0),
+    PMADSwtBeverages = case_when(
+      PCMADMilkSwt == 1 | PCMADYogurtDrinkSwt == 1 | PCMADOtherMilkSwtFlavoured == 1 | PCMADTeaSwt == 1 | PCMADAnyOtherLiquidsSwt == 1 |
+        PCMADSoftDrink == 1 | PCMADFruiteJuice == 1 | PCMADChocolateFrappe == 1  ~ 1,
       TRUE ~ 0)) %>%
   # Create the MDD Score variable
   mutate(

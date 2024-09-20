@@ -24,7 +24,8 @@ MDDWomen <- SvyDietQualityData %>%
   filter(MDDGender == "Female") %>%
   filter(MDDAge >= 15 & MDDAge <= 49) %>%
   group_by(Treatment, MDDCategory) %>% 
-  summarise(MDDWomen = survey_mean() * 100) %>% 
+  summarise(MDDWomen = survey_mean() * 100,
+            Total = survey_total()) %>% 
   filter(MDDCategory == 1) %>% 
   dplyr::select(-MDDWomen_se) %>% 
   pivot_wider(names_from = Treatment, values_from = MDDWomen) %>% 
@@ -49,29 +50,32 @@ MDDWomenRegion <- SvyDietQualityData %>%
   filter(MDDGender == "Female") %>%
   filter(MDDAge >= 15 & MDDAge <= 49) %>%
   group_by(regiontype, MDDCategory) %>%
-  summarise(MDDWomen = survey_mean() * 100) %>%
+  summarise(MDDWomen = survey_mean() * 100,
+            Total  = survey_total()) %>%
   ungroup() %>%
-  filter(MDDCategory == 1) %>%
+  #filter(MDDCategory == 1) %>%
   dplyr::select(-MDDWomen_se) %>%
   rename(Percentage = MDDWomen) %>%
   mutate(Indicator = "MDD-W",
-         MDDCategory = regiontype) %>%
-  dplyr::select(Indicator, MDDCategory, Percentage)
+         MDDCategory = regiontype)
   
-
+# Write this into an excel file
+write.xlsx(MDDWomenRegion, "report tables/MDDWomenRegion.xlsx")
 # Calculate MDDWomen - uncategorised
 MDDWomenTot <- SvyDietQualityData %>% 
   filter(MDDGender == "Female") %>%
   filter(MDDAge >= 15 & MDDAge <= 49) %>%
   group_by(MDDCategory) %>%
-  summarise(MDDWomen = survey_mean() * 100) %>%
-  filter(MDDCategory == 1) %>% 
+  summarise(MDDWomen = survey_mean() * 100,
+            Total = survey_total()) %>%
+  #filter(MDDCategory == 1) %>% 
   dplyr::select(-MDDWomen_se) %>%
   rename(Percentage = MDDWomen) %>% 
   mutate(Indicator = "MDD-W",
-         MDDCategory = "Overall") %>%
-  dplyr::select(Indicator, MDDCategory, Percentage)
+         MDDCategory = "Overall") 
 
+# Write this into an excel file
+write.xlsx(MDDWomenTot, "report tables/MDDWomenTot.xlsx")
 # Bind the rows
 MDDTable <- bind_rows(MDDWomenTot, MDDWomenRegion) %>% 
   # Round all the numeric variables to 2 decimal places
@@ -337,6 +341,13 @@ StaplesData <- SvyStaples %>%
   mutate_if(is.numeric, ~round(., 2))
 
 
+SvyStaplesOverall<- SvyDietQualityData %>% 
+  filter(MDDAge >= 15 & MDDAge <=49) %>%
+  filter(MDDGender == "Female") %>%
+  group_by(MDDStaples) %>%
+  summarise(MDDStaplesCat = survey_mean() * 100) %>%
+  filter(MDDStaples == 1) 
+
 #################################################################################################################
 
 #Chisq test for staple foods
@@ -376,6 +387,13 @@ SvyPulsesRegion <- SvyDietQualityData %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Pulses") %>%
   dplyr::select(Indicator, everything())
+
+SvyPulsesOverall <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15 & MDDAge <=49) %>%
+  filter(MDDGender == "Female") %>%
+  group_by(MDDPulses) %>%
+  summarise(MDDPulsesCat = survey_mean() * 100) %>%
+  filter(MDDPulses == 1)
 
 # Join the two dataframes
 
@@ -422,6 +440,13 @@ SvyNutsSeedsRegion <- SvyDietQualityData %>%
          Indicator = "Nuts and Seeds") %>%
   dplyr::select(Indicator, everything())
 
+SvyNutsSeedsOverall <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15 & MDDAge <=49) %>%
+  filter(MDDGender == "Female") %>%
+  group_by(MDDNutsSeeds) %>%
+  summarise(MDDNutsSeedsCat = survey_mean() * 100) %>%
+  filter(MDDNutsSeeds == 1)
+
 # Join the two dataframes
 NutsSeedsData <- SvyNutsSeeds %>% 
   left_join(SvyNutsSeedsRegion, by = "Indicator") %>% 
@@ -463,6 +488,13 @@ SvyDairyRegion <- SvyDietQualityData %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Dairy") %>%
   dplyr::select(Indicator, everything())
+
+SvyDairyOverall <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15 & MDDAge <=49) %>%
+  filter(MDDGender == "Female") %>%
+  group_by(MDDDiary) %>%
+  summarise(MDDDairyCat = survey_mean() * 100) %>%
+  filter(MDDDiary == 1)
 
 # Join the two dataframes
 DairyData <- SvyDairy %>% 
@@ -506,6 +538,13 @@ SvyProteinRegion <- SvyDietQualityData %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Protein") %>%
   dplyr::select(Indicator, everything())
+
+SvyProteinOverall <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15 & MDDAge <=49) %>%
+  filter(MDDGender == "Female") %>%
+  group_by(MDDProtein) %>%
+  summarise(MDDProteinCat = survey_mean() * 100) %>%
+  filter(MDDProtein == 1)
 
 # Join the two dataframes
 ProteinData <- SvyProtein %>% 
@@ -554,6 +593,13 @@ SvyEggsRegion <- SvyDietQualityData %>%
          Indicator = "Eggs") %>%
   dplyr::select(Indicator, everything())
 
+SvyEggsOverall <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15 & MDDAge <=49) %>%
+  filter(MDDGender == "Female") %>%
+  group_by(MDDEggs) %>%
+  summarise(MDDEggsCat = survey_mean() * 100) %>%
+  filter(MDDEggs == 1)
+
 # Join the two dataframes
 EggsData <- SvyEggs %>% 
   left_join(SvyEggsRegion, by = "Indicator") %>% 
@@ -599,6 +645,13 @@ SvyDarkGreenVegRegion <- SvyDietQualityData %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Dark Green Vegetables") %>%
   dplyr::select(Indicator, everything())
+
+SvyDarkGreenVegOverall <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15 & MDDAge <=49) %>%
+  filter(MDDGender == "Female") %>%
+  group_by(MDDDarkGreenVeg) %>%
+  summarise(MDDDarkGreenVegCat = survey_mean() * 100) %>%
+  filter(MDDDarkGreenVeg == 1)
 
 # Join the two dataframes
 DarkGreenVegData <- SvyDarkGreenVeg %>% 
@@ -646,6 +699,13 @@ SvyOtherVegRegion <- SvyDietQualityData %>%
          Indicator = "Other Vegetables") %>%
   dplyr::select(Indicator, everything())
 
+SvyOtherVegOverall <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15 & MDDAge <=49) %>%
+  filter(MDDGender == "Female") %>%
+  group_by(MDDOtherVeg) %>%
+  summarise(MDDOtherVegCat = survey_mean() * 100) %>%
+  filter(MDDOtherVeg == 1)
+
 # Join the two dataframes
 OtherVegData <- SvyOtherVeg %>% 
   left_join(SvyOtherVegRegion, by = "Indicator") %>% 
@@ -691,6 +751,12 @@ SvyOtherVitARegion <- SvyDietQualityData %>%
          Indicator = "Other Vitamin A Foods") %>%
   dplyr::select(Indicator, everything())
 
+SvyOtherVitAOverall <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15 & MDDAge <=49) %>%
+  filter(MDDGender == "Female") %>%
+  group_by(MDDOtherVitA) %>%
+  summarise(MDDVitAFruitVegCat = survey_mean() * 100) %>%
+  filter(MDDOtherVitA == 1)
 # Join the two dataframes
 
 OtherVitAData <- SvyOtherVitA %>% 
@@ -738,6 +804,13 @@ SvyOtherFruitsRegion <- SvyDietQualityData %>%
   mutate(DiffReg = URBAN - RURAL,
          Indicator = "Other Fruits") %>%
   dplyr::select(Indicator, everything())
+
+SvyOtherFruitsOverall <- SvyDietQualityData %>% 
+  filter(MDDAge >= 15 & MDDAge <=49) %>%
+  filter(MDDGender == "Female") %>%
+  group_by(MDDOtherFruits) %>%
+  summarise(MDDOtherFruitsCat = survey_mean() * 100) %>%
+  filter(MDDOtherFruits == 1)
 
 # Join the two dataframes
 OtherFruitsData <- SvyOtherFruits %>% 

@@ -47,7 +47,9 @@ SvyLCSENMaxRegion <- SvyLCSENData %>%
   summarise(Pct_LCSENMax = survey_prop() * 100) %>% 
   select(regiontype, MaxcopingBehaviourEN, Pct_LCSENMax) %>% 
   rename(Proportion = Pct_LCSENMax,
-         Disagregation = regiontype)
+         Disagregation = regiontype) 
+
+write.xlsx(SvyLCSENMaxRegion, "report tables/SvyLCSENMaxRegion.xlsx")
 
 # # Calculate the indicator by diability 
 # SvyLCSENMaxDisability <- SvyLCSENData %>% 
@@ -94,6 +96,8 @@ SvyLCSFSMaxRegion <- SvyLCSFS %>%
   rename(Proportion = Pct_LCSFSMax,
          Disagregation = regiontype)
 
+write.xlsx(SvyLCSFSMaxRegion, "report tables/SvyLCSFSMaxRegion.xlsx")
+
 ########################################################################################################
 # test if the difference in the indicators by region is significant
 LCSFSChisqtest <- svychisq(~MaxcopingBehaviourFS + regiontype, design = SvyLCSFS) # Significant
@@ -118,7 +122,8 @@ write.xlsx(FoodSecurityCS, "report tables/FoodSecurityCS.xlsx")
 
 meanRCSI <- SvyrCSIData %>% 
   group_by(Treatment) %>% 
-  summarise(MeanRCSI = survey_mean(rCSI)) %>% 
+  summarise(MeanRCSI = survey_mean(rCSI),
+            Tot = survey_total()) %>% 
   select(Treatment, MeanRCSI) %>% 
   pivot_wider(names_from = Treatment, values_from = MeanRCSI) %>%
   mutate(Diff = `Treatment Group` - `Control Group`) %>% 
@@ -184,6 +189,8 @@ meanRCSIProvince <- SvyrCSIData %>%
   select(regiontype, MeanRCSI) 
 ###################################################################################################################################################################
 
+
+write_dta(FIESData, "data/FIESData.dta")
 # Individual components of food security sub-indicators
 # 1. FIES
 FIESWorriedProvince <- FIESData %>%
@@ -469,7 +476,8 @@ rCSICopingStrategies <- bind_rows(rCSILessQltyCat,
 rCSILessQltyWhoRegion <- SvyrCSIData %>% 
   drop_na(rCSILessQltyCat) %>% 
   group_by(regiontype, rCSILessQltyCat) %>%
-  summarise(Pct = survey_prop() * 100) %>%
+  summarise(Pct = survey_prop() * 100,
+            Total = survey_total()) %>%
   select(regiontype, rCSILessQltyCat, Pct) %>%
   pivot_wider(names_from = rCSILessQltyCat, values_from = Pct) %>%
   mutate(Indicator = "Relied on less prefered and less expensive food") %>%
@@ -479,7 +487,8 @@ rCSILessQltyWhoRegion <- SvyrCSIData %>%
 rCSIBorrowWhoRegion <- SvyrCSIData %>%
   drop_na(rCSIBorrowCat) %>% 
   group_by(regiontype, rCSIBorrowCat) %>%
-  summarise(Pct = survey_prop() * 100) %>%
+  summarise(Pct = survey_prop() * 100,
+            Total = survey_total()) %>%
   select(regiontype, rCSIBorrowCat, Pct) %>%
   pivot_wider(names_from = rCSIBorrowCat, values_from = Pct) %>%
   mutate(Indicator = "Borrowed food from relative or friend") %>%
@@ -489,7 +498,8 @@ rCSIBorrowWhoRegion <- SvyrCSIData %>%
 rCSIMealSizeWhoRegion <- SvyrCSIData %>%
   drop_na(rCSIMealSizeCat) %>% 
   group_by(regiontype, rCSIMealSizeCat) %>%
-  summarise(Pct = survey_prop() * 100) %>%
+  summarise(Pct = survey_prop() * 100,
+            Tota = survey_total()) %>%
   select(regiontype, rCSIMealSizeCat, Pct) %>%
   pivot_wider(names_from = rCSIMealSizeCat, values_from = Pct) %>%
   mutate(Indicator = "Reduced meal size or portions") %>%
@@ -660,6 +670,126 @@ rCSICopingStrategiesAll <- bind_rows(rCSICopingStrategies, rCSICopingStrategiesP
                                                     "Phnom Penh")),
          Indicator = factor(Indicator))
  
+
+
+#########################################################################################
+
+# FIES Worried
+
+FIESWorriedTreatment <- SmallFIESData %>%
+  count(Treatment, FIESWorried) %>%
+  group_by(Treatment) %>%
+  mutate(Pct = n / sum(n) * 100) 
+
+# Write excel file
+
+write.xlsx(FIESWorriedTreatment, "report tables/FIESWorriedTreatment.xlsx")
+
+# FIES Worried by regiontype
+
+FIESWorriedRegion <- SmallFIESData %>%
+  count(regiontype, FIESWorried) %>%
+  group_by(regiontype) %>%
+  mutate(Pct = n / sum(n) * 100)
+
+# Write excel file
+
+write.xlsx(FIESWorriedRegion, "report tables/FIESWorriedRegion.xlsx")
+# Overall FIES Worried
+
+FIESWorriedOverall <- SmallFIESData %>%
+  count(FIESWorried) %>%
+  mutate(Pct = n / sum(n) * 100)
+
+# Write excel file
+
+write.xlsx(FIESWorriedOverall, "report tables/FIESWorriedOverall.xlsx")
+
+############################################################################################
+
+# Test if the difference in the indicators by treatment is significant
+
+FIESWorriedTestTreat <- chisq.test(SmallFIESData$FIESWorried, SmallFIESData$Treatment) # Not significant
+FIESWorriedTestRegion <- chisq.test(SmallFIESData$FIESWorried, SmallFIESData$regiontype) # Not significant
+
+############################################################################################
+
+# FIES Sufficient nutritious foods
+
+
+FIESEatHealthyTreatment <- SmallFIESData %>%
+  count(Treatment, FIESEatHealthy) %>%
+  group_by(Treatment) %>%
+  mutate(Pct = n / sum(n) * 100)
+
+# Write excel file
+
+write.xlsx(FIESEatHealthyTreatment, "report tables/FIESEatHealthyTreatment.xlsx")
+
+
+# FIES Sufficient nutritious foods by regiontype
+
+FIESEatHealthyRegion <- SmallFIESData %>%
+  count(regiontype, FIESEatHealthy) %>%
+  group_by(regiontype) %>%
+  mutate(Pct = n / sum(n) * 100)
+
+
+# Write excel file
+
+write.xlsx(FIESEatHealthyRegion, "report tables/FIESEatHealthyRegion.xlsx")
+
+
+# Overall FIES Sufficient nutritious foods
+
+FIESEatHealthyOverall <- SmallFIESData %>%
+  count(FIESEatHealthy) %>%
+  mutate(Pct = n / sum(n) * 100)
+
+# Write excel file
+
+write.xlsx(FIESEatHealthyOverall, "report tables/FIESEatHealthyOverall.xlsx")
+
+
+
+############################################################################################
+
+# Test if the difference in the indicators by treatment is significant
+
+FIESEatHealthyTestTreat <- chisq.test(SmallFIESData$FIESEatHealthy, SmallFIESData$Treatment) # Not significant
+FIESEatHealthyTestRegion <- chisq.test(SmallFIESData$FIESEatHealthy, SmallFIESData$regiontype) # Not significant
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
