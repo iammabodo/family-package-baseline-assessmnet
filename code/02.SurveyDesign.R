@@ -48,7 +48,7 @@ SvyrCSIData <- rCSIData %>%
 
 # Merge the MAD Data with the Survey Design Data
 SvyMADData <- MADChildren %>% 
-  left_join(SurveyDesignData, by = "interview__key") %>% 
+  left_join(SurveyDesignData, by = "hhid") %>% 
   #Set the data to survey designed data
   as_survey_design(ids = clusterid, 
                    strata = strataid, 

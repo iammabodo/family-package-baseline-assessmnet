@@ -136,9 +136,6 @@ DietQuality <- read_dta("new data/sec7.dta") %>%
   mutate(Treatment = case_when(
     IDPOOR == "POOR_1" | IDPOOR == "POOR_2" ~ "Treatment Group",
     TRUE ~ "Control Group")) %>%
-  # Change Treatment to factor variable
-  mutate(Treatment = as_factor(Treatment),
-         MDDCategory = as_factor(MDDCategory)) %>%
   # Set Variable Labels
   set_variable_labels(
     MDDId = "Diet Quality Respondent ID",
@@ -222,7 +219,7 @@ DietQuality <- left_join(DietQuality, MDDHHRoster, by = c("MDDId", "hhid"))
 
 ## Data Export in sav, stata, and csv formats
 #write_sav(DietQuality, "data/DietQuality.sav")
-write_dta(DietQuality, "data/DietQuality.dta")  
+write_dta(DietQuality, "clean data/DietQuality.dta")  
 write_csv(DietQuality, "data/DietQuality.csv")  
 
 
