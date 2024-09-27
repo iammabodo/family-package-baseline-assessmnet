@@ -289,15 +289,10 @@ MADChildren <- MADChildren %>%
     MDDCat = "Minimum Dietary Diversity Category")
   # Change labeled variables to factor variables
 
-# Read in the Household Characteristics data
+# Save the cleaned data as .dta
 
-HHCharacteristics <- read_dta("new data/cover.dta") %>% 
-  # Select relevant variables
-  select(hhid, HHID, IDPOOR) %>% 
-  # Create treatment variable
-  mutate(Treatment = case_when(
-    IDPOOR == 1 | IDPOOR == 2 ~ "Treatment Group",
-    TRUE ~ "Control Group"))
+write_dta(MADChildren, "clean data/MADChildren.dta")
+
  
 # Merge the data with household data
 
