@@ -66,5 +66,10 @@ report tables/*
 # New Data folder
 new data/*
 
+
+# Clean data
+
+clean data/*
+
 # D Store file
 .DS_Store
