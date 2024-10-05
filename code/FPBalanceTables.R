@@ -169,14 +169,192 @@ adult_nutrition_balance_results <- bind_rows(MDDWomen, MDDScore, MDDSweetBeverag
 # Write excel file
 write.xlsx(adult_nutrition_balance_results, "report tables/AdultNutritionBalanceTable.xlsx")
 
+########################################################################################
+
+# Livelihoods Coping Strategies Essential Needs (LCSEN) Indicators
+
+# Read the LCSEN data
+LCSEN <- read_dta("clean data/LCSEN.dta") %>% 
+  dplyr::select(hhid,  MaxcopingBehaviourEN) %>% 
+  pivot_wider(names_from = MaxcopingBehaviourEN, values_from = MaxcopingBehaviourEN) %>% 
+  rename(StressCopingEn = `2`,
+         CrisisCopingEn = `3`,
+         EmergencyCopingEn = `4`,
+         NoCopingEN = `1`) %>% 
+  mutate(NoCopingEN = case_when(
+    !is.na(NoCopingEN) ~ 1,
+    TRUE ~ 0),
+    StressCopingEn = case_when(
+      !is.na(StressCopingEn) ~ 1,
+      TRUE ~ 0),
+    CrisisCopingEn = case_when(
+      !is.na(CrisisCopingEn) ~ 1,
+      TRUE ~ 0),
+    EmergencyCopingEn = case_when(
+      !is.na(EmergencyCopingEn) ~ 1,
+      TRUE ~ 0))
+
+# Merge the LCSEN data with the cover data
+LCSEN_merged_data <- left_join(cover_data, LCSEN, by = c("hhid")) %>% 
+  mutate(T1 = ifelse(IDPOOR < 3, 1, 0),          # Treatment indicator based on IDPoor classification
+         T2 = ifelse(poorscore < 0, 1, 0)) %>% 
+  #mutate_at(vars(starts_with("strata")), as.factor)  # Ensure strata variables are treated as factors
+  mutate(strataid = as.factor(strataid))  # Ensure strataid is treated as a factor
+
+# Generate dummy variables for strataid, excluding the first level as the baseline
+strata_dummies_LCSEN <- model.matrix(~ strataid - 1, data = LCSEN_merged_data)
+
+# Renaming columns to match Stata output (strata_1, strata_2, ...)
+colnames(strata_dummies_LCSEN) <- paste0("strata_", 1:ncol(strata_dummies_LCSEN))
+
+# Add the dummy variables back to the merged dataset
+
+LCSEN_merged_data <- cbind(LCSEN_merged_data, strata_dummies_LCSEN)
+
+# Specify covariates, including poverty score and actual strata dummies present in the data
+
+existing_strata_vars_LCSEN <- grep("^strata_", colnames(LCSEN_merged_data), value = TRUE)
+
+covariates_LCSEN <- c("poorscore", existing_strata_vars_LCSEN)
+
+# Set up survey design (ensure 'clusterid' and 'strataid' exist in the data)
+
+
+LCSEN_survey_design <- svydesign(
+  ids = ~clusterid,   # Village level clustering
+  strata = ~strataid, # Control for strata
+  data = LCSEN_merged_data
+)
+
+
+# Indicators for LCSEN
+
+
+LCSEN_Stress <- calculate_balance("StressCopingEn", LCSEN_survey_design, covariates_LCSEN) # Food consumption for LCSEN
+LCSEN_Crisis <- calculate_balance("CrisisCopingEn", LCSEN_survey_design, covariates_LCSEN) # Food consumption for LCSEN
+LCSEN_Emergency <- calculate_balance("EmergencyCopingEn", LCSEN_survey_design, covariates_LCSEN) # Food consumption for LCSEN
+LCSEN_NoCoping <- calculate_balance("NoCopingEN", LCSEN_survey_design, covariates_LCSEN) # Food consumption for LCSEN
+
+# Merge the tables and round numerical values
+
+LCSEN_balance_results <- bind_rows(LCSEN_Stress, LCSEN_Crisis, LCSEN_Emergency, LCSEN_NoCoping) %>% 
+  # Round numerical values to 3 decimal places
+  mutate_if(is.numeric, ~round(., 3)) %>% 
+  dplyr::select(Indicator, Overall_Mean, Treatment_Mean, Comparison_Mean, Difference) # Removing the p-value and stars columns since non of the indicators are significant
+
+
+###############################################################################################
+
+# Reduced coping strategies index balance table
+
+# Read the reduced coping strategies index data
+
+ReducedCopingStrategies <- read_dta("clean data/rCSIData.dta") %>% 
+  mutate(
+    rCSILessQltyCat = case_when(
+      rCSILessQltyCat ==1 ~ 1,
+      TRUE ~ 0
+    ),
+    rCSIBorrowCat = case_when(
+      rCSIBorrowCat ==1 ~ 1,
+      TRUE ~ 0
+    ),
+    rCSIMealSizeCat = case_when(
+      rCSIMealSizeCat ==1 ~ 1,
+      TRUE ~ 0
+    ),
+    rCSIMealNbCat = case_when(
+      rCSIMealNbCat ==1 ~ 1,
+      TRUE ~ 0
+    ),
+    rCSIMealAdultCat = case_when(
+      rCSIMealAdultCat ==1 ~ 1,
+      TRUE ~ 0))
+
+# Merge the reduced coping strategies index data with the cover data
+
+ReducedCopingStrategies_merged_data <- left_join(cover_data, ReducedCopingStrategies, by = c("hhid")) %>% 
+  mutate(T1 = ifelse(IDPOOR < 3, 1, 0),          # Treatment indicator based on IDPoor classification
+         T2 = ifelse(poorscore < 0, 1, 0)) %>% 
+  #mutate_at(vars(starts_with("strata")), as.factor)  # Ensure strata variables are treated as factors
+  mutate(strataid = as.factor(strataid))  # Ensure strataid is treated as a factor
+
+# Generate dummy variables for strataid, excluding the first level as the baseline
+
+strata_dummies_reduced_coping_strategies <- model.matrix(~ strataid - 1, 
+                                                         data = ReducedCopingStrategies_merged_data)
+
+
+# Renaming columns to match Stata output (strata_1, strata_2, ...)
+
+colnames(strata_dummies_reduced_coping_strategies) <- paste0("strata_", 1:ncol(strata_dummies_reduced_coping_strategies))
+
+# Add the dummy variables back to the merged dataset
+
+ReducedCopingStrategies_merged_data <- cbind(ReducedCopingStrategies_merged_data, strata_dummies_reduced_coping_strategies)
+
+# Specify covariates, including poverty score and actual strata dummies present in the data
+
+existing_strata_vars_reduced_coping_strategies <- grep("^strata_", colnames(ReducedCopingStrategies_merged_data), value = TRUE)
+
+
+covariates_reduced_coping_strategies <- c("poorscore", 
+                                          existing_strata_vars_reduced_coping_strategies)
+
+# Set up survey design (ensure 'clusterid' and 'strataid' exist in the data)
+
+ReducedCopingStrategies_survey_design <- svydesign(
+  ids = ~clusterid,   # Village level clustering
+  strata = ~strataid, # Control for strata
+  data = ReducedCopingStrategies_merged_data
+)
+
+
+# Indicators for Reduced Coping Strategies Index
+ 
+# a. rCSI (Reduced Coping Strategies Index)
+rCSI <- calculate_balance("rCSI", ReducedCopingStrategies_survey_design, covariates_reduced_coping_strategies) # Reduced Coping Strategies Index
+
+# b. rCSILessQlty
+
+rCSILessQltyCat <- calculate_balance("rCSILessQltyCat", 
+                                     ReducedCopingStrategies_survey_design, 
+                                     covariates_reduced_coping_strategies) # Reduced Coping Strategies Index
+
+# c. rCSIBorrowCat
+
+rCSIBorrowCat <- calculate_balance("rCSIBorrowCat", 
+                                   ReducedCopingStrategies_survey_design, 
+                                   covariates_reduced_coping_strategies) # Reduced Coping Strategies Index
+
+# d. rCSIMealSizeCat
+
+rCSIMealSizeCat <- calculate_balance("rCSIMealSizeCat", 
+                                     ReducedCopingStrategies_survey_design, 
+                                     covariates_reduced_coping_strategies) # Reduced Coping Strategies Index
+
+# e. rCSIMealNbCat
+
+rCSIMealNbCat <- calculate_balance("rCSIMealNbCat", 
+                                   ReducedCopingStrategies_survey_design, 
+                                   covariates_reduced_coping_strategies) # Reduced Coping Strategies Index
+
+
+# f. rCSIMealAdultCat
+
+rCSIMealAdultCat <- calculate_balance("rCSIMealAdultCat", 
+                                      ReducedCopingStrategies_survey_design, 
+                                      covariates_reduced_coping_strategies) # Reduced Coping Strategies Index
 
 
 
+# Merge the tables and round numerical values
 
-
-
-
-
+reduced_coping_strategies_balance_results <- bind_rows(rCSI, rCSILessQltyCat, rCSIBorrowCat, 
+                                                       rCSIMealSizeCat, rCSIMealNbCat, rCSIMealAdultCat) %>% 
+  # Round numerical values to 3 decimal places
+  mutate_if(is.numeric, ~round(., 3)) %>% 
+  dplyr::select(Indicator, Overall_Mean, Treatment_Mean, Comparison_Mean, Difference) # Removing the p-value and stars columns since non of the indicators are significant
 
 
 

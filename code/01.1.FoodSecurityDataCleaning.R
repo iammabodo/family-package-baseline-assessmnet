@@ -7,15 +7,15 @@ library(eRm)
 
 
 FoodSecurity <- read_dta("new data/sec8.dta") %>% 
-  select(hhid, Province, District, Commune, Village, HHID, IDPOOR, sec8_3a:sec8_9b) %>% 
-  select(-sec8_4k_OTHER)
-# Load the data with disabilities
+  dplyr::select(hhid, Province, District, Commune, Village, HHID, IDPOOR, sec8_3a:sec8_9b) %>% 
+  dplyr::select(-sec8_4k_OTHER)
+
 
 
 # Livelihoods Copying Strategies Data
 
 LCSEN <- FoodSecurity %>% 
-  select(hhid, Province, District, Commune, Village, HHID,
+  dplyr::select(hhid, Province, District, Commune, Village, HHID,
          IDPOOR,
          # Livelihoods Copying Strategies Variables
          sec8_4a:sec8_4k_OTHER_EN) %>% 
@@ -151,6 +151,9 @@ LCSEN <- FoodSecurity %>%
   set_variable_labels(
     Treatment = "Family Package Treatment Group or Control Group")
   
+# write stata file
+write_dta(LCSEN, "clean data/LCSEN.dta")
+
 
 ##################################################################################################################################################################
 
@@ -159,8 +162,7 @@ LCSEN <- FoodSecurity %>%
 
 
 rCSIData <- FoodSecurity %>% 
-  select(hhid, Province, District, Commune, Village, HHID,
-         IDPOOR, sec8_5:sec8_9b) %>% 
+  select(hhid, sec8_5:sec8_9b) %>% 
   # Rename Variables
   rename(
     rCSILessQlty = sec8_5,
@@ -188,13 +190,6 @@ rCSIData <- FoodSecurity %>%
     rCSIMealNbWho = "Who in the household reduced the number of meals",
     rCSIMealAdult = "Restricted consumption by adults in order for small children to eat",
     rCSIMealAdultWho = "Which adult gender mainly reduced or restricted consumption") %>% 
-  # Change labelled variables to factor variables
-  mutate(
-    Province = as_factor(Province),
-    District = as_factor(District),
-    Commune = as_factor(Commune),
-    Village = as_factor(Village),
-    IDPOOR = as_factor(IDPOOR)) %>% 
   # Create reduced Coping strategies indicator
   mutate(rCSI = rCSILessQlty +
            (rCSIBorrow * 2) +
@@ -222,22 +217,19 @@ rCSIData <- FoodSecurity %>%
   mutate_at(
     vars(rCSILessQltyCat:rCSIMealAdultCat),
     ~ factor(., levels = c(1, 0), labels = c("Yes", "No"))) %>%
-  # Create treatment variable using the IDPOOR Variable
-  mutate(
-    Treatment = case_when(
-      IDPOOR == "POOR_1" | IDPOOR == "POOR_2" ~ "Treatment Group",
-      IDPOOR == "NEAR_POOR" ~ "Control Group",
-      TRUE ~ "Missing"),
-    Treatment  = factor(Treatment)) %>%
   # Set variable labels for the Treatment, Other factor variables and rCSI variable
   set_variable_labels(
-    Treatment = "Family Package Treatment Group or Control Group",
     rCSI = "Reduced Coping Strategies Index (rCSI)",
     rCSILessQltyCat = "Did household relied on less preffered",
     rCSIBorrowCat = "Did household borrowed food or relied on help from friends or relatives",
     rCSIMealSizeCat = "Did household reduced portion size of meals",
     rCSIMealNbCat = "Did household reduced the number of meals eaten per day",
     rCSIMealAdultCat = "Did household restricted consumption by adults in order for small children to eat")
+
+
+# Write a stata file for the Reduced Coping Strategies Indicators Data
+
+write_dta(rCSIData, "clean data/rCSIData.dta")
 
 ##################################################################################################################################################################
 
