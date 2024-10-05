@@ -1,4 +1,4 @@
-
+library(openxlsx)
 # source necessary files
 
 source("code/01.2.MDDDataCleaning.R")
@@ -9,10 +9,17 @@ source("code/02.00.Functions.R")
 # Cover data and MADChildren data
 cover_data <- read_dta("new data/cover.dta")
 MADChildren <- read_dta("clean data/MADChildren.dta")  # Data for children indicators
+EBF2Days <- read_dta("clean data/BreastFeedingData.dta") %>%  # Data for exclusive breastfeeding indicators
+  mutate(ChildId = pid,
+         ChildGender = sex) %>% 
+  dplyr::select(hhid, ChildId, ChildGender, sec4_10) %>%  # Select relevant columns
+  left_join(cover_data, by = "hhid") %>% 
+  dplyr::select(hhid, ChildId, ChildGender, sec4_10, clusterid, strataid) %>%  # Merge with cover data
+  mutate(strataid = as.factor(strataid))  # Ensure strataid is treated as a factor
 
 # Merge data on household ID (hhid)
-MAD_merged_data <- merge(cover_data, MADChildren, by = c("hhid", "Province", "District", "Commune", "Village", "HHID"), all.x = TRUE) %>% 
-  filter(!is.na(ChildAgeMonths))  # Remove rows with missing hhid
+MAD_merged_data <-  MADChildren %>% 
+  left_join(cover_data, by = c("hhid", "Province", "District", "Commune", "Village", "HHID")) 
 
 # Create treatment indicators
 MAD_merged_data <- MAD_merged_data %>%
@@ -30,17 +37,30 @@ colnames(strata_dummies) <- paste0("strata_", 1:ncol(strata_dummies))
 
 # Add the dummy variables back to the merged dataset
 MAD_merged_data <- cbind(MAD_merged_data, strata_dummies)
+MAD_merged_EBF2Days <- EBF2Days %>%
+  left_join(MAD_merged_data, by = c("hhid", "ChildId", "ChildGender", "clusterid", "strataid")) %>%   # Merge with exclusive breastfeeding data %>% 
+  filter(!is.na(sec4_10) & sec4_10 != -99) 
 
 # Specify covariates, including poverty score and actual strata dummies present in the data
 existing_strata_vars <- grep("^strata_", colnames(MAD_merged_data), value = TRUE)
 covariates <- c("poorscore", existing_strata_vars)
 
-# Set up survey design (ensure 'clusterid' and 'strataid' exist in the data)
+# Set up survey design (ensure 'clusterid' and 'strataid' exist in the data) - Complete data
 MAD_survey_design <- svydesign(
   ids = ~clusterid,   # Village level clustering
   strata = ~strataid, # Control for strata
   data = MAD_merged_data
 )
+
+#Set up survey design (ensure 'clusterid' and 'strataid' exist in the data) - EBF2Days data
+
+MAD_survey_design_EBF2Days <- svydesign(
+  ids = ~clusterid,   # Village level clustering
+  strata = ~strataid, # Control for strata
+  data = MAD_merged_EBF2Days 
+)
+ # Adjusting for lonely PSUs - specifically strata 9
+options(survey.lonely.psu = "adjust")
 
 
 # Subsetting data for specific indicators (e.g., children aged 6 months and above)
@@ -55,19 +75,20 @@ MAD_survey_design_subset_cbf <- subset(MAD_survey_design, ChildAgeMonths >= 12)
 MAD <- calculate_balance("MAD", MAD_survey_design_subset, covariates) # Minimum Acceptable Diet (MAD) for children aged 6-23 months
 CBF <- calculate_balance("PCMADBreastfeeding", MAD_survey_design_subset_cbf, covariates) # Continued breastfeeding for children between 12-23 months
 MMF <- calculate_balance("MMF", MAD_survey_design_subset, covariates) # Minimum Meal Frequency (MMF) for children aged 6-23 months
+MDD <- calculate_balance("MDDCat", MAD_survey_design_subset, covariates) # Minimum Dietary Diversity (MDD) for children aged 6-23 months
 MADEBF <- calculate_balance("MADEBF", MAD_survey_design_U5, covariates) # Exclusive Breastfeeding for children under 5 months
 MADMixMF <- calculate_balance("MADMixMF", MAD_survey_design_U5, covariates) # Mixed Milk Feeding for children under 5 months
 BFAll <- calculate_balance("PCMADBreastfeeding", MAD_survey_design, covariates) # Continued Breastfeeding for all children aged 0-23 months
 PMADEggFlesh <- calculate_balance("PMADEggFlesh", MAD_survey_design_subset, covariates) # Egg and Flesh consumption for children aged 6-23 months
 PCMADUnhealthyFds <- calculate_balance("PCMADUnhealthyFds", MAD_survey_design_subset, covariates) # Unhealthy food consumption for children aged 6-23 months
 PMADSwtBeverages <- calculate_balance("PMADSwtBeverages", MAD_survey_design_subset, covariates) # Sweetened beverage consumption for children aged 6-23 months
-
+EBF2D <- calculate_balance("sec4_10", MAD_survey_design_EBF2Days, covariates) # Exclusive breastfeeding for 2 days
 # Merge the tables and round numerical values
 
-child_nutrition_balance_results <- bind_rows(MAD, CBF, MMF, MADEBF, MADMixMF, BFAll, PMADEggFlesh, PMADSwtBeverages, PCMADUnhealthyFds) %>% 
+child_nutrition_balance_results <- bind_rows(MAD, CBF, MMF, MDD, MADEBF, MADMixMF, BFAll, PMADEggFlesh, PMADSwtBeverages, PCMADUnhealthyFds, EBF2D) %>% 
   # Round numerical values to 3 decimal places
   mutate_if(is.numeric, ~round(., 3)) %>% 
-  select(Indicator, Overall_Mean, Treatment_Mean, Comparison_Mean, Difference) # Removing the p-value and stars columns since non of the indicators are significant
+  dplyr::select(Indicator, Overall_Mean, Treatment_Mean, Comparison_Mean, Difference) # Removing the p-value and stars columns since non of the indicators are significant
 
 ###############################################################################################
 # Format and display the balance table using gt
@@ -87,7 +108,7 @@ Child_nutrition_balance_table <- child_nutrition_balance_results %>%
     decimals = 3
   )
 
-write.xlsx(balance_table, "report tables/ChildNutritionBalanceTable.xlsx")
+write.xlsx(Child_nutrition_balance_table, "report tables/ChildNutritionBalanceTable.xlsx")
 
 
 ###############################################################################################
@@ -97,7 +118,7 @@ write.xlsx(balance_table, "report tables/ChildNutritionBalanceTable.xlsx")
 # Read the adult nutrition data
 
 AdultNutrition <- read_dta("clean data/DietQuality.dta") %>% 
-  select(-c(Province, District, Commune, Village))  # Remove location columns
+  dplyr::select(-c(Province, District, Commune, Village))  # Remove location columns
 
 # Merge the adult nutrition data with the cover data
 
@@ -156,15 +177,26 @@ MDDDarkGreenVeg <- calculate_balance("MDDDarkGreenVeg", Adult_survey_design, cov
 MDDOtherVeg <- calculate_balance("MDDOtherVeg", Adult_survey_design, covariates_adult_nut) # Other vegetable consumption for all adults aged 18-59 years
 MDDOtherVitA <- calculate_balance("MDDOtherVitA", Adult_survey_design, covariates_adult_nut) # Other Vitamin A-rich food consumption for all adults aged 18-59 years
 MDDOtherFruits <- calculate_balance("MDDOtherFruits", Adult_survey_design, covariates_adult_nut) # Other fruit consumption for all adults aged 18-59 years
+MDDSweetsCake <- calculate_balance("MDDSweetsCake", Adult_survey_design, covariates_adult_nut) # Sweets and cake consumption for all adults aged 18-59 years
+MDDSweetsCandy <- calculate_balance("MDDSweetsCandy", Adult_survey_design, covariates_adult_nut) # Sweets and candy consumption for all adults aged 18-59 years
+MDDOtherChips <- calculate_balance("MDDOtherChips", Adult_survey_design, covariates_adult_nut) # Other chips consumption for all adults aged 18-59 years
+MDDOtherFriedFoods <- calculate_balance("MDDOtherFriedFoods", Adult_survey_design, covariates_adult_nut) # Other fried food consumption for all adults aged 18-59 years
+MDDOtherNoodles  <- calculate_balance("MDDOtherNoodles", Adult_survey_design, covariates_adult_nut) # Other noodles consumption for all adults aged 18-59 years
+MDDDrinkTea <- calculate_balance("MDDDrinkTea", Adult_survey_design, covariates_adult_nut) # Tea consumption for all adults aged 18-59 years
+MDDDrinksFruitJuice <- calculate_balance("MDDDrinksFruitJuice", Adult_survey_design, covariates_adult_nut) # Fruit juice consumption for all adults aged 18-59 years
+MDDDrinksSoftDrinks <- calculate_balance("MDDDrinksSoftDrinks", Adult_survey_design, covariates_adult_nut) # Soft drink consumption for all adults aged 18-59 years
+
 
 # Merge the tables and round numerical values
 
 adult_nutrition_balance_results <- bind_rows(MDDWomen, MDDScore, MDDSweetBeverages, MDDUnhealthyFoods, 
                                              MDDStaples, MDDPulses, MDDNutsSeeds, MDDMilkDairy, 
-                                             MDDProtein, MDDEggs, MDDDarkGreenVeg, MDDOtherVeg, MDDOtherVitA, MDDOtherFruits) %>% 
+                                             MDDProtein, MDDEggs, MDDDarkGreenVeg, MDDOtherVeg, MDDOtherVitA, MDDOtherFruits,
+                                             MDDSweetsCake, MDDSweetsCandy, MDDOtherChips, MDDOtherFriedFoods, MDDOtherNoodles,
+                                             MDDDrinkTea, MDDDrinksFruitJuice, MDDDrinksSoftDrinks) %>% 
   # Round numerical values to 3 decimal places
   mutate_if(is.numeric, ~round(., 3)) %>% 
-  select(Indicator, Overall_Mean, Treatment_Mean, Comparison_Mean, Difference) # Removing the p-value and stars columns since non of the indicators are significant
+  dplyr::select(Indicator, Overall_Mean, Treatment_Mean, Comparison_Mean, Difference) # Removing the p-value and stars columns since non of the indicators are significant
 
 # Write excel file
 write.xlsx(adult_nutrition_balance_results, "report tables/AdultNutritionBalanceTable.xlsx")
@@ -239,10 +271,12 @@ LCSEN_NoCoping <- calculate_balance("NoCopingEN", LCSEN_survey_design, covariate
 
 LCSEN_balance_results <- bind_rows(LCSEN_Stress, LCSEN_Crisis, LCSEN_Emergency, LCSEN_NoCoping) %>% 
   # Round numerical values to 3 decimal places
-  mutate_if(is.numeric, ~round(., 3)) %>% 
-  dplyr::select(Indicator, Overall_Mean, Treatment_Mean, Comparison_Mean, Difference) # Removing the p-value and stars columns since non of the indicators are significant
+  mutate_if(is.numeric, ~round(., 3)) 
 
 
+# Write excel file
+
+write.xlsx(LCSEN_balance_results, "report tables/LCSENBalanceTable.xlsx")
 ###############################################################################################
 
 # Reduced coping strategies index balance table
@@ -357,5 +391,6 @@ reduced_coping_strategies_balance_results <- bind_rows(rCSI, rCSILessQltyCat, rC
   dplyr::select(Indicator, Overall_Mean, Treatment_Mean, Comparison_Mean, Difference) # Removing the p-value and stars columns since non of the indicators are significant
 
 
-
+# Write excel file
+write.xlsx(reduced_coping_strategies_balance_results, "report tables/ReducedCopingStrategiesBalanceTable.xlsx")
 

@@ -10,26 +10,17 @@ library(srvyr)
 # Load the data
 
 ExlusiveBF <- read_dta("new data/sec4.dta") %>% 
-  select(hhid, pid, AGE_CH, sec4_10)
+  dplyr::select(hhid, pid, AGE_CH, sec4_10)
 
 ExcluiveBFSec6 <- read_dta("new data/sec6.dta") %>% 
-  select(hhid, pid, age, sex)
-
-SurveyDesignDataEBF <- read_dta("new data/cover.dta") %>% 
-  select(hhid, clusterid, IDPOOR, strataid, GPS__Latitude, GPS__Longitude, GPS__Accuracy, GPS__Altitude, GPS__Timestamp, regiontype, poorscore)
+  dplyr::select(hhid, pid, age, sex)
 
 # Merge the data
-BreastFeedingData <- left_join(ExlusiveBF, ExcluiveBFSec6, by = c("hhid", "pid")) %>% 
-  left_join(SurveyDesignDataEBF, by = "hhid") %>% 
-  # Create treatment variable
-  mutate(Treatment = case_when(
-    IDPOOR == 1 | IDPOOR == 2 ~ "Treatment Group",
-    TRUE ~ "Control Group")) %>% 
-  filter(sec4_10 != -99) %>% 
-  # Change sec4_10 to factor
-  mutate(sec4_10 = as_factor(sec4_10))
-
+BreastFeedingData <- left_join(ExlusiveBF, ExcluiveBFSec6, by = c("hhid", "pid")) 
 # Create the survey design object
+
+# Write dta file
+write_dta(BreastFeedingData, "clean data/BreastFeedingData.dta")
 
 SvyBreastFeedingData <- BreastFeedingData %>% 
   as_survey_design(ids = clusterid, 
@@ -46,7 +37,7 @@ SvyBreastFed2Treat <- SvyBreastFeedingData %>%
   summarise(EBF = survey_prop() * 100,
             Total = survey_total()) %>% 
   mutate(EBF = round(EBF, 2)) %>% 
-  select(sec4_10, EBF, Total)
+  dplyr::select(sec4_10, EBF, Total)
 
 
 # Write data into an excel file
@@ -60,7 +51,7 @@ SvyBreastFed2Region <- SvyBreastFeedingData %>%
   summarise(EBF = survey_prop() * 100,
             Total = survey_total()) %>% 
   mutate(EBF = round(EBF, 2)) %>% 
-  select(regiontype, sec4_10, EBF, Total)
+  dplyr::select(regiontype, sec4_10, EBF, Total)
 
 # Write data into an excel file
 
